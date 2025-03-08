@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
-      "target": "ES5",
-      "module": "commonjs",
-      "strict": true,
-      "esModuleInterop": true,
-      "outDir": "./public"
+      "target": "ES5",                    // Cible ES5 pour la compatibilité avec plus de navigateurs
+      "module": "commonjs",               // Utilisation du système de modules commonjs
+      "strict": true,                     // Activer les vérifications strictes
+      "esModuleInterop": true,            // Permet l'interopérabilité avec des modules ES6
+      "outDir": "./frontend/public",      // Sortie des fichiers JavaScript compilés dans le dossier public
+      "rootDir": "./frontend/src",        // Les fichiers sources TypeScript se trouvent dans frontend/src
+      "skipLibCheck": true,               // Ignore les vérifications des fichiers de type
+      "forceConsistentCasingInFileNames": true  // Vérifie la casse des noms de fichiers
     },
     "include": [
-      "src/**/*",
-      "public/**/*.ts"
+      "frontend/src/**/*"                 // Inclure tous les fichiers .ts dans frontend/src
     ]
-  }
-  
+}
