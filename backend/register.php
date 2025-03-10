@@ -28,5 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 } else {
     echo "Méthode de requête invalide.";
+    echo $_SERVER['REQUEST_METHOD'];
 }
 ?>

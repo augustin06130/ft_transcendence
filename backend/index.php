@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 // Démarrer la session pour pouvoir utiliser les variables de session
 session_start();
 
@@ -28,4 +28,4 @@ $stmt->execute();
 
 echo "Base de données SQLite et utilisateur créés.";
 ?>
-
+ -->

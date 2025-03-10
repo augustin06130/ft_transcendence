@@ -6,8 +6,8 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./frontend/public:/var/www/frontend/public
-      - ./backend:/var/www/backend
+      - ./frontend/public:/var/www/server/frontend/public
+      - ./backend:/var/www/server/backend
     networks:
       - app-network
 
