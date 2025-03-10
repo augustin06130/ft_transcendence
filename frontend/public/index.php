@@ -111,7 +111,7 @@ if ($row['COUNT(*)'] == 0) {
 <body>
     <div class="container">
         <h1>ft_transcendence</h1>
-        <a href="pong.html" class="btn">Pong</a>
+        <a href="pong/pong.html" class="btn">Pong</a>
     </div>
 
     <!-- Afficher le bouton de login ou le nom d'utilisateur -->
@@ -208,7 +208,7 @@ if ($row['COUNT(*)'] == 0) {
 <body>
     <div class="container">
         <h1>ft_transcendence</h1>
-        <a href="pong.html" class="btn">Pong</a>
+        <a href="pong/pong.html" class="btn">Pong</a>
     </div>
 
     <!-- Afficher le bouton de login ou le nom d'utilisateur -->
