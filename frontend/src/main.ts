@@ -1,4 +1,4 @@
-import { Game } from './game/Game';
+import { Game } from './pong/Game';
 
 // Initialisation du canvas
 const canvas = document.getElementById('pongCanvas') as HTMLCanvasElement;
