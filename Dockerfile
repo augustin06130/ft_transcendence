@@ -6,10 +6,14 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g typescript
 
-# Installer SQLite et PHP PDO SQLite
-RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev && \
-    docker-php-ext-install pdo pdo_sqlite
+RUN apt-get update \
+    && apt-get install -y \
+    sqlite3 \
+    libsqlite3-dev \
+    entr \
+    && docker-php-ext-install pdo pdo_sqlite
 
+    
 # Copier les fichiers de ton projet dans le conteneur
 COPY . /var/www/
 
@@ -35,4 +39,4 @@ RUN npm run build
 EXPOSE 80
 
 # Démarrer le serveur PHP intégré sur le port 80, en servant le contenu du dossier public
-CMD ["php", "-S", "0.0.0.0:80", "-t", "/var/www/"]
+CMD ["sh", "-c", "find /var/www/ -type f | entr -r php -S 0.0.0.0:80 -t /var/www/"]
