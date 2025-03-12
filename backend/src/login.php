@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
 
     // Créer une connexion à la base de données SQLite
-    $db = new SQLite3('/var/www/html/database.db');
+    $db = new SQLite3('/var/www/database.db');
 
     // Vérifier si l'utilisateur existe dans la base de données
     $stmt = $db->prepare("SELECT id, password FROM users WHERE username = :username");
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;  // Assurez-vous d'appeler exit après la redirection pour stopper l'exécution du code suivant
     } else {
         // Connexion échouée : rediriger vers la page de connexion avec un message d'erreur
-        header('Location: /login.php?error=Nom d\'utilisateur ou mot de passe incorrect');
+        header('Location: /frontend/public/login.html?error=Nom d\'utilisateur ou mot de passe incorrect');
         exit;
     }
 } else {

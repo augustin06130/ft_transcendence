@@ -6,7 +6,7 @@ session_start();
 $isLoggedIn = isset($_SESSION['username']);
 
 // Créer une nouvelle base de données SQLite (si elle n'existe pas déjà)
-$db = new SQLite3('/var/www/html/database.db');
+$db = new SQLite3('/var/www/database.db');
 
 // Créer une table 'users' si elle n'existe pas
 $db->exec("CREATE TABLE IF NOT EXISTS users (
@@ -36,7 +36,7 @@ if ($row['COUNT(*)'] == 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ft_transcendence - Accueil</title>
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="/public/styles/index.css">
 </head>
 <body>
     <div class="container">
@@ -47,10 +47,15 @@ if ($row['COUNT(*)'] == 0) {
     <!-- Afficher le bouton de login ou le nom d'utilisateur -->
     <div class="login-btn-container">
         <?php if ($isLoggedIn): ?>
-            <span>Bienvenue, <?php echo $_SESSION['username']; ?></span>
+            <span class="username">Bienvenue, <?php echo $_SESSION['username']; ?></span>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="/backend/logout.php" class="dropdown-item">Logout</a>
+                <script src="js/menu.js"></script>
+            </div>
         <?php else: ?>
             <a href="login.html" class="login-btn">Login</a>
         <?php endif; ?>
     </div>
+    <script src="js/script.js"></script>
 </body>
 </html>

@@ -4,13 +4,12 @@
     "module": "es6", // Utilise les modules ES6
     "strict": true, // Activer les vérifications strictes
     "esModuleInterop": true, // Permet l'interopérabilité avec des modules ES6
-    "outDir": "frontend/public", // Sortie des fichiers JavaScript compilés dans le dossier public
-    "rootDir": "frontend/src", // Les fichiers sources TypeScript se trouvent dans frontend/src
+    "outDir": "public/js", // Sortie des fichiers JavaScript compilés dans le dossier public
+    "rootDir": "src", // Les fichiers sources TypeScript se trouvent dans frontend/src
     "skipLibCheck": true, // Ignore les vérifications des fichiers de type
     "forceConsistentCasingInFileNames": true // Vérifie la casse des noms de fichiers
   },
   "include": [
-    "./frontend/src/**/*", // Inclure tous les fichiers server
-    "./backend/**/*"
+    "./src/**/*", // Inclure tous les fichiers server
   ]
 }
