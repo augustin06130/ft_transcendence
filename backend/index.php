@@ -26,6 +26,5 @@ $stmt->bindValue(':username', $username, SQLITE3_TEXT);
 $stmt->bindValue(':password', $password, SQLITE3_TEXT);
 $stmt->execute();
 
-echo "Base de données SQLite et utilisateur créés.";
 ?>
  -->
