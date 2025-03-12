@@ -20,24 +20,33 @@ function loadPage(url: string): void {
     }
 }
 
+import { LoginForm } from './login';
+const loginForm = new LoginForm();
+
+
 // Fonction pour gérer la navigation sans recharger la page
 function setupNavigation(): void {
+    const main = document.getElementsByTagName("main")[0];
+
     const homeLink = document.getElementById('home-link')!;
-    const aboutLink = document.getElementById('about-link')!;
+    const loginButton = document.getElementById('login-button')!;
     const contactLink = document.getElementById('contact-link')!;
 
     // Ajouter un événement de clic pour la page d'accueil
     homeLink.addEventListener('click', (event) => {
         event.preventDefault();
+
         history.pushState({}, '', '/'); // Met à jour l'URL sans recharger la page
         loadPage('/'); // Charge la page d'accueil
     });
 
     // Ajouter un événement de clic pour la page À propos
-    aboutLink.addEventListener('click', (event) => {
+    loginButton.addEventListener('click', (event) => {
         event.preventDefault();
-        history.pushState({}, '', '/frontend/public/login.html'); // Met à jour l'URL sans recharger la page
-        loadPage('/login'); // Charge la page "About"
+        main.innerHTML = '';
+        history.pushState({}, '', '/login.html');
+        main.appendChild(loginForm.getContainer());
+        // loadPage('/login'); // Charge la page "About"
     });
 
     // Ajouter un événement de clic pour la page Contact
@@ -57,5 +66,8 @@ window.addEventListener('popstate', () => {
     loadPage(window.location.pathname); // Charger le contenu en fonction de l'URL actuelle
 });
 
+window.addEventListener('DOMContentLoaded', () => {
 // Appel de la fonction pour configurer la navigation
-setupNavigation();
+console.log("lol")
+    setupNavigation();
+})

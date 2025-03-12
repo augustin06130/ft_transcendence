@@ -24,11 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['username'] = $username;
         
         // Rediriger vers la page d'accueil (index.php)
-        header('Location: /frontend/public/index.php');
+        header('Location: /index.php');
         exit;  // Assurez-vous d'appeler exit après la redirection pour stopper l'exécution du code suivant
     } else {
         // Connexion échouée : rediriger vers la page de connexion avec un message d'erreur
-        header('Location: /frontend/public/login.html?error=Nom d\'utilisateur ou mot de passe incorrect');
+        header('Location: /public/login.html?error=Nom d\'utilisateur ou mot de passe incorrect');
         exit;
     }
 } else {

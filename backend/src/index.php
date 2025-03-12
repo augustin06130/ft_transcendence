@@ -39,6 +39,7 @@ if ($row['COUNT(*)'] == 0) {
     <link rel="stylesheet" href="/public/styles/index.css">
 </head>
 <body>
+    <main>
     <div class="container">
         <h1>ft_transcendence</h1>
         <a href="pong/pong.html" class="btn">Pong</a>
@@ -46,16 +47,26 @@ if ($row['COUNT(*)'] == 0) {
 
     <!-- Afficher le bouton de login ou le nom d'utilisateur -->
     <div class="login-btn-container">
-        <?php if ($isLoggedIn): ?>
-            <span class="username">Bienvenue, <?php echo $_SESSION['username']; ?></span>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <a href="/backend/logout.php" class="dropdown-item">Logout</a>
-                <script src="js/menu.js"></script>
-            </div>
-        <?php else: ?>
-            <a href="login.html" class="login-btn">Login</a>
-        <?php endif; ?>
+        <span class="username">Bienvenue, <?php echo $_SESSION['username']; ?></span>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <a href="/logout.php" class="dropdown-item">Logout</a>
+            <script src="/public/js/menu.js"></script>
+        </div>
+        <button id="login-button" class="login-btn">Login</button>
     </div>
-    <script src="js/script.js"></script>
+    
+
+
+        <!-- <?php if ($isLoggedIn): ?> -->
+
+        <!-- <?php else: ?>
+            <a href="/public/login.html" class="login-btn">Login</a>
+            <?php endif; ?> -->
+
+
+    <script src="/public/js/script.js"></script>
+    <script src="/public/js/login.js"></script>
+        </main>
+
 </body>
 </html>

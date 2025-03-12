@@ -6,7 +6,7 @@ COPY package*.json ./
 
 RUN npm install
 RUN npm install -g typescript
+RUN npm install --save-exact --save-dev esbuild
 RUN npm install -g nodemon
 
 CMD ["npm", "run", "hot-reload"]
-# CMD ["nodemon", "--watch", "src/", "--exec", "npm run build && npm start --silent"]

@@ -2,12 +2,15 @@
     "name": "ft_transcendense",
     "version": "1.0.0",
     "scripts": {
-      "build": "tsc",
+      "build": "node build.mjs",
       "start": "node public/js/script.js",
       "hot-reload": "nodemon --watch src/ --exec 'npm run build'"
     },
+
+    "type": "module",
     "devDependencies": {
-      "typescript": "^4.0.0"
+      "typescript": "^4.0.0",
+      "esbuild": "^0.14.0"
     }
   }
   

@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Ajouter l'utilisateur dans la base de données
         $stmt = $db->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
         if ($stmt->execute([$username, $password])) {
-            header('Location: /frontend/public/login.html');
+            header('Location: /public/login.html');
             exit;
         } else {
             echo "Erreur lors de l'inscription.";
