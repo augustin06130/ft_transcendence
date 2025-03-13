@@ -5,8 +5,6 @@ WORKDIR /frontend
 COPY package*.json ./
 
 RUN npm install
-RUN npm install -g typescript
-RUN npm install --save-exact --save-dev esbuild
-RUN npm install -g nodemon
+RUN npm install -g typescript nodemon esbuild@0.25.1
 
 CMD ["npm", "run", "hot-reload"]

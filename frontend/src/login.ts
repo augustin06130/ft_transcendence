@@ -1,4 +1,41 @@
 // LoginForm.ts
+
+import { el } from './framework';
+
+export function login_logout_btn(username:string) : HTMLElement {
+  function cmp_span(username:string) : HTMLElement{
+    let span =   el('span', `Bienvenue, ${username}`)
+    span.className = "username"
+    return span
+  }
+  
+  function dropdown() : HTMLElement {
+    let a = el("a", "Logout")
+    a.setAttribute("href", "/logout.php")
+    a.className = "dropdown-item"
+  
+    let d = el("div", a)
+    d.id = "dropdownMenu"
+    d.className = "dropdown-menu"
+    return d
+  }
+  
+  function b() {
+    let e = el("button", "Login")
+    e.id = "login-button"
+    e.className ="login-btn"
+    return e
+  }
+
+  return el('div',
+    cmp_span(username),
+    dropdown(),
+    b()
+  );
+} 
+
+
+
 export class LoginForm {
     private container: HTMLElement;
   

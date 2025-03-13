@@ -47,10 +47,9 @@ if ($row['COUNT(*)'] == 0) {
 
     <!-- Afficher le bouton de login ou le nom d'utilisateur -->
     <div class="login-btn-container">
-        <span class="username">Bienvenue, <?php echo $_SESSION['username']; ?></span>
+        <!-- <span class="username">Bienvenue, <?php echo $_SESSION['username']; ?></span> -->
         <div class="dropdown-menu" id="dropdownMenu">
             <a href="/logout.php" class="dropdown-item">Logout</a>
-            <script src="/public/js/menu.js"></script>
         </div>
         <button id="login-button" class="login-btn">Login</button>
     </div>
@@ -64,9 +63,8 @@ if ($row['COUNT(*)'] == 0) {
             <?php endif; ?> -->
 
 
-    <script src="/public/js/script.js"></script>
-    <script src="/public/js/login.js"></script>
         </main>
-
-</body>
+        
+        <script src="/public/js/bundle.js"></script>
+    </body>
 </html>

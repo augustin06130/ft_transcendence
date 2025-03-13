@@ -2,15 +2,15 @@
     "name": "ft_transcendense",
     "version": "1.0.0",
     "scripts": {
-      "build": "node build.mjs",
-      "start": "node public/js/script.js",
+      "build": "npx esbuild src/script.ts --bundle --outfile=./public/js/bundle.js --minify",
       "hot-reload": "nodemon --watch src/ --exec 'npm run build'"
     },
 
     "type": "module",
     "devDependencies": {
-      "typescript": "^4.0.0",
-      "esbuild": "^0.14.0"
+      "typescript": "^5.0.0",
+      "esbuild": "^0.25.1",
+      "nodemon": "^3.0.0"
     }
-  }
+}
   

@@ -20,13 +20,14 @@ function loadPage(url: string): void {
     }
 }
 
-import { LoginForm } from './login';
-const loginForm = new LoginForm();
+import { LoginForm, login_logout_btn } from './login';
+// const loginForm = new LoginForm();
 
 
 // Fonction pour gérer la navigation sans recharger la page
 function setupNavigation(): void {
     const main = document.getElementsByTagName("main")[0];
+    main.appendChild(login_logout_btn("Augustin"));
 
     const homeLink = document.getElementById('home-link')!;
     const loginButton = document.getElementById('login-button')!;
@@ -45,7 +46,7 @@ function setupNavigation(): void {
         event.preventDefault();
         main.innerHTML = '';
         history.pushState({}, '', '/login.html');
-        main.appendChild(loginForm.getContainer());
+        // main.appendChild(login_logout_btn("Augustin"));
         // loadPage('/login'); // Charge la page "About"
     });
 
