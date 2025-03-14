@@ -1,4 +1,4 @@
-<?php
+/*
 // Démarrer la session pour pouvoir utiliser les variables de session
 session_start();
 
@@ -36,4 +36,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header('Location: /login.php');
     exit;
 }
-?>
+*/

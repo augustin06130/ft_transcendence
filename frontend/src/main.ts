@@ -1,15 +1,12 @@
-import { Game } from './pong/Game';
+import { $, router, h1 } from './framework';
+import Home from './Home';
+import { NavBar } from './navbar';
 
-// Initialisation du canvas
-const canvas = document.getElementById('pongCanvas') as HTMLCanvasElement;
-const context = canvas.getContext('2d');
 
-if (!context) {
-    throw new Error('Impossible de récupérer le contexte du canvas.');
-}
+document.addEventListener("DOMContentLoaded", (event) => {
+    $('entry', { class: "min-h-screen  w-[100vw] bg-black text-green-500 font-mono p-4" },
+        NavBar(),
+        Home(),
+    )
+  });
 
-// Crée une instance du jeu
-const game = new Game(canvas, context);
-
-// Lance le jeu
-game.start();

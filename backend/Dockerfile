@@ -1,16 +1,20 @@
-FROM php:7.4-cli
+FROM node:alpine3.21
 
-RUN apt-get update \
-    && apt-get install -y \
-    sqlite3 \
-    libsqlite3-dev \
-    entr \
-    && docker-php-ext-install pdo pdo_sqlite
-
+RUN apk update && apk upgrade
+RUN apk add --no-cache sqlite
 
 WORKDIR /backend
 
+
+COPY package*.json ./
+
+RUN npm install
+RUN npm install -g nodemon 
+RUN npm install fastify@5.0.0 fastify-static@4.0.0 sqlite3
+RUN npm install -g typescript @types/node
+# RUN npm install -g ts-node
+# RUN npm install --save-dev @types/node
+
 EXPOSE 80
 
-CMD ["sh", "-c", "find ./src -type f | entr -r php -S 0.0.0.0:80 -t ./src"]
-
+CMD ["npm", "run", "hot-reload"]

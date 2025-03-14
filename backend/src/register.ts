@@ -1,6 +1,4 @@
-<?php
-// register.php - Traitement du formulaire d'inscription
-
+/*
 // Inclure le fichier de connexion à la base de données
 include('db.php');
 
@@ -31,4 +29,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     echo "Méthode de requête invalide.";
     echo $_SERVER['REQUEST_METHOD'];
 }
-?>
+
+*/

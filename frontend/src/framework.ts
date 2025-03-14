@@ -1,8 +1,6 @@
-// framework.ts
-
 type HTMLElementAttributes = { [key: string]: any };
 
-type Args = HTMLElementAttributes | HTMLElement | string
+type Args = HTMLElementAttributes | HTMLElement  | string
 export function el(tagName: string, ...args: Args[]) : HTMLElement {
     const element = document.createElement(tagName);
   
@@ -48,3 +46,67 @@ export const button = (...children: Args[]) => el("button", ...children);
 export const form = (...children: Args[]) => el("form", ...children);
 export const input = (...children: Args[]) => el("input", ...children);
 export const br = (...children: Args[]) => el("br", ...children);
+export const nav = (...children: Args[]) => el("nav", ...children);
+export const li = (...children: Args[]) => el("li", ...children);
+export const ul = (...children: Args[]) => el("ul", ...children);
+export const pre = (...children: Args[]) => el("pre", ...children);
+
+
+export function $(id:string, ...elements:Args[]) {
+    const entry = document.getElementById(id);
+
+    let attributes: { [key: string]: any } = {};
+    let children: Args[] = [];
+  
+    // Check if the first argument is an object (attributes)
+    if (elements.length > 0 && typeof elements[0] === 'object' && !Array.isArray(elements[0])) {
+      attributes = elements[0];
+      children = elements.slice(1);
+    } else {
+      children = elements;
+    }
+  
+    if (entry) {
+      Object.keys(attributes).forEach(key => {
+        entry.setAttribute(key, attributes[key]);
+      });
+      children.forEach(child => {
+          entry.appendChild(child as HTMLElement);
+      });
+    }
+}
+type Routes = {
+    [key: string]: () => HTMLElement;
+  };
+
+export function router(...routes:Routes[]) {
+    let result = div();
+
+    function syncHash() {
+        let hashLocation = document.location.hash.split('#')[1];
+        if (!hashLocation) {
+            hashLocation = '/';
+        }
+
+        if (!(hashLocation in routes)) {
+            // TODO(#2): make the route404 customizable in the router component
+            const route404 = '/404';
+
+            console.assert(route404 in routes);
+            hashLocation = route404;
+        }
+
+        result.replaceChildren(routes[hashLocation]());
+
+        return result;
+    };
+
+    syncHash();
+
+    // TODO(#3): there is way to "destroy" an instance of the router to make it remove it's "hashchange" callback
+    window.addEventListener("hashchange", syncHash);
+
+    result.refresh = syncHash;
+
+    return result;
+}
