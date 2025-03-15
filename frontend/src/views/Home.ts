@@ -14,15 +14,15 @@ function fakeSystemInfo() {
 
 function animatedCaret() {
   // prettier-ignore
-  return div({ class: "mt-4 flex items-center" },
-    span({ class: "text-green-400 mr-2" }, "$"),
-    div({ class: "h-5 w-2 bg-green-500 animate-pulse" })
+  return div({ className: "mt-4 flex items-center" },
+    span({ className: "text-green-400 mr-2" }, "$"),
+    div({ className: "h-5 w-2 bg-green-500 animate-pulse" })
   )
 }
 
 function footer() {
   // prettier-ignore
-  return div({ class: "mt-8 text-green-400/70 text-sm text-center" },
+  return div({ className: "mt-8 text-green-400/70 text-sm text-center" },
     p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`)
   )
 }
@@ -30,8 +30,8 @@ function footer() {
 export default function Home() {
   // prettier-ignore
   const el = [
-    div({ class: "space-y-4" },
-      // p({ class: "text-green-400" },
+    div({ className: "space-y-4" },
+      // p({ className: "text-green-400" },
       //   text,
       //   showCursor ? "█" : " "
       // ),

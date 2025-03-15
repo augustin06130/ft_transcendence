@@ -1,4 +1,4 @@
-import { Args, HTMLElementAttributes } from "@framework/types";
+import { Args, HTMLElementProperties } from "@framework/types";
 import { el } from "@framework/el";
 
 const tags = [
@@ -19,15 +19,23 @@ const tags = [
   "li",
   "ul",
   "pre",
+  "label",
 ] as const;
 
-export const elements = tags.reduce((acc, tag) => {
-  acc[tag] = (attributes: HTMLElementAttributes, ...children: Args[]) =>
-    el(tag, attributes, ...children);
-  return acc;
-}, {} as Record<(typeof tags)[number], (attributes: HTMLElementAttributes, ...children: Args[]) => ReturnType<typeof el>>);
+export const elements = Object.fromEntries(
+  tags.map(tag => [
+    tag,
+    (attributes: HTMLElementProperties<typeof tag>
+       , ...children: Args[]) =>
+      el(tag, attributes, ...children),
+  ])
+) as {
+  [K in (typeof tags)[number]]: (
+    attributes: HTMLElementProperties<K>,
+    ...children: Args[]
+  ) => HTMLElementTagNameMap[K];
+};
 
-// If you want them available globally
 Object.assign(globalThis, elements);
 
 export const {
@@ -48,4 +56,5 @@ export const {
   li,
   ul,
   pre,
+  label,
 } = elements;

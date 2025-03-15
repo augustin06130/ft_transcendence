@@ -1,8 +1,8 @@
 import { a } from "@framework/tags";
-import { Args, HTMLElementAttributes } from "@framework/types";
+import { Args, HTMLElementProperties } from "@framework/types";
 
 export default function Link(
-  attributes: HTMLElementAttributes,
+  attributes: HTMLElementProperties,
   to: string,
   ...children: Args[]
 ) {

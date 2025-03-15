@@ -1,48 +1,117 @@
-import TerminalBox, { withTerminalHostname } from "@components/TerminalBox";
-import { LoginForm } from "@components/LoginForm";
-import { div, br, a } from "@framework/tags";
+import { div, p, form, input, label, span } from "@framework/tags";
+import TerminalBox, { footer } from "@components/TerminalBox";
+import UseState from "@framework/UseState";
+import UseRouter from "@framework/UseRouter";
+import { el } from "@framework/el";
+import { State } from "@framework/types";
 
-async function handleSubmit(event: Event) {
-  event.preventDefault();
+function success(username:string) {
+  // prettier-ignore
+  return div({ className: "space-y-4 py-4 text-center" },
+    p({ className: "text-xl text-green-400" }, "Authentication successful"),
+    p({ className: "text-sm mt-2" }, `Welcome back, ${username}`),
+    div({ className: "h-2 w-2 bg-green-500 rounded-full animate-pulse" }),
+    p({ className: "text-sm" }, "Redirecting to system...")
+  )
+}
 
-  // Get form data
-  const form = event.target as HTMLFormElement;
-  const formData = new FormData(form);
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+document.createElement('label').form
+function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>boolean, username:State<string>, password:State<string>) {
 
-  // Simulate form submission (you can replace with an actual API call)
-  const errorMessage = this.container.querySelector(
-    "#error-message"
-  ) as HTMLElement;
+  function inputL(
+    id:string,
+    name:string,
+    labelName:string,
+    type:string,
 
-  // Example validation
-  if (username === "" || password === "") {
-    errorMessage.textContent = "Nom d'utilisateur ou mot de passe manquant!";
-    errorMessage.style.display = "block";
-    return;
+    value:()=>string,
+    onInput:(e:Event)=>void,
+
+    placeholder:string
+  ) {
+    return div({ className: "space-y-1" },
+      label({ htmlFor: name, className: "text-sm flex items-center gap-2" }, 
+        el("img", {src:"https://unpkg.com/lucide-static@latest/icons/user.svg", className:"h-4 w-4"}),
+        span({},`${labelName}:`)
+      ),
+      input({
+        id: id,
+        type: type,
+        name: name,
+        className: "w-full bg-black border border-green-500/30 p-2 text-green-500",
+        placeholder: placeholder,
+        value: value(),
+        event:{
+          input: onInput,
+        }
+      })
+    )
   }
 
-  // Simulating a failed login response
-  if (username !== "admin" || password !== "password123") {
-    errorMessage.textContent = "Nom d'utilisateur ou mot de passe incorrect!";
-    errorMessage.style.display = "block";
-  } else {
-    // Handle successful login (e.g., redirect to another page)
-    errorMessage.style.display = "none";
-    window.location.href = "/dashboard.html"; // Redirect after successful login
-  }
+  // prettier-ignore
+  return form({ 
+    className: "space-y-4",
+    event : {
+      submit: handleSubmit
+    }
+  },
+    inputL("username", "username", "USERNAME", "text", username.get, (e) => username.set((e.target as any)?.value), "username"),
+    inputL("password", "password", "PASSWORD", "password", password.get, (e) => password.set((e.target as any)?.value), "********"),
+    // error() && p({ className: "text-red-500 text-sm" }, error()),
+    input({
+      id: "submit",
+      type: "submit",
+      className: "w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20",
+    }),
+  );
 }
 
 export default function Login() {
-  // l_form.addEventListener('submit', this.handleSubmit.bind(this));
+  const router = UseRouter();
 
-  const cmdName = withTerminalHostname("./login");
-  return TerminalBox(
-    cmdName,
-    div({ id: "error-message", class: "error", style: "display:none;" }),
-    LoginForm("Se connecter"),
-    br({}),
-    a({ href: "register.html" }, "Créer un compte")
+  const username = UseState("");
+  const password = UseState("");
+  const error = UseState("");
+  const loading = UseState(false);
+  const loginSuccess = UseState(false);
+
+  function handleSubmit(e:Event) {
+    e.preventDefault();
+    error.set("");
+    if (!username || !password) {
+      error.set("ERROR: All fields are required");
+      return;
+    }
+    loading.set(true);
+    setTimeout(() => {
+      loading.set(false);
+      loginSuccess.set(true);
+      setTimeout(() => router.push("/"), 1500);
+    }, 1000);
+  }
+
+  const formContent = loginSuccess.get()
+    ? success(username.get()) 
+    : LoginForm(handleSubmit, error.get, loading.get, username, password)
+
+  console.log(username.get())
+
+
+  // prettier-ignore
+  return TerminalBox("terminal@user:~/auth",
+    div({ className: "mx-auto max-w-md border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
+      div({ className: "text-center mb-6" },
+        p({ className: "text-2xl font-bold tracking-wider" }, 
+          "SYSTEM LOGIN"),
+        p({ className: "text-green-400/70 text-sm mt-1" }, 
+          "Enter credentials to access the system")
+      ),
+      formContent,
+      div({ className: "mt-6 text-green-400/70 text-xs border-t border-green-500/30 pt-4" },
+        p({}, `$ Last login: ${new Date().toLocaleString()}`),
+        p({}, "$ System status: Online")
+      )
+    ),
+    footer()
   );
 }

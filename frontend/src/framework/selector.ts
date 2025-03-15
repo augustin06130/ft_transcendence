@@ -1,8 +1,8 @@
-import { Args, HTMLElementAttributes } from "@framework/types";
+import { Args, HTMLElementProperties } from "@framework/types";
 
 export function $(
   id: string,
-  attributes: HTMLElementAttributes,
+  attributes: HTMLElementProperties,
   ...elements: Args[]
 ) {
   const entry = document.getElementById(id);

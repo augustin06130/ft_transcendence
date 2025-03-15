@@ -8,6 +8,8 @@ import About from "@views/About";
 import Project from "@views/Project";
 import Contact from "@views/Contact";
 
+const isLogged = true;
+
 function navBarRoutes(logged: boolean) {
   const baseLinks = {
     "/": {
@@ -45,25 +47,15 @@ function navBarRoutes(logged: boolean) {
     },
   };
 }
-// const navBarRoutes = {
-//   "/login": {
-//     view: () => Login(),
-//     label: "Login",
-//   },
-//   "/pong": {
-//     view: () => Pong(),
-//     label: "Pong",
-//   },
-// };
 
 const routers = Router({
-  ...navBarRoutes(false),
+  ...navBarRoutes(isLogged),
 });
 
 document.addEventListener("DOMContentLoaded", (event) => {
   // prettier-ignore
   $("entry", {class: "min-h-screen  w-[100vw] bg-black text-green-500 font-mono p-4"},
-    NavBar(navBarRoutes(false)),
+    NavBar(navBarRoutes(isLogged)),
     routers
   );
 });
