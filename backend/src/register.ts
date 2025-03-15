@@ -1,4 +1,39 @@
+import { FastifyReply } from 'fastify';
+import bcrypt from 'bcrypt';
+import {CheckUserExists, CreateNewUser} from './db';
+
+declare module '@fastify/session' {
+    interface FastifySessionObject {
+        username?: string;
+    }
+}
+
+export async function NewUser(
+    username: string, 
+    password: string,
+    reply: FastifyReply
+) {
+      if (!username || !password) {
+        return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
+      }
+      try {
+        const userExists = await CheckUserExists(username);
+        if (userExists) {
+          return reply.status(400).send({ error: 'Cet utilisateur existe déjà.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await CreateNewUser(username, hashedPassword);
+  
+        return reply.redirect('./index.html');
+      } catch (err) {
+        console.error('Erreur lors de l\'inscription :', err);
+        return reply.status(500).send({ error: 'Erreur interne du serveur' });
+      }
+    
+}
 /*
+
 // Inclure le fichier de connexion à la base de données
 include('db.php');
 

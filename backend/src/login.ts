@@ -1,3 +1,79 @@
+import { FastifyRequest, FastifyReply } from 'fastify';
+import bcrypt from 'bcrypt';
+import {VerifUser} from './db';
+
+declare module '@fastify/session' {
+    interface FastifySessionObject {
+        username?: string;
+    }
+}
+
+export async function CertifUser(
+    username: string,
+    userpassword: string,
+    request: FastifyRequest,
+    reply: FastifyReply
+) {
+    if (!username || !userpassword) {
+        return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
+      }
+    try {
+        const user = await VerifUser(username);
+        if (user && bcrypt.compareSync(userpassword, user.password)) {
+            request.session.username = username;
+            return reply.redirect('/index.html');
+        } else {
+            return reply.redirect('/index.html');
+        }
+    } catch(err){
+        console.error('Erreur lors de la vérification des identifiants :', err);
+        return reply.status(500).send({ error: 'Erreur interne du serveur' });
+    }
+}
+
+
+
+
+
+// // Fonction pour initialiser la route de connexion
+// export default async function loginRoutes(app: FastifyInstance) {
+//   // Route POST pour gérer la connexion
+//   app.post('/login', async (request: FastifyRequest, reply: FastifyReply) => {
+//     // Récupérer les données du formulaire
+//     const { username, password } = request.body as { username: string; password: string };
+
+//     // Vérifier si les données sont valides
+//     if (!username || !password) {
+//       return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
+//     }
+
+//     try {
+//       // Vérifier si l'utilisateur existe dans la base de données
+      
+
+//       // Si l'utilisateur existe, vérifier le mot de passe
+//       if (user && bcrypt.compareSync(password, user.password)) {
+//         // Connexion réussie : enregistrer l'utilisateur dans la session
+//         request.session.set('username', username);
+
+//         // Rediriger vers la page d'accueil
+//         return reply.redirect('/index.html');
+//       } else {
+//         // Connexion échouée : rediriger vers la page de connexion avec un message d'erreur
+//         return reply.redirect('/public/login.html?error=Nom d\'utilisateur ou mot de passe incorrect');
+//       }
+//     } catch (err) {
+//       console.error('Erreur lors de la vérification des identifiants :', err);
+//       return reply.status(500).send({ error: 'Erreur interne du serveur' });
+//     } finally {
+//       // Fermer la connexion à la base de données
+//       db.close();
+//     }
+//   });
+// }
+
+
+
 /*
 // Démarrer la session pour pouvoir utiliser les variables de session
 session_start();

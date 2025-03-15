@@ -2,3 +2,4 @@
 /backend/package-lock.json
 database.db
 **.js
+.env

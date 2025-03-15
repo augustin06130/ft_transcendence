@@ -1,8 +1,33 @@
 import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifySession from '@fastify/session';
+import fastifyCookie from '@fastify/cookie';
 import path from 'path';
+import dotenv from 'dotenv';
+import { CertifUser } from './login';
+import { NewUser } from './register';
+
+dotenv.config();
+
+if (!process.env.SESSION_SECRET) {
+  console.log('SESSION_SECRET chargé avec succès :', process.env.SESSION_SECRET);
+  console.error('Erreur : SESSION_SECRET n\'est pas défini dans les variables d\'environnement.');
+  process.exit(1);
+}
 
 const app: FastifyInstance = Fastify({ logger: true });
+
+app.register(fastifyCookie);
+
+app.register(fastifySession, {
+  secret: process.env.SESSION_SECRET, // TODO : mettre dans l'env et le prendre avec dotenv
+  cookie: {
+    secure: false, // Mettez `secure: true` en production avec HTTPS
+    httpOnly: true, // Empêche l'accès au cookie via JavaScript
+    maxAge: 86400, // Durée de vie du cookie en secondes (1 jour)
+    path: '/', // Chemin du cookie
+  }, // Mettez `secure: true` en production avec HTTPS
+});
 
 // Serve static files from the 'public' directory
 app.register(fastifyStatic, {
@@ -13,6 +38,16 @@ app.register(fastifyStatic, {
 // Define a route to serve index.html directly
 app.get('/', (request: FastifyRequest, reply: FastifyReply) => {
   reply.sendFile('index.html'); // Serve index.html directly
+});
+
+app.post('/login', async (request, reply) => {
+  const { username, password } = request.body as { username: string; password: string };
+  await CertifUser(username, password, request, reply);
+});
+
+app.post('/register', async (request: FastifyRequest, reply: FastifyReply) => {
+  const { username, password } = request.body as { username: string; password: string };
+  await NewUser(username, password, reply);
 });
 
 // Start the server
