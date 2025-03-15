@@ -1,6 +1,13 @@
 import { div, p } from "@framework/tags";
 import { Args } from "@framework/types";
 
+export function footer() {
+  return div(
+    { class: "mt-8 text-green-400/70 text-sm text-center" },
+    p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`)
+  );
+}
+
 export function withTerminalHostname(cmdName: string = "") {
   return `terminal@user:~ ${cmdName}`;
 }

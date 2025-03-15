@@ -15,6 +15,7 @@ export default function Link(
   );
 
   linkElement.addEventListener("click", (event) => {
+    console.log("lol")
     event.preventDefault();
     const myEvent = new CustomEvent("url", {
       detail: {

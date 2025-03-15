@@ -3,3 +3,4 @@ export * from "@framework/el";
 export * from "@framework/tags";
 export * from "@framework/Router";
 export * from "@framework/selector";
+export * from "@framework/UseState";

@@ -11,7 +11,7 @@ app.register(fastifyStatic, {
 });
 
 // Define a route to serve index.html directly
-app.get('/', (request: FastifyRequest, reply: FastifyReply) => {
+app.get('/tata', (request: FastifyRequest, reply: FastifyReply) => {
   reply.sendFile('index.html'); // Serve index.html directly
 });
 
@@ -36,7 +36,8 @@ start();
 
 
 
-
+    // "hot-reload": "npm install && nodemon --watch ./src --exec 'npm run build && npm run start'"
+//
 
 
 

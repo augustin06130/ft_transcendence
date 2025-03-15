@@ -19,6 +19,7 @@ const tags = [
   "li",
   "ul",
   "pre",
+  "label",
 ] as const;
 
 export const elements = tags.reduce((acc, tag) => {
@@ -48,4 +49,5 @@ export const {
   li,
   ul,
   pre,
+  label,
 } = elements;

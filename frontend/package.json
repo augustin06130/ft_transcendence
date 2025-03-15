@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "scripts": {
       "build": "npx esbuild src/main.ts --bundle --outfile=./public/js/bundle.js",
-      "hot-reload": "nodemon --watch src/ --exec 'npm run build'"
+      "hot-reload": "nodemon --watch ./src --exec 'npm run build'"
     },
 
     "type": "module",
