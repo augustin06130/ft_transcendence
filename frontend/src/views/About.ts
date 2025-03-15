@@ -1,6 +1,6 @@
 import TerminalBox, { withTerminalHostname } from "@components/TerminalBox";
 
-export default function Pong() {
-  const cmdName = withTerminalHostname("./pong");
+export default function About() {
+  const cmdName = withTerminalHostname("./about");
   return TerminalBox(cmdName);
 }

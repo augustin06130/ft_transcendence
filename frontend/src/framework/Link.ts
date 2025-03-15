@@ -16,8 +16,6 @@ export default function Link(
 
   linkElement.addEventListener("click", (event) => {
     event.preventDefault();
-    console.log(`Link clicked: ${to}`);
-
     const myEvent = new CustomEvent("url", {
       detail: {
         to: to,

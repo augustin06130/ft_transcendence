@@ -1,6 +1,6 @@
-import { div, h2, br, a } from "@framework/framework";
-
+import TerminalBox, { withTerminalHostname } from "@components/TerminalBox";
 import { LoginForm } from "@components/LoginForm";
+import { div, br, a } from "@framework/tags";
 
 async function handleSubmit(event: Event) {
   event.preventDefault();
@@ -36,8 +36,10 @@ async function handleSubmit(event: Event) {
 
 export default function Login() {
   // l_form.addEventListener('submit', this.handleSubmit.bind(this));
-  return div(
-    h2({}, "Connexion"),
+
+  const cmdName = withTerminalHostname("./login");
+  return TerminalBox(
+    cmdName,
     div({ id: "error-message", class: "error", style: "display:none;" }),
     LoginForm("Se connecter"),
     br({}),
