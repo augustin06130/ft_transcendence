@@ -6,7 +6,7 @@
       "@views/*": ["views/*"],
       "@framework/*": ["framework/*"]
     },
-    "lib": ["dom", "es2017"],
+    "lib": ["dom", "es2019"],
     "target": "ES6", // Cible ES6 pour la compatibilité avec les navigateurs modernes
     "module": "es6", // Utilise les modules ES6
     "strict": true, // Activer les vérifications strictes

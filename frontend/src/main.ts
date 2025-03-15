@@ -8,7 +8,7 @@ import About from "@views/About";
 import Project from "@views/Project";
 import Contact from "@views/Contact";
 
-const isLogged = false;
+const isLogged = true;
 
 function navBarRoutes(logged: boolean) {
   const baseLinks = {

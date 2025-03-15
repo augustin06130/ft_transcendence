@@ -1,29 +1,25 @@
-import { Args, HTMLElementAttributes, Events } from "@framework/types";
+import { Args, HTMLElementProperties, Events } from "@framework/types";
 
-export function el(
-  tagName: string,
-  attributes: HTMLElementAttributes,
+export function el<K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+  attributes: HTMLElementProperties<K>,
   ...children: Args[]
-): HTMLElement {
-  const parent = document.createElement(tagName);
+): HTMLElementTagNameMap[K] {
+  const parent = document.createElement(tagName) as HTMLElementTagNameMap[K];
 
-  Object.keys(attributes).forEach((key) => {
-    if (key == "event") {
-      console.log(parent, attributes[key])
-      const event:Events = attributes[key]!;
-      
-      Object.entries(event).forEach(([name, callback]) => {
-        parent.addEventListener(name, (e:Event) => {
-          console.log(name, parent, e)
-          callback(e)
-        });
-      })
-    } else {
-      parent.setAttribute(key, attributes[key]);
+  for (const key in attributes) {
+    if (key === "style" && attributes.style) {
+      Object.assign(parent.style, attributes.style);
+    } else if (key === "event" && attributes.event) {
+      for (const event in attributes.event) {
+        parent.addEventListener(event.slice(2).toLowerCase(), attributes.event[event] as EventListener);
+      }
+    } else if (attributes.hasOwnProperty(key)) {
+      (parent as any)[key] = attributes[key as keyof typeof attributes];
     }
-  });
+  }
 
-  children.forEach((element) => {
+  children.filter((child) => (child != null && child != undefined)).forEach((element) => {
     if (typeof element === "string") {
       parent.innerHTML = element;
     } else {
@@ -33,3 +29,7 @@ export function el(
 
   return parent;
 }
+
+var a = el("canvas",{})
+
+// <K extends keyof HTMLElementTagNameMap>(name: K): HTMLElementTagNameMap[K]
