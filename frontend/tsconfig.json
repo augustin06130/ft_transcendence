@@ -1,9 +1,12 @@
 {
   "compilerOptions": {
-    "lib" :[
-      "dom",
-      "es2017"
-    ],
+    "baseUrl": "src",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@views/*": ["views/*"],
+      "@framework/*": ["framework/*"]
+    },
+    "lib": ["dom", "es2017"],
     "target": "ES6", // Cible ES6 pour la compatibilité avec les navigateurs modernes
     "module": "es6", // Utilise les modules ES6
     "strict": true, // Activer les vérifications strictes
@@ -14,6 +17,6 @@
     "forceConsistentCasingInFileNames": true // Vérifie la casse des noms de fichiers
   },
   "include": [
-    "./src/**/*", // Inclure tous les fichiers server
+    "./src/**/*" // Inclure tous les fichiers server
   ]
 }
