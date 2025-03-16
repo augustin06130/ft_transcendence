@@ -2,8 +2,9 @@ import { div, p, form, input, label, span } from "@framework/tags";
 import TerminalBox, { footer } from "@components/TerminalBox";
 import UseState from "@framework/UseState";
 import UseRouter from "@framework/UseRouter";
-import { el } from "@framework/el";
 import { State } from "@framework/types";
+import { UserIconSVG } from "@Icon/User";
+import { LockIconSVG } from "@Icon/Lock";
 
 function success(username:string) {
   // prettier-ignore
@@ -27,11 +28,13 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
     value:()=>string,
     onInput:(e:Event)=>void,
 
-    placeholder:string
+    placeholder:string,
+
+    icon: SVGSVGElement
   ) {
     return div({ className: "space-y-1" },
       label({ htmlFor: name, className: "text-sm flex items-center gap-2" }, 
-        el("img", {src:"https://unpkg.com/lucide-static@latest/icons/user.svg", className:"h-4 w-4"}),
+        icon,
         span({},`${labelName}:`)
       ),
       input({
@@ -48,6 +51,7 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
     )
   }
 
+  const err = error()
   // prettier-ignore
   return form({ 
     className: "space-y-4",
@@ -55,9 +59,9 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
       submit: handleSubmit
     }
   },
-    inputL("username", "username", "USERNAME", "text", username.get, (e) => username.set((e.target as any)?.value), "username"),
-    inputL("password", "password", "PASSWORD", "password", password.get, (e) => password.set((e.target as any)?.value), "********"),
-    // error() && p({ className: "text-red-500 text-sm" }, error()),
+    inputL("username", "username", "USERNAME", "text", username.get, (e) => username.set((e.target as any)?.value), "username", UserIconSVG),
+    inputL("password", "password", "PASSWORD", "password", password.get, (e) => password.set((e.target as any)?.value), "********", LockIconSVG),
+    err ? p({ className: "text-red-500 text-sm" }, error()) : null,
     input({
       id: "submit",
       type: "submit",

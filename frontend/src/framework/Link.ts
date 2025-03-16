@@ -2,7 +2,7 @@ import { a } from "@framework/tags";
 import { Args, HTMLElementProperties } from "@framework/types";
 
 export default function Link(
-  attributes: HTMLElementProperties,
+  attributes: HTMLElementProperties<'a'>,
   to: string,
   ...children: Args[]
 ) {

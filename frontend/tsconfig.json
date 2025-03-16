@@ -4,7 +4,8 @@
     "paths": {
       "@components/*": ["components/*"],
       "@views/*": ["views/*"],
-      "@framework/*": ["framework/*"]
+      "@framework/*": ["framework/*"],
+      "@Icon/*": ["Icon/*"]
     },
     "lib": ["dom", "es2019"],
     "target": "ES6", // Cible ES6 pour la compatibilité avec les navigateurs modernes

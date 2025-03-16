@@ -2,6 +2,33 @@ import { div, canvas, button, h1, h2, p } from "@framework/tags";
 import TerminalBox from "@components/TerminalBox";
 import UseState from "@framework/UseState";
 
+function pongGameTitle () {
+  return  div({ className: "text-center mb-4" }, 
+    h1({ className: "text-2xl font-bold tracking-wider" }, "TERMINAL PONG"),
+    p({ className: "text-green-400/70 text-sm" }, "Move your mouse or finger to control the left paddle")
+  )
+}
+
+function pongInstructions(winningScore:number) {
+  return div({ className: "mt-6 text-green-400/70 text-sm" }, 
+    p({ className: "mb-1" }, "$ cat instructions.txt"),
+    div({ className: "border border-green-500/20 p-2 rounded bg-black/50" }, 
+      p({}, "- Move your mouse or finger to control the left paddle"),
+      p({}, `- First player to reach ${winningScore} points wins`),
+      p({}, "- The ball speeds up as the game progresses")
+    )
+  )
+}
+
+function pongFooter() {
+  return div({ className: "mt-8 text-green-400/70 text-sm text-center" }, 
+    `© ${new Date().getFullYear()} TERM_OS • All systems nominal`
+  )
+}
+
+
+import { Update } from "@framework/UseState";
+
 export default function PongGame() {
   const canvasElement = canvas({className: "w-full h-full border border-green-500/30 rounded"});
   let playerScore = UseState(0);
@@ -284,7 +311,7 @@ export default function PongGame() {
   if (gameStarted && !gameOver) {
     requestAnimationFrame(gameLoop)
   }
-  
+
   /* CLEAN UP */
   // return () => {
   //   // Clean up event listeners
@@ -293,49 +320,31 @@ export default function PongGame() {
   //   canvas.removeEventListener("touchmove", handleMouseMove)
   // }
 
-
-  const GameTitle = () => {
-    return  div({ className: "text-center mb-4" }, 
-      h1({ className: "text-2xl font-bold tracking-wider" }, "TERMINAL PONG"),
-      p({ className: "text-green-400/70 text-sm" }, "Move your mouse or finger to control the left paddle")
+  const GameOverlayStart = () => {
+    return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" }, 
+      h2({ className: "text-2xl font-bold mb-4" }, "TERMINAL PONG"),
+      p({ className: "mb-6" }, `First to ${WINNING_SCORE} wins`),
+      button({ 
+        click: initGame,
+        className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
+      }, "START GAME")
     )
   }
 
-  const GameCanvas = () => {
-    const GameOverlay = (ok:boolean) => {
-      if (ok == false) return null
+  const GameOverlayStop = () => {
       return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" }, 
-        h2({ className: "text-2xl font-bold mb-4" }, "TERMINAL PONG"),
-        p({ className: "mb-6" }, `First to ${WINNING_SCORE} wins`),
+        h2({ className: "text-2xl font-bold mb-2" }, `${winner} WINS!`),
+        p({ className: "mb-2" }, `Final Score: ${playerScore} - ${computerScore}`),
         button({ 
           click: initGame,
-          className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
-        }, "START GAME")
+          className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition mt-4"
+        }, "PLAY AGAIN")
       )
-    }
-    const GameOverlayStop = (ok:boolean) => {
-        if (ok == false) return null
-        return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" }, 
-          h2({ className: "text-2xl font-bold mb-2" }, `${winner} WINS!`),
-          p({ className: "mb-2" }, `Final Score: ${playerScore} - ${computerScore}`),
-          button({ 
-            click: initGame,
-            className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition mt-4"
-          }, "PLAY AGAIN")
-        )
-    }
-
-    return div({ className: "relative w-full", style: { height: "60vh" } },
-      canvasElement,
-      GameOverlay(!gameStarted.get() && !gameOver.get()),
-      GameOverlayStop(gameOver.get()),
-    )
   }
 
   const GameControls = () => {
-    const Reset = (ok:boolean) => {
-      if (ok == false) return null
-      button({ 
+    const Reset = () => {
+      return button({ 
         click: () => {
           state.gameStarted = false;
           gameStarted.set(false);
@@ -346,191 +355,22 @@ export default function PongGame() {
 
     return div({ className: "flex justify-between items-center mt-4" }, 
       div({ className: "text-sm" }, `PLAYER: ${playerScore}`),
-      Reset(gameStarted.get() && !gameOver.get()),
+      (gameStarted.get() && !gameOver.get()) ? Reset() : null,
       div({ className: "text-sm" }, `COMPUTER: ${computerScore}`)
     )
   }
 
-  const Instructions = (winningScore:number) => {
-    return div({ className: "mt-6 text-green-400/70 text-sm" }, 
-      p({ className: "mb-1" }, "$ cat instructions.txt"),
-      div({ className: "border border-green-500/20 p-2 rounded bg-black/50" }, 
-        p({}, "- Move your mouse or finger to control the left paddle"),
-        p({}, `- First player to reach ${winningScore} points wins`),
-        p({}, "- The ball speeds up as the game progresses")
-      )
+  return Update(
+    TerminalBox("terminal@user:~/games/pong",
+      pongGameTitle(),
+      div({ className: "relative w-full", style: { height: "60vh" } },
+        canvasElement,
+        (!gameStarted.get() && !gameOver.get()) ? GameOverlayStart() : null,
+        gameOver.get() ? GameOverlayStop() : null,
+      ),
+      GameControls(),
+      pongInstructions(WINNING_SCORE),
+      pongFooter(),
     )
-  }
-
-  const Footer = () => {
-    return div({ className: "mt-8 text-green-400/70 text-sm text-center" }, 
-      `© ${new Date().getFullYear()} TERM_OS • All systems nominal`
-    )
-  }
-
-  return TerminalBox("terminal@user:~/games/pong",
-    GameTitle(),
-    GameCanvas(),
-    GameControls(),
-    Instructions(WINNING_SCORE),
-    Footer(),
   );
 }
-
-
-
-
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-
-
-
-
-      // Game Container 
-      <div className="container mx-auto">
-        <div className="border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10">
-          <div className="flex items-center gap-2 border-b border-green-500/30 pb-2 mb-4">
-            <div className="h-3 w-3 rounded-full bg-green-500"></div>
-            <p className="text-xs">terminal@user:~/games/pong</p>
-          </div>
-
-          // Game Title 
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold tracking-wider">TERMINAL PONG</h1>
-            <p className="text-green-400/70 text-sm">Move your mouse or finger to control the left paddle</p>
-          </div>
-
-          //  Game Canvas 
-          <div className="relative w-full" style={{ height: "60vh" }}>
-            <canvas ref={canvasRef} className="w-full h-full border border-green-500/30 rounded" />
-
-            // Game Overlay 
-            {!gameStarted && !gameOver && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
-                <h2 className="text-2xl font-bold mb-4">TERMINAL PONG</h2>
-                <p className="mb-6">First to {WINNING_SCORE} wins</p>
-                <button
-                  onClick={initGame}
-                  className="px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
-                >
-                  START GAME
-                </button>
-              </div>
-            )}
-
-            {gameOver && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
-                <h2 className="text-2xl font-bold mb-2">{winner} WINS!</h2>
-                <p className="mb-2">
-                  Final Score: {playerScore} - {computerScore}
-                </p>
-                <button
-                  onClick={initGame}
-                  className="px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition mt-4"
-                >
-                  PLAY AGAIN
-                </button>
-              </div>
-            )}
-          </div>
-
-          //  Game Controls 
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm">
-              <p>PLAYER: {playerScore}</p>
-            </div>
-
-            {gameStarted && !gameOver && (
-              <button
-                onClick={() => {
-                  gameStateRef.current.gameStarted = false
-                  setGameStarted(false)
-                }}
-                className="px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition"
-              >
-                RESET
-              </button>
-            )}
-
-            <div className="text-sm">
-              <p>COMPUTER: {computerScore}</p>
-            </div>
-          </div>
-
-          // Instructions 
-          <div className="mt-6 text-green-400/70 text-sm">
-            <p className="mb-1">$ cat instructions.txt</p>
-            <div className="border border-green-500/20 p-2 rounded bg-black/50">
-              <p>- Move your mouse or finger to control the left paddle</p>
-              <p>- First player to reach {WINNING_SCORE} points wins</p>
-              <p>- The ball speeds up as the game progresses</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 text-green-400/70 text-sm text-center">
-          <p>© {new Date().getFullYear()} TERM_OS • All systems nominal</p>
-        </div>
-      </div>
-
-*/
