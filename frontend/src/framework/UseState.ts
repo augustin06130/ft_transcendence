@@ -1,35 +1,41 @@
 import { State } from "@framework/types";
 
-const EVENT_NAME = "stateChange";
+// const EVENT_NAME = "stateChange";
 
-export default function UseState<T>(initialValue: T): State<T> {
-  let state = initialValue;
-  const getState = () => state;
-  const setState = (value: T) => { 
-    state = value;
-    const myEvent = new CustomEvent(EVENT_NAME, {});
-    window.dispatchEvent(myEvent);
-  };
-  return {
-    get: getState,
-    set: setState
-  };
-}
+// export default function UseState<T>(initialValue: T): State<T> {
+//   let state = initialValue;
+//   const getState = () => state;
+//   const setState = (value: T) => { 
+//     state = value;
+//     const myEvent = new CustomEvent(EVENT_NAME, {});
+//     window.dispatchEvent(myEvent);
+//   };
+//   return {
+//     get: getState,
+//     set: setState
+//   };
+// }
 
-import { div } from "./tags";
+type Callback<T> = (newValue: T, oldValue: T) => void;
 
-export function Update(el: HTMLElement) {
-  const root = div({})
+export default function UseState<T>(initialValue: T, callback: Callback<T>) {
+    let value = initialValue;
 
-  const render = (state: any) => {
-    console.log("state changed")
-    root.innerHTML = '';
-    root.appendChild(el);
-  };
+    const handler: ProxyHandler<{ value: T }> = {
+        set(target, property: keyof { value: T }, newValue: T) {
+            const oldValue = target[property];
+            if (oldValue !== newValue) {
+                target[property] = newValue;
+                callback(newValue, oldValue); 
+            }
+            return true;
+        },
+        get(target, property: keyof { value: T }) {
+            return target[property];
+        },
+    };
 
-  root.addEventListener(EVENT_NAME, (e:Event) => {
-    render(null);
-  })
-  render(null);
-  return root
+    const proxy = new Proxy<{ value: T }>({ value }, handler);
+    
+    return proxy;
 }

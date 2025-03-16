@@ -30,10 +30,16 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   });
 
   parent.addEventListener("onMounted", () => {
-    // console.log(parent)
     Array.from(parent.children).forEach((e) => {
       e.dispatchEvent(mountEvent(e as HTMLElement));
     })
+  })
+
+  parent.addEventListener("onUnMount", () => {
+    const container = parent.parentElement;
+    if (container) {
+      container.removeChild(parent)
+    }
   })
   return parent;
 }

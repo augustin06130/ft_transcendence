@@ -1,9 +1,10 @@
-import { canvas } from "@framework/tags";
+import { canvas, div, h2, p, button } from "@framework/tags";
+import UseState from "@framework/UseState";
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 10;
 const BALL_RADIUS = 8;
-export const WINNING_SCORE = 5;
+export const WINNING_SCORE = 1;
 
 type PongState = {
   playerY: number;
@@ -21,9 +22,32 @@ type PongState = {
   winner:string;
 }
 
+function overlay(option:{
+  title:string,
+  message:string,
+  labelName:string,
+  onclick:()=>void
+}) :HTMLElement {
+  return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" }, 
+    h2({ className: "text-2xl font-bold mb-4" }, option.title),
+    p({ className: "mb-6" }, option.message),
+    button({ 
+      onclick: option.onclick,
+      className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
+    }, option.labelName)
+  );
+}
+
 export default class PongGame {
   canvasElement: HTMLCanvasElement;
   state:PongState;
+
+  overlayStart: HTMLElement;
+  overlayStop: HTMLElement;
+
+  // gameOver: {
+  //   value:boolean;
+  // }
 
   constructor() {
     // Event listeners
@@ -40,6 +64,8 @@ export default class PongGame {
         onMounted: this.handleResize,
       }
     });
+    window.addEventListener("resize", this.handleResize);
+
     this.state = {
       playerY: 0,
       computerY: 0,
@@ -55,9 +81,25 @@ export default class PongGame {
       gameOver: false,
       winner:"",
     };
+
+    this.overlayStart = overlay({
+      title: "TERMINAL PONG",
+      message: `First to ${WINNING_SCORE} wins`,
+      labelName: "START GAME",
+      onclick: this.initGame,
+    });
+
+    this.overlayStop = overlay({
+      title: `${this.state.winner} WINS!`,
+      message: `Final Score: ${this.state.playerScore} - ${this.state.computerScore}`, // TODO: fix it
+      labelName: "PLAY AGAIN",
+      onclick: this.initGame
+    })
+    this.overlayStop.style.visibility = "hidden";
   }
 
   initGame() {
+
     this.state.canvasWidth = this.canvasElement.width;
     this.state.canvasHeight = this.canvasElement.height;
 
@@ -76,9 +118,12 @@ export default class PongGame {
     this.state.gameStarted = true;
     this.state.gameOver = false;
 
+    this.overlayStart.style.visibility = "hidden"
+    this.overlayStop.style.visibility = "hidden";
+
     // Draw initial state
-    // this.drawGame();
-    // requestAnimationFrame(this.gameLoop);
+    this.drawGame();
+    requestAnimationFrame(this.gameLoop);
   }
 
   handleMouseMove(e:MouseEvent | TouchEvent) {
@@ -173,9 +218,13 @@ export default class PongGame {
     if (this.state.playerScore >= WINNING_SCORE) {
       this.state.gameOver = true;
       this.state.winner = "PLAYER";
+      this.overlayStop.style.visibility = "visible";
+
     } else if (this.state.computerScore >= WINNING_SCORE) {
       this.state.gameOver = true;
       this.state.winner = "COMPUTER";
+      this.overlayStop.style.visibility = "visible";
+
     }
   }
 
@@ -249,11 +298,24 @@ export default class PongGame {
     this.drawGame();
   }
 
+  onOverlayStart(el:HTMLElement) {
+    if(!this.state.gameStarted && !this.state.gameOver) {
+      // el.style.display = 'block'
+    } 
+    return el
+  }
+
   render() {
-    window.addEventListener("resize", this.handleResize);
+    // this.state.gameStarted = true;
+    // this.state.gameOver = false;
     if (this.state.gameStarted && !this.state.gameOver) {
       requestAnimationFrame(this.gameLoop)
-    }    
-    return this.canvasElement
+    }
+    // this.initGame()
+    return div({ className: "relative w-full", style: { height: "50vh" } }, 
+      this.canvasElement,
+      this.overlayStart,
+      this.overlayStop,
+    )
   }
 }
