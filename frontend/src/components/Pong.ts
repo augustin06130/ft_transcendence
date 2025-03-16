@@ -312,7 +312,7 @@ export default class PongGame {
       requestAnimationFrame(this.gameLoop)
     }
     // this.initGame()
-    return div({ className: "relative w-full", style: { height: "50vh" } }, 
+    return div({ className: "relative w-full", style: { height: "60vh" } }, 
       this.canvasElement,
       this.overlayStart,
       this.overlayStop,

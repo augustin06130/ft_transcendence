@@ -6,9 +6,8 @@ import Login from "@views/Login";
 import About from "@views/About";
 import Project from "@views/Project";
 import Contact from "@views/Contact";
-import PongGame from "@views/Pong";
 import PongGameView from "@views/Pong";
-
+import ChatView from "@views/Chat";
 const isLogged = true;
 
 function navBarRoutes(logged: boolean) {
@@ -37,6 +36,10 @@ function navBarRoutes(logged: boolean) {
       "/pong": {
         view: PongGameView,
         label: "Pong",
+      },
+      "/chat": {
+        view: ChatView,
+        label: "Chat",
       },
     };
   }

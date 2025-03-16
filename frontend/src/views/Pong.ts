@@ -45,8 +45,8 @@ export default function PongGameView () {
       `© ${new Date().getFullYear()} TERM_OS • All systems nominal`
     );
   }
-  
-  return TerminalBox("terminal@user:~/games/pong",
+
+  return div({},
     pongGameTitle(),
     game.render(),
     gameControls(),
