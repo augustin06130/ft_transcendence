@@ -1,5 +1,7 @@
 import { Args, HTMLElementProperties, Events } from "@framework/types";
 
+import { mountEvent } from "./selector";
+
 export function el<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
   attributes: HTMLElementProperties<K>,
@@ -12,7 +14,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(
       Object.assign(parent.style, attributes.style);
     } else if (key === "event" && attributes.event) {
       for (const event in attributes.event) {
-        parent.addEventListener(event.slice(2).toLowerCase(), attributes.event[event] as EventListener);
+        parent.addEventListener(event, attributes.event[event] as EventListener);
       }
     } else if (attributes.hasOwnProperty(key)) {
       (parent as any)[key] = attributes[key as keyof typeof attributes];
@@ -27,9 +29,11 @@ export function el<K extends keyof HTMLElementTagNameMap>(
     }
   });
 
+  parent.addEventListener("onMounted", () => {
+    // console.log(parent)
+    Array.from(parent.children).forEach((e) => {
+      e.dispatchEvent(mountEvent(e as HTMLElement));
+    })
+  })
   return parent;
 }
-
-var a = el("canvas",{})
-
-// <K extends keyof HTMLElementTagNameMap>(name: K): HTMLElementTagNameMap[K]

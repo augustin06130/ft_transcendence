@@ -3,29 +3,30 @@ import { NavBar } from "@components/Navbar";
 
 import Home from "@views/Home";
 import Login from "@views/Login";
-import Pong from "@views/Pong";
 import About from "@views/About";
 import Project from "@views/Project";
 import Contact from "@views/Contact";
+import PongGame from "@views/Pong";
+import PongGameView from "@views/Pong";
 
 const isLogged = true;
 
 function navBarRoutes(logged: boolean) {
   const baseLinks = {
     "/": {
-      view: () => Home(),
+      view: Home,
       label: "Home",
     },
     "/about": {
-      view: () => About(),
+      view: About,
       label: "About",
     },
     "/project": {
-      view: () => Project(),
+      view: Project,
       label: "Project",
     },
     "/contact": {
-      view: () => Contact(),
+      view: Contact,
       label: "Contact",
     },
   };
@@ -34,7 +35,7 @@ function navBarRoutes(logged: boolean) {
     return {
       ...baseLinks,
       "/pong": {
-        view: () => Pong(),
+        view: PongGameView,
         label: "Pong",
       },
     };
@@ -42,7 +43,7 @@ function navBarRoutes(logged: boolean) {
   return {
     ...baseLinks,
     "/login": {
-      view: () => Login(),
+      view: Login,
       label: "Login",
     },
   };
