@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
 import fastifyStatic from '@fastify/static';
 import fastifySession from '@fastify/session';
 import fastifyCookie from '@fastify/cookie';
@@ -6,8 +7,11 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { CertifUser } from './login';
 import { NewUser } from './register';
+import { CreateTableUser } from './db';
 
 dotenv.config();
+
+let db: Database;
 
 if (!process.env.SESSION_SECRET) {
   console.log('SESSION_SECRET chargé avec succès :', process.env.SESSION_SECRET);
@@ -42,27 +46,59 @@ app.get('/tata', (request: FastifyRequest, reply: FastifyReply) => {
 
 app.post('/login', async (request, reply) => {
   const { username, password } = request.body as { username: string; password: string };
-  await CertifUser(username, password, request, reply);
+  await CertifUser(username, password, request, reply, db);
 });
 
 app.post('/register', async (request: FastifyRequest, reply: FastifyReply) => {
   const { username, password } = request.body as { username: string; password: string };
-  await NewUser(username, password, reply);
+  await NewUser(username, password, reply, db);
 });
 
-// Start the server
+export function connectToDatabase() {
+  const dbPath = './database.db'; 
+  const db = new Database(dbPath, OPEN_READWRITE | OPEN_CREATE, (err) => {
+    if (err) {
+      console.error("Échec de la connexion à la base de données : " + err.message);
+    } else {
+      console.log("Connexion à la base de données réussie.");
+    }
+  });
+  return db;
+}
+
 const start = async () => {
   try {
+    // Connexion à la base de données
+    db = await connectToDatabase(); // Attendez que la connexion soit établie
+
+    // Créez la table 'users' si elle n'existe pas
+    await CreateTableUser(db);
+
+    // Démarrez le serveur
     await app.listen({
       port: 80,
       host: '0.0.0.0',
     });
     console.log('Server is listening on http://localhost:80');
   } catch (err) {
-    app.log.error(err);
+    console.error("Erreur lors du démarrage du serveur :", err);
     process.exit(1);
   }
 };
+
+// Start the server
+// const start = async () => {
+//   try {
+//     await app.listen({
+//       port: 80,
+//       host: '0.0.0.0',
+//     });
+//     console.log('Server is listening on http://localhost:80');
+//   } catch (err) {
+//     app.log.error(err);
+//     process.exit(1);
+//   }
+// };
 
 start();
 

@@ -1,18 +1,6 @@
 import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
 
-export function connectToDatabase() {
-  const dbPath = './database.db'; 
-  const db = new Database(dbPath, OPEN_READWRITE | OPEN_CREATE, (err) => {
-    if (err) {
-      console.error("Échec de la connexion à la base de données : " + err.message);
-    } else {
-      console.log("Connexion à la base de données réussie.");
-    }
-  });
-  return db;
-}
-
-export async function VerifUser(username: string) {
+export async function VerifUser(username: string, db: Database) {
   return new Promise<any>((resolve, reject) => {
     db.get(
       'SELECT id, password FROM users WHERE username = ?',
@@ -28,7 +16,7 @@ export async function VerifUser(username: string) {
   });
 }
 
-export async function CreateTableUser() {
+export async function CreateTableUser(db: Database) {
   return new Promise<void>((resolve, reject) => {
     const sql = `
       CREATE TABLE IF NOT EXISTS users (
@@ -43,10 +31,11 @@ export async function CreateTableUser() {
         resolve();
       }
     });
+    console.log("la table a bien etait set.");
   });
 }
 
-export async function CheckUserExists(username: string): Promise<boolean> {
+export async function CheckUserExists(username: string, db: Database): Promise<boolean> {
   return new Promise<boolean>((resolve, reject) => {
     db.get(
       'SELECT id FROM users WHERE username = ?',
@@ -62,8 +51,7 @@ export async function CheckUserExists(username: string): Promise<boolean> {
   });
 }
 
-export async function CreateNewUser(username: string, hashedPassword:string) {
-  await CreateTableUser();
+export async function CreateNewUser(username: string, hashedPassword:string, db: Database) {
   return new Promise<void>((resolve, reject) => {
     db.run(
       'INSERT INTO users (username, password) VALUES (?, ?)',
@@ -78,5 +66,3 @@ export async function CreateNewUser(username: string, hashedPassword:string) {
     );
   });
 }
-
-const db = connectToDatabase();

@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { Database } from 'sqlite3';
 import bcrypt from 'bcrypt';
 import {VerifUser} from './db';
 
@@ -12,13 +13,14 @@ export async function CertifUser(
     username: string,
     userpassword: string,
     request: FastifyRequest,
-    reply: FastifyReply
+    reply: FastifyReply,
+    db: Database
 ) {
     if (!username || !userpassword) {
         return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
       }
     try {
-        const user = await VerifUser(username);
+        const user = await VerifUser(username, db);
         if (user && bcrypt.compareSync(userpassword, user.password)) {
             request.session.username = username;
             return reply.redirect('/index.html');
