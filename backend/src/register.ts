@@ -10,12 +10,13 @@ declare module '@fastify/session' {
 }
 
 export async function NewUser(
-    username: string, 
+    username: string,
+    email: string,
     password: string,
     reply: FastifyReply,
     db: Database
 ) {
-      if (!username || !password) {
+      if (!username || !password || !email) {
         return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
       }
       try {
@@ -25,12 +26,12 @@ export async function NewUser(
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        await CreateNewUser(username, hashedPassword, db);
-  
-        return reply.redirect('./index.html');
+        await CreateNewUser(username, hashedPassword, email, db);
+
+        return reply.redirect('/');
       } catch (err) {
         console.error('Erreur lors de l\'inscription :', err);
         return reply.status(500).send({ error: 'Erreur interne du serveur' });
       }
-    
+
 }

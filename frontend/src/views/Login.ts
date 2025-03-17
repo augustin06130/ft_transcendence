@@ -33,7 +33,7 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
     icon: SVGSVGElement
   ) {
     return div({ className: "space-y-1" },
-      label({ htmlFor: name, className: "text-sm flex items-center gap-2" }, 
+      label({ htmlFor: name, className: "text-sm flex items-center gap-2" },
         icon,
         span({},`${labelName}:`)
       ),
@@ -53,7 +53,7 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
 
   const err = error()
   // prettier-ignore
-  return form({ 
+  return form({
     className: "space-y-4",
     event : {
       submit: handleSubmit
@@ -73,11 +73,17 @@ function LoginForm(handleSubmit:(e:Event)=>void, error:()=>string, loading:()=>b
 export default function Login() {
   const router = UseRouter();
 
-  const username = UseState("");
-  const password = UseState("");
-  const error = UseState("");
-  const loading = UseState(false);
-  const loginSuccess = UseState(false);
+  // const username = UseState("");
+  // const password = UseState("");
+  // const error = UseState("");
+  // const loading = UseState(false);
+  // const loginSuccess = UseState(false);
+
+  const username = UseState("", () => {}); // Initialize with empty string and no callback
+  const password = UseState("", () => {}); // Initialize with empty string and no callback
+  const error = UseState("", () => {}); // Initialize with empty string and no callback
+  const loading = UseState(false, () => {}); // Initialize with false and no callback
+  const loginSuccess = UseState(false, () => {}); // Initialize with false and no callback
 
   function handleSubmit(e:Event) {
     e.preventDefault();
@@ -87,15 +93,46 @@ export default function Login() {
       return;
     }
     loading.set(true);
-    setTimeout(() => {
-      loading.set(false);
-      loginSuccess.set(true);
-      setTimeout(() => router.push("/"), 1500);
-    }, 1000);
+    fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username.get(),
+        password: password.get(),
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          // Si la réponse n'est pas OK, lancez une erreur
+          throw new Error('Échec de la connexion');
+        }
+        return response.json(); // Parsez la réponse JSON
+      })
+      .then((data) => {
+        if (data.success) {
+          loading.set(false); // Désactivez l'état de chargement
+          loginSuccess.set(true); // Définissez l'état de succès
+          setTimeout(() => router.push("/"), 1500); // Redirigez après un délai
+        } else {
+          throw new Error(data.error || 'Échec de la connexion');
+        }
+      })
+      .catch((err) => {
+        console.error('Erreur lors de la connexion :', err);
+        error.set(err.message); // Affichez un message d'erreur
+        loading.set(false); // Désactivez l'état de chargement
+      });
+    // setTimeout(() => {
+    //   loading.set(false);
+    //   loginSuccess.set(true);
+    //   setTimeout(() => router.push("/"), 1500);
+    // }, 1000);
   }
 
   const formContent = loginSuccess.get()
-    ? success(username.get()) 
+    ? success(username.get())
     : LoginForm(handleSubmit, error.get, loading.get, username, password)
 
   console.log(username.get())
@@ -105,9 +142,9 @@ export default function Login() {
   return TerminalBox("terminal@user:~/auth",
     div({ className: "mx-auto max-w-md border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
       div({ className: "text-center mb-6" },
-        p({ className: "text-2xl font-bold tracking-wider" }, 
+        p({ className: "text-2xl font-bold tracking-wider" },
           "SYSTEM LOGIN"),
-        p({ className: "text-green-400/70 text-sm mt-1" }, 
+        p({ className: "text-green-400/70 text-sm mt-1" },
           "Enter credentials to access the system")
       ),
       formContent,

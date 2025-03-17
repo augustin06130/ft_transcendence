@@ -17,7 +17,7 @@ export function NavBar(routes: { [key: string]: { label: string } }) {
       div({ className: "flex items-center gap-2" },
         span({ className: "text-xl font-bold tracking-wider" }, "ft_transcendence")
       ),
-      ul({ className: "flex gap-6" }, 
+      ul({ className: "flex gap-6" },
         ...buttons.map((b) => li({}, b)))
     )
   );

@@ -11,7 +11,7 @@ import { CreateTableUser } from './db';
 
 dotenv.config();
 
-let db: Database;
+const db = connectToDatabase(); // Attendez que la connexion soit établie
 
 if (!process.env.SESSION_SECRET) {
   console.log('SESSION_SECRET chargé avec succès :', process.env.SESSION_SECRET);
@@ -50,12 +50,12 @@ app.post('/login', async (request, reply) => {
 });
 
 app.post('/register', async (request: FastifyRequest, reply: FastifyReply) => {
-  const { username, password } = request.body as { username: string; password: string };
-  await NewUser(username, password, reply, db);
+  const { username, email, password } = request.body as { username: string; email:string; password: string };
+  await NewUser(username, email, password, reply, db);
 });
 
 export function connectToDatabase() {
-  const dbPath = './database.db'; 
+  const dbPath = './database.db';
   const db = new Database(dbPath, OPEN_READWRITE | OPEN_CREATE, (err) => {
     if (err) {
       console.error("Échec de la connexion à la base de données : " + err.message);
@@ -69,7 +69,7 @@ export function connectToDatabase() {
 const start = async () => {
   try {
     // Connexion à la base de données
-    db = await connectToDatabase(); // Attendez que la connexion soit établie
+    // db = await connectToDatabase(); // Attendez que la connexion soit établie
 
     // Créez la table 'users' si elle n'existe pas
     await CreateTableUser(db);
