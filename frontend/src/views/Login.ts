@@ -5,6 +5,8 @@ import UseRouter from "@framework/UseRouter";
 import { State } from "@framework/types";
 import { UserIconSVG } from "@Icon/User";
 import { LockIconSVG } from "@Icon/Lock";
+import { isLogged } from "@framework/auth";
+
 
 function success(username:string) {
   // prettier-ignore
@@ -114,8 +116,11 @@ export default function Login() {
         if (data.success) {
           loading.set(false); // Désactivez l'état de chargement
           loginSuccess.set(true); // Définissez l'état de succès
-          setTimeout(() => router.push("/"), 1500); // Redirigez après un délai
-        } else {
+          isLogged.set(true);
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("url", { detail: { to: "/" } }));
+          }, 1500);
+          }  else {
           throw new Error(data.error || 'Échec de la connexion');
         }
       })

@@ -23,9 +23,9 @@ export async function CertifUser(
         const user = await VerifUser(username, db);
         if (user && bcrypt.compareSync(userpassword, user.password)) {
             request.session.username = username;
-            return reply.redirect('/');
+            return reply.status(200).send({ success: true, message: 'connexion reussie', user });
         } else {
-            return reply.redirect('/');
+            return reply.status(403).send({ success: false, message: 'connexion echouee'});
         }
     } catch(err){
         console.error('Erreur lors de la vérification des identifiants :', err);
