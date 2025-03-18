@@ -1,4 +1,5 @@
 import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
+import { FastifyReply } from 'fastify';
 
 export async function VerifUser(username: string, db: Database) {
   return new Promise<any>((resolve, reject) => {
@@ -36,20 +37,20 @@ export async function CreateTableUser(db: Database): Promise<void> {
     });
   });
 }
-
 export async function CheckUserExists(username: string, db: Database): Promise<boolean> {
   return new Promise<boolean>((resolve, reject) => {
-    db.get(
-      'SELECT id FROM users WHERE username = ?',
-      [username],
-      (err, row) => {
-        if (err) {
-          reject(err); // Rejeter la promesse en cas d'erreur
-        } else {
-          resolve(!!row); // Renvoie true si l'utilisateur existe, sinon false
-        }
-      }
-    );
+      db.get(
+          'SELECT id FROM users WHERE username = ?',
+          [username],
+          (err, row) => {
+              if (err) {
+                  console.error('Error checking user existence:', err); // Log the error
+                  reject(err);
+              } else {
+                  resolve(!!row);
+              }
+          }
+      );
   });
 }
 
@@ -60,21 +61,21 @@ export async function CreateNewUser(
   db: Database
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
-    const sql = `
-      INSERT INTO users (username, password, email)
-      VALUES (?, ?, ?)
-    `;
-    const params = [username, hashedPassword, email];
+      const sql = `
+          INSERT INTO users (username, password, email)
+          VALUES (?, ?, ?)
+      `;
+      const params = [username, hashedPassword, email];
 
-    db.run(sql, params, function (err) {
-      if (err) {
-        console.error("Error creating user:", err.message); // Log the error
-        reject(new Error(`Failed to create user: ${err.message}`)); // Provide more context
-      } else {
-        const userId = this.lastID; // Get the ID of the newly inserted user
-        console.log(`User '${username}' created successfully with ID: ${userId}.`); // Log success
-        resolve(userId); // Return the new user's ID
-      }
-    });
+      db.run(sql, params, function (err) {
+          if (err) {
+              console.error("Error creating user:", err.message); // Log the error
+              reject(new Error(`Failed to create user: ${err.message}`));
+          } else {
+              const userId = this.lastID;
+              console.log(`User '${username}' created successfully with ID: ${userId}.`); // Log success
+              resolve(userId);
+          }
+      });
   });
 }

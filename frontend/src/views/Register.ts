@@ -2,9 +2,13 @@ import { div, p, form, input, label, span } from "@framework/tags";
 import TerminalBox, { footer } from "@components/TerminalBox";
 import UseState from "@framework/UseState";
 import { UserIconSVG } from "@Icon/User";
-import { baseLinks } from "@framework/Routes";
+import { Router } from "@framework/Router";
 import { LockIconSVG } from "@Icon/Lock";
 import Link from "@framework/Link";
+import Login from "@views/Login";
+import { Routes } from "@framework/types";
+
+
 
 function success(username: string) {
   // prettier-ignore
@@ -73,37 +77,38 @@ export default function Register() {
     fetch('/register', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+          'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        username: username.get(),
-        email: email.get(),
-        password: password.get(),
+          username: username.get(),
+          email: email.get(),
+          password: password.get(),
       }),
     })
-      .then((response) => {
+    .then((response) => {
         if (!response.ok) {
-          throw new Error('Échec de la connexion');
+            throw new Error('Échec de la connexion');
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Réponse du serveur :", data); // Ajoutez ce log pour déboguer
+        return response.json(); // Toujours parser la réponse en JSON
+    })
+    .then((data) => {
+        console.log("Réponse du serveur :", data);
         if (data.success) {
-          loading.set(false);
-          registerSuccess.set(true);
-          setTimeout(() => {
-            window.location.href = "/login";
-          }, 1500);
+            loading.set(false);
+            registerSuccess.set(true);
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent("url", { detail: { to: "/login" } }));
+            }, 1500);
+
         } else {
-          throw new Error(data.message || 'Échec de la connexion');
+            throw new Error(data.message || 'Échec de la connexion');
         }
-      })
-      .catch((err) => {
+    })
+    .catch((err) => {
         console.error('Erreur lors de la connexion :', err);
         error.set(err.message);
         loading.set(false);
-      });
+    });
   }
 
   const formContent = registerSuccess.get()

@@ -23,9 +23,9 @@ export async function CertifUser(
         const user = await VerifUser(username, db);
         if (user && bcrypt.compareSync(userpassword, user.password)) {
             request.session.username = username;
-            return reply.redirect('/index.html');
+            return reply.redirect('/');
         } else {
-            return reply.redirect('/index.html');
+            return reply.redirect('/');
         }
     } catch(err){
         console.error('Erreur lors de la vérification des identifiants :', err);
@@ -51,7 +51,7 @@ export async function CertifUser(
 
 //     try {
 //       // Vérifier si l'utilisateur existe dans la base de données
-      
+
 
 //       // Si l'utilisateur existe, vérifier le mot de passe
 //       if (user && bcrypt.compareSync(password, user.password)) {
@@ -93,14 +93,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $db->prepare("SELECT id, password FROM users WHERE username = :username");
     $stmt->bindValue(':username', $username, SQLITE3_TEXT);
     $result = $stmt->execute();
-    
+
     // Récupérer les résultats de la requête
     $user = $result->fetchArray(SQLITE3_ASSOC);
-    
+
     if ($user && password_verify($password, $user['password'])) {
         // Connexion réussie : enregistrer l'utilisateur dans la session
         $_SESSION['username'] = $username;
-        
+
         // Rediriger vers la page d'accueil (index.php)
         header('Location: /index.php');
         exit;  // Assurez-vous d'appeler exit après la redirection pour stopper l'exécution du code suivant

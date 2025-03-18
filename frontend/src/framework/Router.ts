@@ -28,3 +28,4 @@ export function Router(routes: Routes) {
   // (result as any).refresh = syncHash;
   return result;
 }
+
