@@ -57,7 +57,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   // Re-render the app whenever isLogged changes
   isLogged.subscribe(() => {
-    renderApp(); // Re-render the entire app
+    setTimeout(() => {
+      renderApp(); // Re-render the entire app
+    }, 1000);
   });
 });
 

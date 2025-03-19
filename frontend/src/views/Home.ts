@@ -41,38 +41,6 @@ export default function Home() {
   return TerminalBox("terminal@user:~", ...el);
 }
 
-// function LogoutButton() {
-//   const handleLogout = async () => {
-//     try {
-//       const response = await fetch('/logout', {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//       });
-
-//       if (response.ok) {
-//         console.log('Déconnexion réussie');
-//         // Mettre à jour l'état de connexion
-//         isLogged.set(false);
-//         // Rediriger vers la page d'accueil
-//         window.dispatchEvent(new CustomEvent("url", { detail: { to: "/" } }));
-//       } else {
-//         // Afficher les détails de l'erreur
-//         const errorMessage = await response.text();
-//         console.error('Échec de la déconnexion :', response.status, errorMessage);
-//       }
-//     } catch (error) {
-//       console.error('Erreur lors de la déconnexion :', error);
-//     }
-//   };
-
-//   // prettier-ignore
-//   return button({
-//     onclick: handleLogout, // Appeler directement la fonction
-//     className: "text-green-400/70 text-sm hover:text-green-400/100 transition-opacity absolute right-6 bottom-0",
-//   }, "Logout");
-// }
 function LogoutButton() {
   const handleLogout = async () => {
     try {
