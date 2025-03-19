@@ -28,10 +28,10 @@ function overlay(option:{
   labelName:string,
   onclick:()=>void
 }) :HTMLElement {
-  return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" }, 
+  return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
     h2({ className: "text-2xl font-bold mb-4" }, option.title),
     p({ className: "mb-6" }, option.message),
-    button({ 
+    button({
       onclick: option.onclick,
       className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
     }, option.labelName)
@@ -40,16 +40,14 @@ function overlay(option:{
 
 export default class PongGame {
   canvasElement: HTMLCanvasElement;
-  state:PongState;
-
+  state: PongState;
   overlayStart: HTMLElement;
   overlayStop: HTMLElement;
+  gameMode: 'ai' | 'pvp'; // Ajout de gameMode comme propriété
 
-  // gameOver: {
-  //   value:boolean;
-  // }
+  constructor(gameMode: 'ai' | 'pvp') { // Ajout de gameMode comme paramètre
+    this.gameMode = gameMode; // Initialisation de gameMode
 
-  constructor() {
     // Event listeners
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleResize = this.handleResize.bind(this);
@@ -79,7 +77,7 @@ export default class PongGame {
       computerScore: 0,
       gameStarted: false,
       gameOver: false,
-      winner:"",
+      winner: "",
     };
 
     this.overlayStart = overlay({
@@ -91,12 +89,17 @@ export default class PongGame {
 
     this.overlayStop = overlay({
       title: `${this.state.winner} WINS!`,
-      message: `Final Score: ${this.state.playerScore} - ${this.state.computerScore}`, // TODO: fix it
+      message: `Final Score: ${this.state.playerScore} - ${this.state.computerScore}`,
       labelName: "PLAY AGAIN",
       onclick: this.initGame
-    })
+    });
     this.overlayStop.style.visibility = "hidden";
   }
+
+  setGameMode(gameMode: 'ai' | 'pvp') {
+    this.gameMode = gameMode;
+  }
+
 
   initGame() {
 
@@ -229,29 +232,32 @@ export default class PongGame {
   }
 
   updateComputer() {
-    const computerCenter = this.state.computerY + PADDLE_HEIGHT / 2;
+    if (this.gameMode === 'ai') { // Utilisation de this.gameMode
+      const computerCenter = this.state.computerY + PADDLE_HEIGHT / 2;
 
-    if (this.state.ballSpeedX > 0) {
-      if (computerCenter < this.state.ballY - 35) {
-        this.state.computerY += 6;
-      } else if (computerCenter > this.state.ballY + 35) {
-        this.state.computerY -= 6;
+      if (this.state.ballSpeedX > 0) {
+        if (computerCenter < this.state.ballY - 35) {
+          this.state.computerY += 6;
+        } else if (computerCenter > this.state.ballY + 35) {
+          this.state.computerY -= 6;
+        }
+      } else {
+        if (computerCenter < this.state.canvasHeight / 2 - 30) {
+          this.state.computerY += 3;
+        } else if (computerCenter > this.state.canvasHeight / 2 + 30) {
+          this.state.computerY -= 3;
+        }
       }
-    } else {
-      if (computerCenter < this.state.canvasHeight / 2 - 30) {
-        this.state.computerY += 3;
-      } else if (computerCenter > this.state.canvasHeight / 2 + 30) {
-        this.state.computerY -= 3;
-      }
-    }
 
-    if (this.state.computerY < 0) {
-      this.state.computerY = 0;
-    }
-    if (this.state.computerY > this.state.canvasHeight - PADDLE_HEIGHT) {
-      this.state.computerY = this.state.canvasHeight - PADDLE_HEIGHT;
+      if (this.state.computerY < 0) {
+        this.state.computerY = 0;
+      }
+      if (this.state.computerY > this.state.canvasHeight - PADDLE_HEIGHT) {
+        this.state.computerY = this.state.canvasHeight - PADDLE_HEIGHT;
+      }
     }
   }
+
 
   drawGame() {
     const ctx = this.canvasElement.getContext("2d");
@@ -301,21 +307,65 @@ export default class PongGame {
   onOverlayStart(el:HTMLElement) {
     if(!this.state.gameStarted && !this.state.gameOver) {
       // el.style.display = 'block'
-    } 
+    }
     return el
   }
 
+
   render() {
-    // this.state.gameStarted = true;
-    // this.state.gameOver = false;
-    if (this.state.gameStarted && !this.state.gameOver) {
-      requestAnimationFrame(this.gameLoop)
-    }
-    // this.initGame()
-    return div({ className: "relative w-full", style: { height: "60vh" } }, 
+    return div({ className: "relative w-full", style: { height: "60vh" } },
       this.canvasElement,
       this.overlayStart,
       this.overlayStop,
-    )
+    );
   }
+  // render() {
+  //   // this.state.gameStarted = true;
+  //   // this.state.gameOver = false;
+  //   if (this.state.gameStarted && !this.state.gameOver) {
+  //     requestAnimationFrame(this.gameLoop)
+  //   }
+  //   // this.initGame()
+  //   return div({ className: "relative w-full", style: { height: "60vh" } },
+  //     this.canvasElement,
+  //     this.overlayStart,
+  //     this.overlayStop,
+  //   )
+  // }
+
+  reset() {
+    this.state.playerScore = 0;
+    this.state.computerScore = 0;
+    this.state.gameStarted = false;
+    this.state.gameOver = false;
+    this.state.winner = "";
+    this.resetBall();
+    this.drawGame();
+  }
+
+  moveLeftPaddle(deltaY: number) {
+    this.state.playerY += deltaY;
+
+    // Garder le paddle dans les limites du canvas
+    if (this.state.playerY < 0) {
+      this.state.playerY = 0;
+    }
+    if (this.state.playerY > this.state.canvasHeight - PADDLE_HEIGHT) {
+      this.state.playerY = this.state.canvasHeight - PADDLE_HEIGHT;
+    }
+  }
+
+  moveRightPaddle(deltaY: number) {
+    this.state.computerY += deltaY;
+
+    // Garder le paddle dans les limites du canvas
+    if (this.state.computerY < 0) {
+      this.state.computerY = 0;
+    }
+    if (this.state.computerY > this.state.canvasHeight - PADDLE_HEIGHT) {
+      this.state.computerY = this.state.canvasHeight - PADDLE_HEIGHT;
+    }
+  }
+
+
 }
