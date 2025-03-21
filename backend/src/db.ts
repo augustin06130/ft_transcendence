@@ -1,5 +1,6 @@
 import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
 import { FastifyReply } from 'fastify';
+import fs from 'fs';
 
 export async function VerifUser(username: string, db: Database) {
   return new Promise<any>((resolve, reject) => {
@@ -24,7 +25,9 @@ export async function CreateTableUser(db: Database): Promise<void> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        name TEXT,
+        data BLOB
       )`;
     db.run(sql, (err) => {
       if (err) {
@@ -37,6 +40,7 @@ export async function CreateTableUser(db: Database): Promise<void> {
     });
   });
 }
+
 export async function CheckUserExists(username: string, db: Database): Promise<boolean> {
   return new Promise<boolean>((resolve, reject) => {
       db.get(
@@ -77,5 +81,72 @@ export async function CreateNewUser(
               resolve(userId);
           }
       });
+  });
+}
+
+export async function EditUserInfo(
+  userId: number,
+  username: string,
+  hashedPassword: string,
+  email: string,
+  imagePath: string | null,
+  db: Database
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let sql = `
+      UPDATE users
+      SET username = ?, password = ?, email = ?
+    `;
+    const params: (string | number | Buffer)[] = [username, hashedPassword, email];
+
+    // Ajout de la mise à jour de l'image si un chemin est fourni
+    if (imagePath) {
+      sql += `, data = ?`;
+      insertImage(userId, imagePath, db, params);
+    }
+
+    sql += ` WHERE id = ?`;
+    params.push(userId);
+
+    db.run(sql, params, function (err) {
+      if (err) {
+        console.error("Error updating user:", err.message);
+        reject(new Error(`Failed to update user: ${err.message}`));
+      } else {
+        console.log(`User '${username}' updated successfully.`);
+        resolve();
+      }
+    });
+  });
+}
+
+
+async function insertImage(userId: number, imagePath: string, db: Database, params: any) {
+  const binaryData = fs.readFileSync(imagePath);
+  params.push(binaryData);
+  await db.run(`UPDATE users SET data = ? WHERE id = ?`, binaryData, userId);
+  console.log(`Image ajoutée pour l'utilisateur ID ${userId}`);
+}
+async function retrieveImage(userId: number, outputPath: string, db: Database) {
+  return new Promise<void>((resolve, reject) => {
+      db.get<{ data: Buffer }>(
+          `SELECT data FROM users WHERE id = ?`, 
+          [userId], 
+          (err, row) => {
+              if (err) {
+                  reject(err);
+                  return;
+              }
+
+              if (row && row.data) {
+                  fs.writeFileSync(outputPath, row.data);
+                  console.log(`Image récupérée et sauvegardée sous ${outputPath}`);
+                  resolve();
+              } else {
+                  console.log(`Aucune image trouvée pour l'utilisateur ID ${userId}`);
+                  resolve();
+              }
+          }
+      );
   });
 }

@@ -1,7 +1,7 @@
 import Home from "@views/Home";
 import Login from "@views/Login";
 import Register from "@views/Register";
-import About from "@views/About";
+import Profile from "@views/Profile";
 import Project from "@views/Project";
 import Contact from "@views/Contact";
 import PongGameView from "@views/Pong";
@@ -12,9 +12,9 @@ export const baseLinks = {
     view: Home,
     label: "Home",
   },
-  "/about": {
-    view: About,
-    label: "About",
+  "/profile": {
+    view: Profile,
+    label: "Profile",
   },
   "/project": {
     view: Project,

@@ -12,11 +12,10 @@ function navBarRoutes(logged: boolean): Routes {
   console.log("isLogged = ", isLogged.get());
 
   if (logged) {
-    console.log("et tres bien loger");
     // When logged in, include Pong and Chat
     return {
       "/": baseLinks["/"],
-      "/about": baseLinks["/about"],
+      "/profile": baseLinks["/profile"],
       "/pong": baseLinks["/pong"],
       "/chat": baseLinks["/chat"],
     };
@@ -24,7 +23,7 @@ function navBarRoutes(logged: boolean): Routes {
     // When not logged in, include Login and Register
     return {
       "/": baseLinks["/"],
-      "/about": baseLinks["/about"],
+      "/profile": baseLinks["/profile"],
       "/pong": baseLinks["/pong"],
       "/chat": baseLinks["/chat"],
       "/login": baseLinks["/login"],

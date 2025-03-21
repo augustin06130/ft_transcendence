@@ -20,6 +20,7 @@ const tags = [
   "ul",
   "pre",
   "label",
+  "img",
 ] as const;
 
 export const elements = Object.fromEntries(
@@ -57,4 +58,5 @@ export const {
   ul,
   pre,
   label,
+  img,
 } = elements;
