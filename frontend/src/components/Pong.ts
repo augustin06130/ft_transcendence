@@ -236,6 +236,7 @@ export default class PongGame {
   checkWinner() {
 	if (this.state.playerScore < WINNING_SCORE && this.state.computerScore < WINNING_SCORE)
 	  return
+
     this.state.winner = this.state.playerScore >= WINNING_SCORE ? "PLAYER" : "COMPUTER";
     this.state.gameOver = true;
 	this.overlayStop.update(`Final Score: ${this.state.playerScore} - ${this.state.computerScore}`);
