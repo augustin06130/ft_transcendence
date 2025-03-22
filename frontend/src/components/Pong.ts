@@ -38,7 +38,7 @@ function overlay(option: {
   labelName: string,
   onclick: () => void
 }): HTMLElement {
-	HTMLElement result = div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
+	let result:HTMLElement = div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
       h2({ className: "text-2xl font-bold mb-4" }, option.title),
       p({ className: "mb-6" }, option.message),
       button({
@@ -46,10 +46,11 @@ function overlay(option: {
         className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
       }, option.labelName)
     );
-	result.update = (html:string) => {
-      this.overlayStop.children[1].innerHTML = html;
-      // this.overlayStop.children[1].innerHTML = ;
-	}
+
+	result.update = function(html:string) {
+      this.children[1].innerHTML = html;
+	};
+
 	return result;
 }
 
