@@ -16,7 +16,7 @@ export async function UserProfile(
     reply: FastifyReply,
     db: Database
 ) {
-    if (!username || !userpassword || email || image) {
+    if (!username || !userpassword) {
         return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
       }
     try {
