@@ -240,6 +240,7 @@ export default class PongGame {
     this.state.gameOver = true;
 	this.overlayStop.update(`Final Score: ${this.state.playerScore} - ${this.state.computerScore}`);
   	this.overlayStop.style.visibility = "visible";
+
   }
 
   updateComputer() {
