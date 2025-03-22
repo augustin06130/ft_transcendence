@@ -6,7 +6,16 @@ const PADDLE_WIDTH = 10;
 const BALL_RADIUS = 8;
 export const WINNING_SCORE = 1;
 
+export type gameModesType = 'ai'| 'pvp'| 'remote';
+export const gameModes: gameModesType[] = ['ai', 'pvp', 'remote'];
+enum gameMode {
+  ai,
+  pvp,
+  remote,
+}
+
 type PongState = {
+  role: "host" | "guest"
   playerY: number;
   computerY: number;
   ballX: number;
@@ -19,15 +28,16 @@ type PongState = {
   computerScore: number;
   gameStarted: boolean;
   gameOver: boolean;
-  winner:string;
+  winner: string;
+  gameState: "pregame" | "dountdown" | "playing" | "score"
 }
 
-function overlay(option:{
-  title:string,
-  message:string,
-  labelName:string,
-  onclick:()=>void
-}) :HTMLElement {
+function overlay(option: {
+  title: string,
+  message: string,
+  labelName: string,
+  onclick: () => void
+}): HTMLElement {
   return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
     h2({ className: "text-2xl font-bold mb-4" }, option.title),
     p({ className: "mb-6" }, option.message),
@@ -43,9 +53,9 @@ export default class PongGame {
   state: PongState;
   overlayStart: HTMLElement;
   overlayStop: HTMLElement;
-  gameMode: 'ai' | 'pvp'; // Ajout de gameMode comme propriété
+  gameMode: gameModesType;
 
-  constructor(gameMode: 'ai' | 'pvp') { // Ajout de gameMode comme paramètre
+  constructor(gameMode: gameModesType) { // Ajout de gameMode comme paramètre
     this.gameMode = gameMode; // Initialisation de gameMode
 
     // Event listeners
@@ -78,6 +88,7 @@ export default class PongGame {
       gameStarted: false,
       gameOver: false,
       winner: "",
+      gameState: "pregame"
     };
 
     this.overlayStart = overlay({
@@ -93,10 +104,13 @@ export default class PongGame {
       labelName: "PLAY AGAIN",
       onclick: this.initGame
     });
+	this.updateOverlayStop = () => {
+      this.overlayStop.children[1].innerHTML = `Final Score: ${this.state.playerScore} - ${this.state.computerScore}`;
+	}
     this.overlayStop.style.visibility = "hidden";
   }
 
-  setGameMode(gameMode: 'ai' | 'pvp') {
+  setGameMode(gameMode: gameModesType) {
     this.gameMode = gameMode;
   }
 
@@ -129,10 +143,10 @@ export default class PongGame {
     requestAnimationFrame(this.gameLoop);
   }
 
-  handleMouseMove(e:MouseEvent | TouchEvent) {
+  handleMouseMove(e: MouseEvent | TouchEvent) {
     if (!this.state.gameStarted || this.state.gameOver) return;
     const rect = this.canvasElement.getBoundingClientRect();
-    let mouseY:number;
+    let mouseY: number;
 
     if ("touches" in e) {
       mouseY = e.touches[0].clientY - rect.top;
@@ -218,17 +232,12 @@ export default class PongGame {
   }
 
   checkWinner() {
-    if (this.state.playerScore >= WINNING_SCORE) {
-      this.state.gameOver = true;
-      this.state.winner = "PLAYER";
-      this.overlayStop.style.visibility = "visible";
-
-    } else if (this.state.computerScore >= WINNING_SCORE) {
-      this.state.gameOver = true;
-      this.state.winner = "COMPUTER";
-      this.overlayStop.style.visibility = "visible";
-
-    }
+	if (this.state.playerScore < WINNING_SCORE && this.state.computerScore < WINNING_SCORE)
+	  return
+    this.state.winner = this.state.playerScore >= WINNING_SCORE ? "PLAYER" : "COMPUTER";
+    this.state.gameOver = true;
+    this.updateOverlayStop();
+  	this.overlayStop.style.visibility = "visible";
   }
 
   updateComputer() {
@@ -304,8 +313,8 @@ export default class PongGame {
     this.drawGame();
   }
 
-  onOverlayStart(el:HTMLElement) {
-    if(!this.state.gameStarted && !this.state.gameOver) {
+  onOverlayStart(el: HTMLElement) {
+    if (!this.state.gameStarted && !this.state.gameOver) {
       // el.style.display = 'block'
     }
     return el
@@ -366,6 +375,4 @@ export default class PongGame {
       this.state.computerY = this.state.canvasHeight - PADDLE_HEIGHT;
     }
   }
-
-
 }
