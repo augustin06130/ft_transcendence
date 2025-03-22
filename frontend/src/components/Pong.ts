@@ -38,14 +38,19 @@ function overlay(option: {
   labelName: string,
   onclick: () => void
 }): HTMLElement {
-  return div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
-    h2({ className: "text-2xl font-bold mb-4" }, option.title),
-    p({ className: "mb-6" }, option.message),
-    button({
-      onclick: option.onclick,
-      className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
-    }, option.labelName)
-  );
+	HTMLElement result = div({ className: "absolute inset-0 flex flex-col items-center justify-center bg-black/80" },
+      h2({ className: "text-2xl font-bold mb-4" }, option.title),
+      p({ className: "mb-6" }, option.message),
+      button({
+        onclick: option.onclick,
+        className: "px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition"
+      }, option.labelName)
+    );
+	result.update = (html:string) => {
+      this.overlayStop.children[1].innerHTML = html;
+      // this.overlayStop.children[1].innerHTML = ;
+	}
+	return result;
 }
 
 export default class PongGame {
@@ -104,9 +109,6 @@ export default class PongGame {
       labelName: "PLAY AGAIN",
       onclick: this.initGame
     });
-	this.updateOverlayStop = () => {
-      this.overlayStop.children[1].innerHTML = `Final Score: ${this.state.playerScore} - ${this.state.computerScore}`;
-	}
     this.overlayStop.style.visibility = "hidden";
   }
 
@@ -236,7 +238,7 @@ export default class PongGame {
 	  return
     this.state.winner = this.state.playerScore >= WINNING_SCORE ? "PLAYER" : "COMPUTER";
     this.state.gameOver = true;
-    this.updateOverlayStop();
+	this.overlayStop.update(`Final Score: ${this.state.playerScore} - ${this.state.computerScore}`);
   	this.overlayStop.style.visibility = "visible";
   }
 
