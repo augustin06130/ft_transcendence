@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@fastify/websocket": "^11.0.2",
     "abbrev": "^1.1.1",
     "abstract-logging": "^2.0.1",
     "acorn": "^8.14.1",
@@ -21,6 +22,7 @@
     "avvio": "^9.1.0",
     "balanced-match": "^1.0.2",
     "base64-js": "^1.5.1",
+    "bcrypt": "^5.1.1",
     "binary-extensions": "^2.3.0",
     "bindings": "^1.5.0",
     "bl": "^4.1.0",
@@ -164,6 +166,7 @@
     "sonic-boom": "^4.2.0",
     "split2": "^4.2.0",
     "sprintf-js": "^1.1.3",
+    "sqlite": "^5.0.2",
     "sqlite3": "^5.1.7",
     "ssri": "^8.0.1",
     "string_decoder": "^1.3.0",
@@ -189,32 +192,30 @@
     "which": "^2.0.2",
     "wide-align": "^1.1.5",
     "wrappy": "^1.0.2",
+    "ws": "^8.18.1",
     "yallist": "^4.0.0",
-    "yn": "^3.1.1",
-    "sqlite": "^5.0.2",
-    "bcrypt": "^5.1.1"
+    "yn": "^3.1.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "hot-reload": "npm install && nodemon --watch ./src --exec 'npm run build && npm run start'"
-
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^22.13.10",
-    "typescript": "^5.8.2",
-    "fastify": "^5.2.1",
-    "@fastify/static": "^8.0.0",
-    "@fastify/session": "^11.0.0",
-    "@fastify/swagger": "^7.0.0",
     "@fastify/cookie": "^11.0.0",
-    "dotenv": "^16.4.7",
+    "@fastify/session": "^11.0.0",
+    "@fastify/static": "^8.0.0",
+    "@fastify/swagger": "^7.0.0",
     "@types/bcrypt": "^5.0.2",
-    "@types/sqlite3": "^3.1.11"
+    "@types/node": "^22.13.10",
+    "@types/sqlite3": "^3.1.11",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "typescript": "^5.8.2"
   }
 }
