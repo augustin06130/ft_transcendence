@@ -3,17 +3,17 @@ OUTPUT_PORT         = 80
 COMPOSE_FILE        = docker-compose.yml
 
 run:
-	@docker-compose -f $(COMPOSE_FILE) up
+	@docker compose -f $(COMPOSE_FILE) up
 
 build:
-	@docker-compose -f $(COMPOSE_FILE) build
+	@docker compose -f $(COMPOSE_FILE) build
 
 down:
-	@docker-compose -f $(COMPOSE_FILE) down
+	@docker compose -f $(COMPOSE_FILE) down
 
 rebuild:
-	@docker-compose -f $(COMPOSE_FILE) down
-	@docker-compose -f $(COMPOSE_FILE) up --build
+	@docker compose -f $(COMPOSE_FILE) down
+	@docker compose -f $(COMPOSE_FILE) up --build
 
 clean:
 	# docker compose down

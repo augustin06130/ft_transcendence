@@ -140,7 +140,8 @@ export default function playPong(
 
     broadcastCmd("set", 3);
     sendCmd(p1, "set", 1);
-    sendCmd(p2, "set", 2);
+	if (p1 !== p2)
+    	sendCmd(p2, "set", 2);
 
     initGame();
     startTurn();

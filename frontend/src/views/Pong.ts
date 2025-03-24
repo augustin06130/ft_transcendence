@@ -72,20 +72,20 @@ export default function PongGameView() {
 	};
 
 	// Gérer les contrôles pour le mode PvP
-	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'w' || e.key === 'W') {
-			game.moveLeftPaddle(-10); // Déplacer le paddle gauche vers le haut
-		} else if (e.key === 's' || e.key === 'S') {
-			game.moveLeftPaddle(10); // Déplacer le paddle gauche vers le bas
-		}
-		// if (gameMode.get() === 'pvp') {
-		if (e.key === 'i' || e.key === 'I') {
-			game.moveRightPaddle(-10); // Déplacer le paddle droit vers le haut
-		} else if (e.key === 'k' || e.key === 'K') {
-			game.moveRightPaddle(10); // Déplacer le paddle droit vers le bas
-		}
-		// }
-	};
+	// const handleKeyDown = (e: KeyboardEvent) => {
+	// 	if (e.key === 'w' || e.key === 'W') {
+	// 		game.moveLeftPaddle(-10); // Déplacer le paddle gauche vers le haut
+	// 	} else if (e.key === 's' || e.key === 'S') {
+	// 		game.moveLeftPaddle(10); // Déplacer le paddle gauche vers le bas
+	// 	}
+	// 	// if (gameMode.get() === 'pvp') {
+	// 	if (e.key === 'i' || e.key === 'I') {
+	// 		game.moveRightPaddle(-10); // Déplacer le paddle droit vers le haut
+	// 	} else if (e.key === 'k' || e.key === 'K') {
+	// 		game.moveRightPaddle(10); // Déplacer le paddle droit vers le bas
+	// 	}
+	// 	// }
+	// };
 	const pongInstructions = () => {
 		return div({ className: "mt-6 text-green-400/70 text-sm" },
 			p({ className: "mb-1" }, "$ cat instructions.txt"),
@@ -105,8 +105,6 @@ export default function PongGameView() {
 			`© ${new Date().getFullYear()} TERM_OS • All systems nominal`
 		);
 	};
-
-	window.addEventListener('keydown', handleKeyDown);
 
 	// Fonction de rendu du composant
 	const renderComponent = () => {

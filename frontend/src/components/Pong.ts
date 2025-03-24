@@ -20,6 +20,8 @@ type PongState = {
 	playerScore: number;
 	computerScore: number;
 	player: number;
+	deltaYplayer: number;
+	deltaYcomputer: number;
 }
 
 function overlay(option: {
@@ -57,6 +59,8 @@ export default class PongGame {
 		this.name2Setter = name2Setter;
 		this.gameMode = gameMode;
 		this.handleResize = this.handleResize.bind(this);
+		this.handleKeyDown = this.handleKeyDown.bind(this);
+		this.handleKeyUp = this.handleKeyUp.bind(this);
 		this.startGame = this.startGame.bind(this);
 		this.registerGame = this.registerGame.bind(this);
 		this.backToRegister = this.backToRegister.bind(this);
@@ -69,6 +73,8 @@ export default class PongGame {
 			}
 		});
 		window.addEventListener("resize", this.handleResize);
+		window.addEventListener('keydown', this.handleKeyDown);
+		window.addEventListener('keyup', this.handleKeyUp);
 
 		this.state = this.reset();
 
@@ -130,8 +136,6 @@ export default class PongGame {
 				this.overlayStart.style.visibility = "hidden";
 				break;
 			case "update":
-				this.name1Setter("coucou");
-				this.name2Setter("coucou");
 				this.updateGame(data);
 				break;
 			case "setName":
@@ -170,6 +174,8 @@ export default class PongGame {
 			computerScore: 0,
 			playerY: 0,
 			computerY: 0,
+			deltaYplayer: 0,
+			deltaYcomputer: 0,
 			ballX: 0,
 			ballY: 0,
 			canvasWidth: 0,
@@ -195,6 +201,8 @@ export default class PongGame {
 		this.state.playerScore = parseInt(data.arg4);
 		this.state.computerScore = parseInt(data.arg5);
 		this.drawGame();
+		this.moveLeftPaddle();
+		this.moveRightPaddle();
 	}
 
 	startGame() {
@@ -202,14 +210,33 @@ export default class PongGame {
 		this.sendCmd("ready");
 	}
 
-	moveLeftPaddle(deltaY: number) {
+	moveLeftPaddle() {
 		if (this.state.player === 1 || this.gameMode === 'local')
-			this.sendCmd("paddle", "player", deltaY);
+			this.sendCmd("paddle", "player", this.state.deltaYplayer);
 	}
 
-	moveRightPaddle(deltaY: number) {
+	moveRightPaddle() {
 		if (this.state.player === 2 || this.gameMode === 'local')
-			this.sendCmd("paddle", "computer", deltaY);
+			this.sendCmd("paddle", "computer", this.state.deltaYcomputer);
+	}
+
+	handleKeyDown(e: KeyboardEvent) {
+		console
+		if (e.key === 'w' || e.key === 'W')
+			this.state.deltaYplayer = -5;
+		else if (e.key === 's' || e.key === 'S')
+			this.state.deltaYplayer = 5;
+		if (e.key === 'i' || e.key === 'I')
+			this.state.deltaYcomputer = -10;
+		else if (e.key === 'k' || e.key === 'K')
+			this.state.deltaYcomputer = 10;
+	};
+
+	handleKeyUp(e: KeyboardEvent) {
+		if (e.key === 'w' || e.key === 'W' || e.key === 's' || e.key === 'S')
+			this.state.deltaYplayer = 0;
+		if (e.key === 'i' || e.key === 'I' || e.key === 'k' || e.key === 'K')
+			this.state.deltaYcomputer = 0;
 	}
 
 	backToRegister() {
