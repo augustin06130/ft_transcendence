@@ -103,7 +103,7 @@ const start = async () => {
 
 		// Démarrez le serveur
 		await app.listen({
-			port: 18000,
+			port: 80,
 			host: '0.0.0.0',
 		});
 		// console.log('Server is listening on http://localhost:80');

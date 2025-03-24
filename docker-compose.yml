@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
     ports:
-      - "18000:18000"
+      - "8080:80"
     volumes:
       - ./backend:/backend
       - ./frontend/public:/backend/public
