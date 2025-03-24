@@ -3,7 +3,6 @@ OUTPUT_PORT         = 80
 COMPOSE_FILE        = docker-compose.yml
 
 run:
-	@echo "Starting $(CONTAINER_IMAGE_NAME) at http://localhost:$(OUTPUT_PORT)"
 	@docker compose -f $(COMPOSE_FILE) up
 
 build:

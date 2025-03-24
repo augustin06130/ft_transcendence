@@ -4,6 +4,7 @@
   "main": "index.js",
   "dependencies": {
     "@fastify/websocket": "^11.0.2",
+    "@types/ws": "^8.18.0",
     "abbrev": "^1.1.1",
     "abstract-logging": "^2.0.1",
     "acorn": "^8.14.1",
