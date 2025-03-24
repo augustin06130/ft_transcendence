@@ -2,277 +2,312 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { WebSocket } from "@fastify/websocket";
 
 type PongState = {
-  ingame: boolean;
-  ballX: number;
-  ballY: number;
-  playerY: number;
-  computerY: number;
-  playerHeight: number;
-  computerHeight: number;
-  ballSpeedX: number;
-  ballSpeedY: number;
-  canvasWidth: number;
-  canvasHeight: number;
-  playerScore: number;
-  computerScore: number;
-  winner: string;
-  ballRadius: number;
-  intervalId: number;
-  mode: "ai" | "local" | "remote";
+	ingame: boolean;
+	ballX: number;
+	ballY: number;
+	playerY: number;
+	computerY: number;
+	playerHeight: number;
+	computerHeight: number;
+	ballSpeedX: number;
+	ballSpeedY: number;
+	playerScore: number;
+	computerScore: number;
+	ballRadius: number;
+	intervalId: number;
+	playerSpeed: number;
+	computerSpeed: number;
+	mode: "ai" | "local" | "remote";
 };
 
 const PADDLE_WIDTH = 10;
-const WINNING_SCORE = 3;
+const WINNING_SCORE = 1;
 
 // let connects = new Set<string>();
-type client = {
-  username: string;
-  socket: WebSocket;
-  registered: boolean;
+type Client = {
+	username: string;
+	socket: WebSocket;
+	registered: boolean;
 };
 
-let clients: client[] = [];
+let clients: Client[] = [];
 
 let gameState: PongState = {
-  ingame: false,
-  ballX: 0,
-  ballY: 0,
-  ballSpeedX: 0,
-  ballSpeedY: 0,
-  playerY: 0,
-  computerY: 0,
-  playerHeight: 100,
-  computerHeight: 100,
-  playerScore: 0,
-  computerScore: 0,
-  canvasWidth: 0,
-  canvasHeight: 0,
-  winner: "",
-  ballRadius: 8,
-  intervalId: 0,
-  mode: "ai",
+	ingame: false,
+	ballX: 0,
+	ballY: 0,
+	ballSpeedX: 0,
+	ballSpeedY: 0,
+	playerY: 0,
+	computerY: 0,
+	playerHeight: 200,
+	computerHeight: 200,
+	playerScore: 0,
+	computerScore: 0,
+	ballRadius: 12,
+	intervalId: 0,
+	mode: "ai",
+	playerSpeed: 6,
+	computerSpeed: 6,
 };
 
 export default function playPong(
-  socket: WebSocket,
-  request: FastifyRequest,
-  app: FastifyInstance,
+	socket: WebSocket,
+	request: FastifyRequest,
+	app: FastifyInstance,
 ) {
-  const username = Math.floor(Math.random() * 1000000000).toString();
-  // const username = request.session.username ? request.session.username : "";
+	const username = Math.floor(Math.random() * 1000000000).toString();
+	// const username = request.session.username ? request.session.username : "";
 
-  // if (username === "") {
-  //   sendCmd(socket, "error", "You must be logged to play !");
-  //   socket.close();
-  //   return;
-  // }
+	// if (username === "") {
+	//   sendCmd(socket, "error", "You must be logged to play !");
+	//   socket.close();
+	//   return;
+	// }
 
-  console.log(`User: ${username} arrived`);
-  clients.push;
-  clients.push({ username, socket, registered: true });
+	console.log(`User: ${username} arrived`);
+	let currClient = { username, socket, registered: true };
+	clients.push(currClient);
+	if (gameState.ingame) {
+		console.log("go to sec");
+		sendCmd(currClient, "spec");
+	}
 
-  socket.on("message", (message: any) => onMessageHandle(message, username));
+	socket.on("message", (message: any) => onMessageHandle(message));
 
-  socket.on("close", () => {
-    console.log(`User ${username} left`);
-    clients.filter((c: client) => c.username === username);
-  });
+	socket.on("close", () => {
+		console.log(`User ${username} left`);
+		clients.filter((c: Client) => c.username === username);
+	});
 
-  function parse(cmd: string, ...args: (string | number)[]) {
-    let obj: any = { cmd: cmd };
-    args.forEach((arg, i) => (obj[`arg${i}`] = arg));
-    return JSON.stringify(obj);
-  }
+	function parse(cmd: string, ...args: (string | number)[]) {
+		let obj: any = { cmd: cmd };
+		args.forEach((arg, i) => (obj[`arg${i}`] = arg));
+		return JSON.stringify(obj);
+	}
 
-  function sendCmd(client: client, cmd: string, ...args: (string | number)[]) {
-    client.socket.send(parse(cmd, ...args));
-  }
+	function sendCmd(client: Client, cmd: string, ...args: (string | number)[]) {
+		client.socket.send(parse(cmd, ...args));
+	}
 
-  function broadcastCmd(cmd: string, ...args: (string | number)[]) {
-    let obj = parse(cmd, ...args);
+	function broadcastCmd(cmd: string, ...args: (string | number)[]) {
+		let obj = parse(cmd, ...args);
+		clients.forEach((client: Client) => {
+			if (client.socket.readyState === 1) client.socket.send(obj);
+		});
+	}
 
-    clients.forEach((client: client) => {
-      if (client.socket.readyState === 1) client.socket.send(obj);
-    });
-  }
+	function onMessageHandle(msg: any) {
+		const data = JSON.parse(msg);
+		if (data.cmd !== "paddle")
+			console.log(data);
+		switch (data.cmd) {
+			case "register":
+				registerClient();
+				break;
+			case "paddle":
+				if (data.arg0 === "player")
+					updatePlayerPaddle(data.arg1);
+				else
+					updateComputerPaddle(data.arg1);
+				break;
+			case "ready":
+				startGame();
+				break;
+			case "mode":
+				gameState.mode = data.arg0;
+				broadcastCmd("mode", data.arg0);
+				break;
+		}
+	}
+	
+	function registerClient() {
+		clients.map((c) => {
+			if (c.username === username) {
+				c.registered = true;
+				sendCmd(c, "registered");
+			}
+		});
+	}
 
-  function onMessageHandle(msg: any, username: string) {
-    const data = JSON.parse(msg);
-    console.log(data);
-    switch (data.cmd) {
-      case "register":
-        clients.map((c) => {
-          if (c.username === username) {
-            c.registered = true;
-            sendCmd(c, "registered");
-          }
-        });
-        break;
-      case "canvas":
-        gameState.canvasWidth = data.arg0;
-        gameState.canvasHeight = data.arg1;
-        break;
-      case "paddle":
-        if (data.arg0 === "player") updatePlayerPaddle(data.arg1);
-        else updateComputerPaddle(data.arg1);
-        break;
-      case "ready":
-        if (!gameState.ingame) startGame();
-        break;
-      case "error":
-        break;
-    }
-  }
+	function getPlayer() {
+		const c = clients.slice(clients.findIndex((c) => c.registered))[0];
+		clients.push(c);
+		return c;
+	}
 
-  function getPlayer() {
-    let i = clients.findIndex((c) => c.registered);
-    return clients[i];
-  }
+	function getPlayerCount() {
+		return clients.reduce((tot, c) => tot + +c.registered, 0);
+	}
 
-  function startGame() {
-    gameState.ingame = true;
+	function selectPlayers(): boolean {
+		if (gameState.mode === "remote" && getPlayerCount() < 2)
+			return false;
 
-    //selecting players
-    let p1 = getPlayer();
-    let p2 = getPlayer();
-    broadcastCmd("setName", "player1", p1.username);
-    broadcastCmd("setName", "player2", p2.username);
+		let p2 = null;
+		const p1 = getPlayer();
+		sendCmd(p1, "set", 1);
+		broadcastCmd("setName", "player1", p1.username);
 
-    broadcastCmd("set", 3);
-    sendCmd(p1, "set", 1);
-	if (p1 !== p2)
-    	sendCmd(p2, "set", 2);
+		switch (gameState.mode) {
+			case "remote":
+				console.log("number of players", getPlayerCount());
+				p2 = getPlayer();
+				sendCmd(p2, "set", 2);
+				broadcastCmd("setName", "player2", p2.username);
+				break;
+			case "ai":
+				broadcastCmd("setName", "player2", 'Computer');
+				break;
+			case "local":
+				broadcastCmd("setName", "player2", 'Guest');
+				break;
+		}
 
-    initGame();
-    startTurn();
-  }
+		clients.forEach(c => {
+			if (c != p1 && c != p2)
+				sendCmd(c, "spec");
+		})
 
-  function startTurn() {
-    if (gameState.intervalId) clearInterval(gameState.intervalId);
+		return true;
+	}
 
-    if (checkWinner()) return;
+	function startGame() {
+		if (gameState.ingame) {
+			console.log("already in game")
+			return;
+		}
+		if (!selectPlayers()) {
+			console.log("cannot start")
+			return;
+		}
 
-    gameState.playerY = (gameState.canvasHeight - gameState.playerHeight) / 2;
-    gameState.computerY =
-      (gameState.canvasHeight - gameState.computerHeight) / 2;
-    gameState.ballX = gameState.canvasWidth / 2;
-    gameState.ballY = gameState.canvasHeight / 2;
-    gameState.ballSpeedX = -4 / 10;
-    gameState.ballSpeedY = (Math.random() * 4 - 2) / 10;
-    gameState.ballRadius = 8;
-    BroadcastGame();
-    setTimeout(() => {
-      gameState.intervalId = setInterval(updateGame, 10) as any;
-    }, 1000);
-  }
+		gameState.ingame = true;
+		broadcastCmd("ingame", 1);
+		initGame();
+		startTurn();
+	}
 
-  function checkWinner() {
-    if (
-      gameState.playerScore < WINNING_SCORE &&
-      gameState.computerScore < WINNING_SCORE
-    )
-      return false;
-    BroadcastGame();
-    broadcastCmd(
-      "score",
-      gameState.playerScore >= WINNING_SCORE ? "player" : "computer",
-    );
-    gameState.ingame = false;
-    return true;
-  }
+	function startTurn() {
+		if (gameState.intervalId) clearInterval(gameState.intervalId);
 
-  function initGame() {
-    gameState.playerScore = 0;
-    gameState.computerScore = 0;
-    gameState.playerY = 0;
-    gameState.computerY = 0;
-    gameState.winner = "";
-  }
+		if (checkWinner()) return;
 
-  function updatePlayerPaddle(delta: number) {
-    gameState.playerY += delta;
-    gameState.playerY = Math.max(gameState.playerY, 0);
-    gameState.playerY = Math.min(
-      gameState.playerY,
-      gameState.canvasHeight - gameState.playerHeight,
-    );
-  }
+		gameState.playerY = 500;
+		gameState.computerY = 500;
+		gameState.ballX = 500;
+		gameState.ballY = 500;
+		gameState.ballSpeedX = -2;
+		gameState.ballSpeedY = Math.random() * 2;
 
-  function updateComputerPaddle(delta: number) {
-    gameState.computerY += delta;
-    gameState.computerY = Math.max(gameState.computerY, 0);
-    gameState.computerY = Math.min(
-      gameState.computerY,
-      gameState.canvasHeight - gameState.computerHeight,
-    );
-  }
+		broadcastGame();
+		setTimeout(() => {
+			gameState.intervalId = setInterval(updateGame, 10) as any;
+		}, 1000);
+	}
 
-  function updateGame() {
-    gameState.ballX += gameState.ballSpeedX;
-    gameState.ballY += gameState.ballSpeedY;
+	function checkWinner() {
+		if (
+			gameState.playerScore < WINNING_SCORE &&
+			gameState.computerScore < WINNING_SCORE
+		)
+			return false;
+		broadcastGame();
+		broadcastCmd("score", gameState.playerScore >= WINNING_SCORE ? "player" : "computer");
+		gameState.ingame = false;
+		broadcastCmd("ingame", 0);
+		return true;
+	}
 
-    // Top and bottom collisions
-    if (
-      gameState.ballY < gameState.ballRadius ||
-      gameState.ballY > gameState.canvasHeight - gameState.ballRadius
-    )
-      gameState.ballSpeedY = -gameState.ballSpeedY;
+	function initGame() {
+		gameState.playerScore = 0;
+		gameState.computerScore = 0;
+		gameState.playerY = 0;
+		gameState.computerY = 0;
+	}
 
-    // Paddles bounce collisions
-    playerPaddle();
-    computerPaddle();
+	function updatePlayerPaddle(delta: number) {
+		gameState.playerY += delta * gameState.playerSpeed;
+		gameState.playerY = Math.max(gameState.playerY, 0);
+		gameState.playerY = Math.min(gameState.playerY, 1000 - gameState.playerHeight);
+	}
 
-    // Left and right exit
-    if (gameState.ballX < gameState.ballRadius) {
-      gameState.computerScore++;
-      startTurn();
-    }
-    if (gameState.ballX > gameState.canvasWidth - gameState.ballRadius) {
-      gameState.playerScore++;
-      startTurn();
-    }
-    BroadcastGame();
-  }
+	function updateComputerPaddle(delta: number) {
+		gameState.computerY += delta * gameState.computerSpeed;
+		gameState.computerY = Math.max(gameState.computerY, 0);
+		gameState.computerY = Math.min(gameState.computerY, 1000 - gameState.computerHeight);
+	}
 
-  function playerPaddle() {
-    if (
-      gameState.ballX < PADDLE_WIDTH + gameState.ballRadius &&
-      gameState.ballY > gameState.playerY &&
-      gameState.ballY < gameState.playerY + gameState.playerHeight
-    ) {
-      gameState.ballSpeedX = -gameState.ballSpeedX;
+	function updateGame() {
+		gameState.ballX += gameState.ballSpeedX;
+		gameState.ballY += gameState.ballSpeedY;
 
-      const deltaY =
-        gameState.ballY - (gameState.playerY + gameState.playerHeight / 2);
-      gameState.ballSpeedY = deltaY * 0.35;
-    }
-  }
+		// Top and bottom collisions
+		if (
+			gameState.ballY < gameState.ballRadius ||
+			gameState.ballY > 1000 - gameState.ballRadius
+		)
+			gameState.ballSpeedY = -gameState.ballSpeedY;
 
-  function computerPaddle() {
-    if (
-      gameState.ballX >
-        gameState.canvasWidth - PADDLE_WIDTH - gameState.ballRadius &&
-      gameState.ballY > gameState.computerY &&
-      gameState.ballY < gameState.computerY + gameState.computerHeight
-    ) {
-      gameState.ballSpeedX = -gameState.ballSpeedX;
+		// Paddles bounce collisions
+		playerPaddle();
+		computerPaddle();
 
-      const deltaY =
-        gameState.ballY - (gameState.computerY + gameState.computerHeight / 2);
-      gameState.ballSpeedY = deltaY * 0.35;
-    }
-  }
-  function ai() {}
+		// Left and right exit
+		if (gameState.ballX < gameState.ballRadius) {
+			gameState.computerScore++;
+			startTurn();
+		}
+		if (gameState.ballX > 1000 - gameState.ballRadius) {
+			gameState.playerScore++;
+			startTurn();
+		}
+		broadcastGame();
+	}
 
-  function BroadcastGame() {
-    broadcastCmd(
-      "update",
-      gameState.ballX,
-      gameState.ballY,
-      gameState.playerY,
-      gameState.computerY,
-      gameState.playerScore,
-      gameState.computerScore,
-    );
-  }
+	function playerPaddle() {
+		if (
+			gameState.ballX < PADDLE_WIDTH + gameState.ballRadius &&
+			gameState.ballY > gameState.playerY &&
+			gameState.ballY < gameState.playerY + gameState.playerHeight
+		) {
+			gameState.ballSpeedX = -gameState.ballSpeedX;
+
+			const deltaY =
+				gameState.ballY - (gameState.playerY + gameState.playerHeight / 2);
+			gameState.ballSpeedY = deltaY * 0.35;
+		}
+	}
+
+	function computerPaddle() {
+		if (
+			gameState.ballX >
+			1000 - PADDLE_WIDTH - gameState.ballRadius &&
+			gameState.ballY > gameState.computerY &&
+			gameState.ballY < gameState.computerY + gameState.computerHeight
+		) {
+			gameState.ballSpeedX = -gameState.ballSpeedX;
+
+			const deltaY =
+				gameState.ballY - (gameState.computerY + gameState.computerHeight / 2);
+			gameState.ballSpeedY = deltaY * 0.35;
+		}
+	}
+	function ai() { }
+
+	function broadcastGame() {
+		broadcastCmd(
+			"update",
+			gameState.ballX,			// 0
+			gameState.ballY,			// 1
+			gameState.playerY,			// 2
+			gameState.computerY,		// 3
+			gameState.playerScore,		// 4
+			gameState.computerScore,	// 5
+			gameState.playerHeight,		// 6
+			gameState.computerHeight,	// 7
+			gameState.ballRadius,		// 8
+			PADDLE_WIDTH,				// 9
+		);
+	}
 }

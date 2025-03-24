@@ -1,15 +1,12 @@
 import { canvas, div, h2, p, button } from "@framework/tags";
+import { Setter, UseStateType } from "@framework/UseState";
 
-const PADDLE_HEIGHT = 100;
-const PADDLE_WIDTH = 10;
-const BALL_RADIUS = 8;
 export const WINNING_SCORE = 1;
 
-export type gameModesType = 'ai' | 'local' | 'remote';
-export const gameModes: gameModesType[] = ['ai', 'local', 'remote'];
+export type GameModeType = 'ai' | 'local' | 'remote';
+export const gameModes: GameModeType[] = ['ai', 'local', 'remote'];
 
 type PongState = {
-	role: "host" | "guest"
 	connected: false;
 	playerY: number;
 	computerY: number;
@@ -22,6 +19,11 @@ type PongState = {
 	player: number;
 	deltaYplayer: number;
 	deltaYcomputer: number;
+	playerHeight: number,
+	computerHeight: number,
+	ballRadius: number,
+	paddleWidth: number,
+	ingame: boolean,
 }
 
 function overlay(option: {
@@ -40,8 +42,6 @@ function overlay(option: {
 	);
 }
 
-type nameSetter = (name: string) => void;
-
 export default class PongGame {
 	canvasElement: HTMLCanvasElement;
 	state: PongState;
@@ -49,29 +49,24 @@ export default class PongGame {
 	overlayRegister: HTMLElement;
 	overlayScore: HTMLElement;
 	overlayError: HTMLElement;
-	gameMode: gameModesType;
-	name1Setter: nameSetter;
-	name2Setter: nameSetter;
+	gameMode: UseStateType<GameModeType>;
+	name1Set: Setter<string>;
+	name2Set: Setter<string>;
+	topTextSet: Setter<string>;
 	socket: WebSocket;
 
-	constructor(gameMode: gameModesType, name1Setter: nameSetter, name2Setter: nameSetter) {
-		this.name1Setter = name1Setter;
-		this.name2Setter = name2Setter;
+	constructor(gameMode: UseStateType<GameModeType>, name1Set: Setter<string>, name2Set: Setter<string>, topTextSet: Setter<string>) {
+		this.name1Set = name1Set;
+		this.name2Set = name2Set;
+		this.topTextSet = topTextSet;
 		this.gameMode = gameMode;
 		this.handleResize = this.handleResize.bind(this);
 		this.handleKeyDown = this.handleKeyDown.bind(this);
 		this.handleKeyUp = this.handleKeyUp.bind(this);
-		this.startGame = this.startGame.bind(this);
 		this.registerGame = this.registerGame.bind(this);
 		this.backToRegister = this.backToRegister.bind(this);
 		this.messageHanle = this.messageHanle.bind(this);
-
-		this.canvasElement = canvas({
-			className: "w-full h-full border border-green-500/30 rounded",
-			event: {
-				onMounted: this.handleResize,
-			}
-		});
+		this.canvasElement = canvas({ className: "w-full h-full border border-green-500/30 rounded" });
 		window.addEventListener("resize", this.handleResize);
 		window.addEventListener('keydown', this.handleKeyDown);
 		window.addEventListener('keyup', this.handleKeyUp);
@@ -82,7 +77,7 @@ export default class PongGame {
 			title: "TERMINAL PONG",
 			message: `First to ${WINNING_SCORE} wins`,
 			labelName: "READY",
-			onclick: this.startGame,
+			onclick: () => this.sendCmd("ready")
 		});
 
 		this.overlayRegister = overlay({
@@ -113,13 +108,11 @@ export default class PongGame {
 
 		this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
 
-		this.socket.onopen = () => {
-			console.log("pong socket opened");
-		}
+		this.socket.onopen = () => console.log("pong socket opened");
 
 		this.socket.onmessage = (event) => this.messageHanle(event);
-		this.socket.onerror = (err) => console.error("Test error:", err);
-		this.socket.onclose = (event) => console.log("Test socket closed:", event.code);
+		this.socket.onerror = (err) => console.error("Socket error:", err);
+		this.socket.onclose = () => this.displayError("You got disconnected");
 	}
 
 	messageHanle(msg: MessageEvent) {
@@ -135,15 +128,14 @@ export default class PongGame {
 				this.state.player = data.arg0;
 				this.overlayStart.style.visibility = "hidden";
 				break;
+			case "go":
+				this.overlayStart.style.visibility = "hidden";
+				break;
 			case "update":
 				this.updateGame(data);
 				break;
 			case "setName":
-				this.name1Setter(data.arg1);
-				if (data.arg0 === "player1")
-					this.name1Setter(data.arg1);
-				else if (data.arg0 === "player2")
-					this.name2Setter(data.arg1);
+				this.setName(data);
 				break;
 			case "score":
 				this.overlayScore.children[0].innerHTML = `${data.arg0} WON !`
@@ -151,13 +143,58 @@ export default class PongGame {
 				this.overlayScore.style.visibility = "visible";
 				break;
 			case "error":
-				this.overlayRegister.style.visibility = "hidden";
-				this.overlayStart.style.visibility = "hidden";
-				this.overlayScore.style.visibility = "hidden";
-				this.overlayError.style.visibility = "visible";
-				this.overlayError.children[1].innerHTML = data.arg0;
+				this.displayError(data.arg0)
+			case "spec":
+				this.startSpec();
+			case "mode":
+				this.gameMode.set(data.arg0);
+			case "ingame":
+				this.state.ingame = !!parseInt(data.arg0);
+				console.log("set ingame", this.state.ingame);
 				break;
 		}
+	}
+
+	getIngame(): boolean {
+		console.log("get ingame", this.state.ingame);
+		return this.state.ingame;
+	}
+
+	setName(data: any) {
+		this.handleResize();
+
+		if (data.arg0 === "player1") {
+			this.name1Set(data.arg1);
+			if (this.state.player === 1)
+				this.topTextSet(`⬅ ⬅ You are playing as ${data.arg1} ⬅ ⬅`);
+		}
+		else if (data.arg0 === "player2") {
+			this.name2Set(data.arg1);
+			if (this.state.player === 2)
+				this.topTextSet(`=> => You are playing as ${data.arg1} => =>`);
+		}
+		if (this.state.player === 3)
+			this.topTextSet(`<=> <=> You are playing localy <=> <=>`);
+
+	}
+
+	startSpec() {
+		// this.state.ingame = true;
+		this.handleResize();
+		this.topTextSet("Spectator");
+		this.state.player = 3;
+		this.overlayScore.style.visibility = "hidden";
+		this.overlayRegister.style.visibility = "hidden";
+		this.overlayStart.style.visibility = "hidden";
+		this.overlayError.style.visibility = "hidden";
+	}
+
+	displayError(msg: string) {
+		this.overlayRegister.style.visibility = "hidden";
+		this.overlayStart.style.visibility = "hidden";
+		this.overlayScore.style.visibility = "hidden";
+		this.overlayError.style.visibility = "visible";
+		this.overlayError.children[1].innerHTML = msg;
 	}
 
 	sendCmd(cmd: string, ...args: (string | number)[]) {
@@ -168,8 +205,8 @@ export default class PongGame {
 
 	reset() {
 		this.state = {
+			ingame: false,
 			connected: false,
-			role: "host",
 			playerScore: 0,
 			computerScore: 0,
 			playerY: 0,
@@ -181,55 +218,61 @@ export default class PongGame {
 			canvasWidth: 0,
 			canvasHeight: 0,
 			player: 0,
+			playerHeight: 0,
+			computerHeight: 0,
+			ballRadius: 0,
+			paddleWidth: 0,
 		};
 		return this.state;
 	}
 
-	setGameMode(gameMode: gameModesType) {
-		this.gameMode = gameMode;
-	}
+	// setGameMode(gameMode: GameModeType) {
+	// 	this.gameMode.set(gameMode);
+	// }
 
 	registerGame() {
 		this.sendCmd("register");
 	}
 
 	updateGame(data: any) {
-		this.state.ballX = parseInt(data.arg0);
-		this.state.ballY = parseInt(data.arg1);
-		this.state.playerY = parseInt(data.arg2);
-		this.state.computerY = parseInt(data.arg3);
+		// this.state.ingame = true;
+		this.state.ballX = parseInt(data.arg0) / 1000 * this.state.canvasWidth;
+		this.state.ballY = parseInt(data.arg1) / 1000 * this.state.canvasHeight;
+		this.state.playerY = parseInt(data.arg2) / 1000 * this.state.canvasHeight;
+		this.state.computerY = parseInt(data.arg3) / 1000 * this.state.canvasHeight;
 		this.state.playerScore = parseInt(data.arg4);
 		this.state.computerScore = parseInt(data.arg5);
+		this.state.playerHeight = parseInt(data.arg6) / 1000 * this.state.canvasHeight;
+		this.state.computerHeight = parseInt(data.arg7) / 1000 * this.state.canvasHeight;
+		this.state.ballRadius = parseInt(data.arg8) / 1000 * this.state.canvasHeight;
+		this.state.paddleWidth = parseInt(data.arg9) / 1000 * this.state.canvasWidth
+
+
 		this.drawGame();
 		this.moveLeftPaddle();
 		this.moveRightPaddle();
 	}
 
-	startGame() {
-		this.handleResize();
-		this.sendCmd("ready");
-	}
-
 	moveLeftPaddle() {
-		if (this.state.player === 1 || this.gameMode === 'local')
+		if (this.state.player === 1 || this.gameMode.get() === 'local')
 			this.sendCmd("paddle", "player", this.state.deltaYplayer);
 	}
 
 	moveRightPaddle() {
-		if (this.state.player === 2 || this.gameMode === 'local')
+		if (this.state.player === 2 || this.gameMode.get() === 'local')
 			this.sendCmd("paddle", "computer", this.state.deltaYcomputer);
 	}
 
 	handleKeyDown(e: KeyboardEvent) {
 		console
 		if (e.key === 'w' || e.key === 'W')
-			this.state.deltaYplayer = -5;
+			this.state.deltaYplayer = -1;
 		else if (e.key === 's' || e.key === 'S')
-			this.state.deltaYplayer = 5;
+			this.state.deltaYplayer = 1;
 		if (e.key === 'i' || e.key === 'I')
-			this.state.deltaYcomputer = -10;
+			this.state.deltaYcomputer = -1;
 		else if (e.key === 'k' || e.key === 'K')
-			this.state.deltaYcomputer = 10;
+			this.state.deltaYcomputer = 1;
 	};
 
 	handleKeyUp(e: KeyboardEvent) {
@@ -276,8 +319,8 @@ export default class PongGame {
 		this.state.canvasWidth = this.canvasElement.width;
 		this.state.canvasHeight = this.canvasElement.height;
 
+		// this.sendCmd("canvas", this.state.canvasWidth, this.state.canvasHeight);
 		this.drawGame();
-		this.sendCmd("canvas", container.clientWidth, container.clientHeight);
 	}
 
 	drawGame() {
@@ -296,11 +339,11 @@ export default class PongGame {
 		ctx.setLineDash([]);
 
 		ctx.fillStyle = "#00ff00";
-		ctx.fillRect(0, this.state.playerY, PADDLE_WIDTH, PADDLE_HEIGHT);
-		ctx.fillRect(this.state.canvasWidth - PADDLE_WIDTH, this.state.computerY, PADDLE_WIDTH, PADDLE_HEIGHT);
+		ctx.fillRect(0, this.state.playerY, this.state.paddleWidth, this.state.playerHeight);
+		ctx.fillRect(this.state.canvasWidth - this.state.paddleWidth, this.state.computerY, this.state.paddleWidth, this.state.computerHeight);
 
 		ctx.beginPath();
-		ctx.arc(this.state.ballX, this.state.ballY, BALL_RADIUS, 0, Math.PI * 2);
+		ctx.arc(this.state.ballX, this.state.ballY, this.state.ballRadius, 0, Math.PI * 2);
 		ctx.fill();
 
 		ctx.font = "30px monospace";
