@@ -17,11 +17,11 @@ type PongState = {
 	intervalId: number;
 	playerSpeed: number;
 	computerSpeed: number;
+	paddleWidth: number,
 	mode: "ai" | "local" | "remote";
 };
 
-const PADDLE_WIDTH = 10;
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 10;
 
 // let connects = new Set<string>();
 type Client = {
@@ -49,6 +49,7 @@ let gameState: PongState = {
 	mode: "ai",
 	playerSpeed: 6,
 	computerSpeed: 6,
+	paddleWidth: 10,
 };
 
 export default function playPong(
@@ -65,20 +66,23 @@ export default function playPong(
 	//   return;
 	// }
 
-	console.log(`User: ${username} arrived`);
-	let currClient = { username, socket, registered: true };
+	let currClient = { username, socket, registered: false };
 	clients.push(currClient);
-	if (gameState.ingame) {
-		console.log("go to sec");
-		sendCmd(currClient, "spec");
-	}
+	broadcastPosition();
+	sendCmd(currClient, "ingame", +gameState.ingame);
 
 	socket.on("message", (message: any) => onMessageHandle(message));
+	// socket.on('connection', () => broadcastPosition())
 
 	socket.on("close", () => {
 		console.log(`User ${username} left`);
-		clients.filter((c: Client) => c.username === username);
+		clients = clients.filter((c: Client) => c.username !== username);
+		broadcastPosition();
 	});
+
+	/************************************************/
+	/*                   Functions                  */
+	/************************************************/
 
 	function parse(cmd: string, ...args: (string | number)[]) {
 		let obj: any = { cmd: cmd };
@@ -94,6 +98,17 @@ export default function playPong(
 		let obj = parse(cmd, ...args);
 		clients.forEach((client: Client) => {
 			if (client.socket.readyState === 1) client.socket.send(obj);
+		});
+	}
+
+	function broadcastPosition() {
+		let obj: any = { cmd: 'queuePosition', arg1: getPlayerCount() }
+		let i = 1;
+		clients.forEach((client: Client) => {
+			if (client.registered)
+				obj['arg0'] = i++;
+			if (client.socket.readyState === 1)
+				client.socket.send(JSON.stringify(obj));
 		});
 	}
 
@@ -120,41 +135,53 @@ export default function playPong(
 				break;
 		}
 	}
-	
+
 	function registerClient() {
-		clients.map((c) => {
+		clients.map(c => {
 			if (c.username === username) {
 				c.registered = true;
 				sendCmd(c, "registered");
 			}
 		});
-	}
-
-	function getPlayer() {
-		const c = clients.slice(clients.findIndex((c) => c.registered))[0];
-		clients.push(c);
-		return c;
+		sendPlayers();
+		broadcastPosition();
 	}
 
 	function getPlayerCount() {
 		return clients.reduce((tot, c) => tot + +c.registered, 0);
 	}
 
-	function selectPlayers(): boolean {
-		if (gameState.mode === "remote" && getPlayerCount() < 2)
-			return false;
+	function get2Players() {
+		let p1: Client | null = null;
+		let p2: Client | null = null;
+		clients.forEach((c: Client, i: number) => {
+			if (c.registered && !p1)
+				p1 = c;
+			else if (c.registered && !p2)
+				p2 = c;
+		})
+		return { p1, p2 };
+	}
 
-		let p2 = null;
-		const p1 = getPlayer();
-		sendCmd(p1, "set", 1);
-		broadcastCmd("setName", "player1", p1.username);
+	function sendPlayers() {
+		if (getPlayerCount() < 0)
+			return;
+
+		let { p1, p2 } = get2Players();
+
+		broadcastCmd("setPlayer", 3);
+		if (!p1)
+			return broadcastCmd("error", "Internal error");
+		sendCmd(p1, "setPlayer", 1);
+
+		broadcastCmd("setName", "player1", (p1 as Client).username);
 
 		switch (gameState.mode) {
 			case "remote":
-				console.log("number of players", getPlayerCount());
-				p2 = getPlayer();
-				sendCmd(p2, "set", 2);
-				broadcastCmd("setName", "player2", p2.username);
+				if (!p2)
+					return broadcastCmd("error", "Internal error");
+				sendCmd(p2, "setPlayer", 2);
+				broadcastCmd("setName", "player2", (p2 as Client).username);
 				break;
 			case "ai":
 				broadcastCmd("setName", "player2", 'Computer');
@@ -163,13 +190,6 @@ export default function playPong(
 				broadcastCmd("setName", "player2", 'Guest');
 				break;
 		}
-
-		clients.forEach(c => {
-			if (c != p1 && c != p2)
-				sendCmd(c, "spec");
-		})
-
-		return true;
 	}
 
 	function startGame() {
@@ -177,10 +197,11 @@ export default function playPong(
 			console.log("already in game")
 			return;
 		}
-		if (!selectPlayers()) {
-			console.log("cannot start")
-			return;
-		}
+
+		// if (!selectPlayers()) {
+		// 	console.log("cannot start")
+		// 	return;
+		// }
 
 		gameState.ingame = true;
 		broadcastCmd("ingame", 1);
@@ -189,9 +210,11 @@ export default function playPong(
 	}
 
 	function startTurn() {
-		if (gameState.intervalId) clearInterval(gameState.intervalId);
+		if (gameState.intervalId)
+			clearInterval(gameState.intervalId);
 
-		if (checkWinner()) return;
+		if (checkWinner())
+			return;
 
 		gameState.playerY = 500;
 		gameState.computerY = 500;
@@ -216,6 +239,8 @@ export default function playPong(
 		broadcastCmd("score", gameState.playerScore >= WINNING_SCORE ? "player" : "computer");
 		gameState.ingame = false;
 		broadcastCmd("ingame", 0);
+		clients.forEach(c => c.registered = false);
+		broadcastPosition();
 		return true;
 	}
 
@@ -267,7 +292,7 @@ export default function playPong(
 
 	function playerPaddle() {
 		if (
-			gameState.ballX < PADDLE_WIDTH + gameState.ballRadius &&
+			gameState.ballX < gameState.paddleWidth + gameState.ballRadius &&
 			gameState.ballY > gameState.playerY &&
 			gameState.ballY < gameState.playerY + gameState.playerHeight
 		) {
@@ -282,7 +307,7 @@ export default function playPong(
 	function computerPaddle() {
 		if (
 			gameState.ballX >
-			1000 - PADDLE_WIDTH - gameState.ballRadius &&
+			1000 - gameState.paddleWidth - gameState.ballRadius &&
 			gameState.ballY > gameState.computerY &&
 			gameState.ballY < gameState.computerY + gameState.computerHeight
 		) {
@@ -293,7 +318,6 @@ export default function playPong(
 			gameState.ballSpeedY = deltaY * 0.35;
 		}
 	}
-	function ai() { }
 
 	function broadcastGame() {
 		broadcastCmd(
@@ -307,7 +331,7 @@ export default function playPong(
 			gameState.playerHeight,		// 6
 			gameState.computerHeight,	// 7
 			gameState.ballRadius,		// 8
-			PADDLE_WIDTH,				// 9
+			gameState.paddleWidth,		// 9
 		);
 	}
 }
