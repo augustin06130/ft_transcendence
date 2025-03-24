@@ -1,18 +1,40 @@
-import { div, button, h1, h2, p } from "@framework/tags";
-import TerminalBox from "@components/TerminalBox";
+import { div, button, h1, p } from "@framework/tags";
+// import TerminalBox from "@components/TerminalBox";
 import PongGame, { WINNING_SCORE, gameModesType, gameModes } from "@components/Pong";
 import UseState from "@framework/UseState";
 
 export default function PongGameView() {
 	const gameMode = UseState<gameModesType>('ai', (newValue, oldValue) => {
 		console.log(`Game mode changed from ${oldValue} to ${newValue}`);
-		game.setGameMode(newValue); // Mettre à jour gameMode dans PongGame
-		updateModeSwitchText(); // Mettre à jour le texte du bouton
+		game.setGameMode(newValue);
+		updateModeSwitchText();
+		updateModePlayer2Name();
 	});
 
-	const game = new PongGame(gameMode.get()); // Passer gameMode à PongGame
 
-	let modeSwitchButton: HTMLElement | null = null; // Référence au bouton ModeSwitch
+	const updateModePlayer1Name = (name: string = '') => {
+		if (player1NameLabel)
+			player1NameLabel.innerHTML = name;
+	}
+
+	const updateModePlayer2Name = (name: string = '') => {
+		let player2Name;
+		if (gameMode.get() === 'ai')
+			player2Name = 'Computer';
+		else if (gameMode.get() === 'remote')
+			player2Name = 'Guest';
+		else
+			player2Name = name;
+
+		if (player2NameLabel)
+			player2NameLabel.innerHTML = player2Name;
+	}
+
+	const game = new PongGame(gameMode.get(), updateModePlayer1Name, updateModePlayer2Name);
+
+	let modeSwitchButton: HTMLElement | null = null;
+	let player2NameLabel: HTMLElement | null = null;
+	let player1NameLabel: HTMLElement | null = null;
 
 	const updateModeSwitchText = () => {
 		if (modeSwitchButton) {
@@ -34,22 +56,18 @@ export default function PongGameView() {
 	const gameControls = () => {
 		modeSwitchButton = button({
 			onclick: () => {
-				if (game.state.gameState != "playing")
-					// if (!game.state.gameStarted)
-					gameMode.set(gameModes[(gameModes.indexOf(gameMode.get()) + 1) % gameModes.length]);
+				gameMode.set(gameModes[(gameModes.indexOf(gameMode.get()) + 1) % gameModes.length]);
 			},
 			className: "px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition"
 		}, "Mode " + gameMode.get());
 
-		// Stocker la référence au bouton ModeSwitch
+		player1NameLabel = div({ className: "text-sm" }, 'Player 1');
+		player2NameLabel = div({ className: "text-sm" }, 'Player 2');
 
 		return div({ className: "flex justify-between items-center mt-4" },
 			div({ className: "text-sm" }, `PLAYER 1`),
-			div({ className: "flex gap-2" },
-				// (game.state.gameStarted && !game.state.gameOver) ? Reset : null,
-				modeSwitchButton
-			),
-			div({ className: "text-sm" }, `PLAYER 2`)
+			div({ className: "flex gap-2" }, modeSwitchButton),
+			player2NameLabel
 		);
 	};
 

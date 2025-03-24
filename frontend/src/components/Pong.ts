@@ -5,8 +5,8 @@ const PADDLE_WIDTH = 10;
 const BALL_RADIUS = 8;
 export const WINNING_SCORE = 1;
 
-export type gameModesType = 'ai' | 'pvp' | 'remote';
-export const gameModes: gameModesType[] = ['ai', 'pvp', 'remote'];
+export type gameModesType = 'ai' | 'local' | 'remote';
+export const gameModes: gameModesType[] = ['ai', 'local', 'remote'];
 
 type PongState = {
 	role: "host" | "guest"
@@ -19,7 +19,6 @@ type PongState = {
 	canvasHeight: number;
 	playerScore: number;
 	computerScore: number;
-	gameState: "connecting" | "ready" | "playing" | "score" | "spec"
 	player: number;
 }
 
@@ -39,6 +38,8 @@ function overlay(option: {
 	);
 }
 
+type nameSetter = (name: string) => void;
+
 export default class PongGame {
 	canvasElement: HTMLCanvasElement;
 	state: PongState;
@@ -47,15 +48,19 @@ export default class PongGame {
 	overlayScore: HTMLElement;
 	overlayError: HTMLElement;
 	gameMode: gameModesType;
+	name1Setter: nameSetter;
+	name2Setter: nameSetter;
 	socket: WebSocket;
 
-	constructor(gameMode: gameModesType) {
+	constructor(gameMode: gameModesType, name1Setter: nameSetter, name2Setter: nameSetter) {
+		this.name1Setter = name1Setter;
+		this.name2Setter = name2Setter;
 		this.gameMode = gameMode;
-
 		this.handleResize = this.handleResize.bind(this);
 		this.startGame = this.startGame.bind(this);
 		this.registerGame = this.registerGame.bind(this);
-		this.restartGame = this.restartGame.bind(this);
+		this.backToRegister = this.backToRegister.bind(this);
+		this.messageHanle = this.messageHanle.bind(this);
 
 		this.canvasElement = canvas({
 			className: "w-full h-full border border-green-500/30 rounded",
@@ -85,7 +90,7 @@ export default class PongGame {
 			title: ``,
 			message: ``,
 			labelName: "PLAY AGAIN",
-			onclick: this.restartGame
+			onclick: this.backToRegister
 		});
 
 		this.overlayError = overlay({
@@ -106,36 +111,47 @@ export default class PongGame {
 			console.log("pong socket opened");
 		}
 
-		this.socket.onmessage = (event) => this.messageHanle(event, this);
+		this.socket.onmessage = (event) => this.messageHanle(event);
 		this.socket.onerror = (err) => console.error("Test error:", err);
 		this.socket.onclose = (event) => console.log("Test socket closed:", event.code);
 	}
 
-	messageHanle(msg: MessageEvent, pong: PongGame) {
+	messageHanle(msg: MessageEvent) {
 		const data = JSON.parse(msg.data);
-		console.log("ws data:", data);
+		if (data.cmd != "update")
+			console.log("ws data:", data);
 		switch (data.cmd) {
 			case "registered":
-				pong.overlayRegister.style.visibility = "hidden";
-				pong.overlayStart.style.visibility = "visible";
+				this.overlayRegister.style.visibility = "hidden";
+				this.overlayStart.style.visibility = "visible";
 				break;
 			case "set":
-				pong.state.player = data.arg0;
+				this.state.player = data.arg0;
+				this.overlayStart.style.visibility = "hidden";
 				break;
 			case "update":
+				this.name1Setter("coucou");
+				this.name2Setter("coucou");
 				this.updateGame(data);
 				break;
+			case "setName":
+				this.name1Setter(data.arg1);
+				if (data.arg0 === "player1")
+					this.name1Setter(data.arg1);
+				else if (data.arg0 === "player2")
+					this.name2Setter(data.arg1);
+				break;
 			case "score":
-				pong.overlayScore.children[0].innerHTML = `${data.arg0} WON !`
-				pong.overlayScore.children[1].innerHTML = `score ${this.state.playerScore} - ${this.state.computerScore}`;
-				pong.overlayScore.style.visibility = "visible";
+				this.overlayScore.children[0].innerHTML = `${data.arg0} WON !`
+				this.overlayScore.children[1].innerHTML = `score ${this.state.playerScore} - ${this.state.computerScore}`;
+				this.overlayScore.style.visibility = "visible";
 				break;
 			case "error":
-				pong.overlayRegister.style.visibility = "hidden";
-				pong.overlayStart.style.visibility = "hidden";
-				pong.overlayScore.style.visibility = "hidden";
-				pong.overlayError.style.visibility = "visible";
-				pong.overlayError.children[1].innerHTML = data.arg0;
+				this.overlayRegister.style.visibility = "hidden";
+				this.overlayStart.style.visibility = "hidden";
+				this.overlayScore.style.visibility = "hidden";
+				this.overlayError.style.visibility = "visible";
+				this.overlayError.children[1].innerHTML = data.arg0;
 				break;
 		}
 	}
@@ -152,7 +168,6 @@ export default class PongGame {
 			role: "host",
 			playerScore: 0,
 			computerScore: 0,
-			gameState: "connecting",
 			playerY: 0,
 			computerY: 0,
 			ballX: 0,
@@ -183,23 +198,21 @@ export default class PongGame {
 	}
 
 	startGame() {
-		this.overlayStart.style.visibility = "hidden";
 		this.handleResize();
-		this.overlayStart.style.visibility = "hidden";
 		this.sendCmd("ready");
 	}
 
 	moveLeftPaddle(deltaY: number) {
-		if (this.state.player == 1)
+		if (this.state.player === 1 || this.gameMode === 'local')
 			this.sendCmd("paddle", "player", deltaY);
 	}
 
 	moveRightPaddle(deltaY: number) {
-		if (this.state.player == 2)
+		if (this.state.player === 2 || this.gameMode === 'local')
 			this.sendCmd("paddle", "computer", deltaY);
 	}
 
-	restartGame() {
+	backToRegister() {
 		this.overlayScore.style.visibility = "hidden";
 		this.overlayRegister.style.visibility = "visible";
 	}

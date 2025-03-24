@@ -1,30 +1,9 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
-
-const PADDLE_WIDTH = 10;
-const WINNING_SCORE = 3;
-
-let connects = new Set();
-let players = new Set();
-let gameState: PongState = {
-	'ballX': 0,
-	'ballY': 0,
-	'ballSpeedX': 0,
-	'ballSpeedY': 0,
-	'playerY': 0,
-	'computerY': 0,
-	'playerHeight': 100,
-	'computerHeight': 100,
-	'playerScore': 0,
-	'computerScore': 0,
-	'canvasWidth': 0,
-	'canvasHeight': 0,
-	'winner': "",
-	'ballRadius': 8,
-	'intervalId': 0,
-};
+import { WebSocket } from 'node:http';
 
 type PongState = {
+	ingame: boolean;
 	ballX: number;
 	ballY: number;
 	playerY: number;
@@ -40,38 +19,79 @@ type PongState = {
 	winner: string;
 	ballRadius: number;
 	intervalId: number;
+	mode: 'ai' | 'local' | 'remote'
 }
 
+const PADDLE_WIDTH = 10;
+const WINNING_SCORE = 3;
+
+// let connects = new Set<string>();
+type client = {
+	socket: WebSocket;
+	time: number;
+}
+
+let players: {
+	[username: string]: client
+} = {};
+
+let gameState: PongState = {
+	ingame: false,
+	ballX: 0,
+	ballY: 0,
+	ballSpeedX: 0,
+	ballSpeedY: 0,
+	playerY: 0,
+	computerY: 0,
+	playerHeight: 100,
+	computerHeight: 100,
+	playerScore: 0,
+	computerScore: 0,
+	canvasWidth: 0,
+	canvasHeight: 0,
+	winner: "",
+	ballRadius: 8,
+	intervalId: 0,
+	mode: 'ai'
+};
+
 export default function playPong(socket: WebSocket, request: FastifyRequest, app: FastifyInstance) {
-	const username = request.session.username ? request.session.username : "";
+	const username = Math.floor(Math.random() * 1000000000).toString();
+	// const username = request.session.username ? request.session.username : "";
 
 	if (username === "") {
-		sendCmd("error", "username not found")
+		sendCmd("error", socket, "You must be logged to play !")
 		socket.close();
 		return;
 	}
 
-	if (connects.has(username)) {
-		sendCmd("error", "duplicate connection")
-		socket.close();
-		return
-	}
-
-	console.log(`User: ${request.session.username} arrived`);
-	connects.add(username)
+	console.log(`User: ${username} arrived`);
+	players[username] = { socket, time: Date.now() };
 
 	socket.on('message', (message: any) => onMessageHandle(message, username))
 
 	socket.on('close', () => {
-		console.log(`User ${request.session.username} left`);
-		connects.delete(username);
-		players.delete(username);
+		console.log(`User ${username} left`);
+		delete players[username];
 	})
 
-	function sendCmd(cmd: string, ...args: (string | number)[]) {
+	function parse(cmd: string, ...args: (string | number)[]) {
 		let obj: any = { 'cmd': cmd };
 		args.forEach((arg, i) => obj[`arg${i}`] = arg)
-		socket.send(JSON.stringify(obj))
+		return JSON.stringify(obj);
+	}
+
+	function sendCmd(cmd: string, client: client, ...args: (string | number)[]) {
+		client.socket.send(parse(cmd, ...args))
+	}
+
+	function broadcastCmd(cmd: string, ...args: (string | number)[]) {
+		let obj = parse(cmd, ...args);
+		app.websocketServer.clients.forEach((client: client) => {
+			if (client.socket.readyState === 1)
+				client.socket.send(obj)
+		})
+
 	}
 
 	function onMessageHandle(msg: any, username: string) {
@@ -80,26 +100,49 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 		switch (data.cmd) {
 			case "register":
 				players.add(username)
-				sendCmd("registered")
+				sendCmd("registered", socket)
 				break;
 			case "canvas":
 				gameState.canvasWidth = data.arg0;
 				gameState.canvasHeight = data.arg1;
 				break;
 			case "paddle":
-				if (data.arg0 == "player")
+				if (data.arg0 === "player")
 					updatePlayerPaddle(data.arg1)
 				else
 					updateComputerPaddle(data.arg1)
 				break;
 			case "ready":
-				sendCmd("set", 1);
-				initGame();
-				startTurn();
+				if (!gameState.ingame)
+					startGame();
 				break;
 			case "error":
 				break;
 		}
+	}
+
+	function selectPlayers() {
+		let it = players.values();
+		let p = it.next();
+		if (p.value)
+			broadcastCmd("setName", "player1", p.value);
+		p = it.next();
+		if (p.value)
+			broadcastCmd("setName", "player2", p.value);
+	}
+	function startGame() {
+		gameState.ingame = true;
+		app.websocketServer.clients.forEach((client: WebSocket, i: number) => {
+			if (i === 0)
+				sendCmd("set", client, 1);
+			else if (i === 1)
+				sendCmd("set", client, 2);
+			else
+				sendCmd("set", client, 3);
+		})
+		selectPlayers();
+		initGame();
+		startTurn();
 	}
 
 	function startTurn() {
@@ -113,10 +156,10 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 		gameState.computerY = (gameState.canvasHeight - gameState.computerHeight) / 2;
 		gameState.ballX = gameState.canvasWidth / 2;
 		gameState.ballY = gameState.canvasHeight / 2;
-		gameState.ballSpeedX = -4;
-		gameState.ballSpeedY = Math.random() * 4 - 2;
+		gameState.ballSpeedX = -4 / 10;
+		gameState.ballSpeedY = (Math.random() * 4 - 2) / 10;
 		gameState.ballRadius = 8;
-		sendGame();
+		BroadcastGame();
 		setTimeout(() => {
 			gameState.intervalId = setInterval(updateGame, 10) as any;
 		}, 1000);
@@ -125,11 +168,11 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 	function checkWinner() {
 		if (gameState.playerScore < WINNING_SCORE && gameState.computerScore < WINNING_SCORE)
 			return false;
-		sendGame();
-		sendCmd("score", gameState.playerScore >= WINNING_SCORE ? "player" : "computer");
+		BroadcastGame();
+		broadcastCmd("score", gameState.playerScore >= WINNING_SCORE ? "player" : "computer");
+		gameState.ingame = false;
 		return true;
 	}
-
 
 	function initGame() {
 		gameState.playerScore = 0;
@@ -173,8 +216,7 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 			gameState.playerScore++;
 			startTurn();
 		}
-
-		sendGame();
+		BroadcastGame();
 	}
 
 	function playerPaddle() {
@@ -202,9 +244,12 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 			gameState.ballSpeedY = deltaY * 0.35;
 		}
 	}
+	function ai() {
 
-	function sendGame() {
-		sendCmd("update", gameState.ballX, gameState.ballY, gameState.playerY, gameState.computerY, gameState.playerScore, gameState.computerScore);
+	}
+
+	function BroadcastGame() {
+		broadcastCmd("update", gameState.ballX, gameState.ballY, gameState.playerY, gameState.computerY, gameState.playerScore, gameState.computerScore);
 	}
 }
 
