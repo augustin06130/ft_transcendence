@@ -21,7 +21,7 @@ type PongState = {
 	mode: "ai" | "local" | "remote";
 };
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 3;
 
 // let connects = new Set<string>();
 type Client = {
@@ -198,6 +198,7 @@ export default function playPong(
 		}
 		if (player1 && player2) {
 			clients.forEach(c => {
+
 				if (c === player1)
 					sendCmd(player1, 'role', 'player1');
 				else if (c === player2)
@@ -266,7 +267,7 @@ export default function playPong(
 
 		broadcastGame();
 		setTimeout(() => {
-			gameState.intervalId = setInterval(updateGame, 10) as any;
+			gameState.intervalId = setInterval(updateGame, 5) as any;
 		}, 1000);
 	}
 

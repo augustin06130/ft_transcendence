@@ -235,17 +235,16 @@ export default class PongGame {
 	}
 
 	moveLeftPaddle() {
-		if (this.state.role === "player1" || this.state.role === 'local')
+		if (this.state.role === "player1")
 			this.sendCmd("paddle", "player", this.state.deltaYplayer);
 	}
 
 	moveRightPaddle() {
-		if (this.state.role === "player2" || this.state.role === 'local')
+		if ((this.state.role === "player1" && this.gameMode.get() === 'local') || this.state.role == "player2")
 			this.sendCmd("paddle", "computer", this.state.deltaYcomputer);
 	}
 
 	handleKeyDown(e: KeyboardEvent) {
-		console
 		if (e.key === 'w' || e.key === 'W')
 			this.state.deltaYplayer = -1;
 		else if (e.key === 's' || e.key === 'S')
