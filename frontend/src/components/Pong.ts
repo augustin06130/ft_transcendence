@@ -16,7 +16,7 @@ type PongState = {
 	canvasHeight: number;
 	playerScore: number;
 	computerScore: number;
-	player: number;
+	role: "player1" | "player2" | "local" | "spec";
 	deltaYplayer: number;
 	deltaYcomputer: number;
 	playerHeight: number,
@@ -118,10 +118,10 @@ export default class PongGame {
 			case "registered":
 				this.switchOverlay('start');
 				break;
-			case "setPlayer":
-				this.state.player = data.arg0;
+			case "role":
+				this.state.role = data.arg0;
 				break;
-			case "setName":
+			case "setNames":
 				this.setNameHandle(data);
 				break;
 			case "update":
@@ -135,8 +135,10 @@ export default class PongGame {
 				break;
 			case "error":
 				this.displayError(data.arg0)
+				break;
 			case "mode":
 				this.gameMode.set(data.arg0);
+				break;
 			case "ingame":
 				this.inGameHandle(data);
 				break;
@@ -154,22 +156,18 @@ export default class PongGame {
 
 	setNameHandle(data: any) {
 		this.handleResize();
+		this.gameMode.set(data.arg0);
+		this.name1Set(data.arg1);
+		this.name2Set(data.arg2);
 
-		if (data.arg1 === 3)
+		if (this.state.role === "spec")
 			this.topTextSet("Spectator");
 		else if (this.gameMode.get() === "local")
 			this.topTextSet(`<---> You are playing localy <--->`);
-		else if (data.arg0 === "player1") {
-			this.name1Set(data.arg1);
-			if (this.state.player === 1)
-				this.topTextSet(`<--- You are playing as ${data.arg1} <---`);
-		}
-		else if (data.arg0 === "player2") {
-			this.name2Set(data.arg1);
-			if (this.state.player === 2)
-				this.topTextSet(`---> You are playing as ${data.arg1} -->`);
-		}
-
+		else if (this.state.role === "player1")
+			this.topTextSet(`<--- You are playing as ${data.arg1} <---`);
+		else if (this.state.role === "player2")
+			this.topTextSet(`---> You are playing as ${data.arg2} --->`);
 	}
 
 	inGameHandle(data: any) {
@@ -177,8 +175,8 @@ export default class PongGame {
 		if (!this.state.ingame)
 			return
 		this.handleResize();
-		if (this.state.player === 3)
-			this.topTextSet("Spectator");
+		// if (this.state.role === 3)
+		// 	this.topTextSet("Spectator");
 		this.switchOverlay();
 	}
 
@@ -207,7 +205,7 @@ export default class PongGame {
 			ballY: 0,
 			canvasWidth: 0,
 			canvasHeight: 0,
-			player: 0,
+			role: "spec",
 			playerHeight: 0,
 			computerHeight: 0,
 			ballRadius: 0,
@@ -236,12 +234,12 @@ export default class PongGame {
 	}
 
 	moveLeftPaddle() {
-		if (this.state.player === 1 || this.gameMode.get() === 'local')
+		if (this.state.role === "player1" || this.state.role === 'local')
 			this.sendCmd("paddle", "player", this.state.deltaYplayer);
 	}
 
 	moveRightPaddle() {
-		if (this.state.player === 2 || this.gameMode.get() === 'local')
+		if (this.state.role === "player2" || this.state.role === 'local')
 			this.sendCmd("paddle", "computer", this.state.deltaYcomputer);
 	}
 
