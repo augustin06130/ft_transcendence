@@ -147,7 +147,7 @@ export default function playPong(
 				startGame();
 				break;
 			case "mode":
-				if (currClient === player1 || currClient === player2)
+				if (currClient.registered && currClient === player1)
 					gameState.mode = data.arg0;
 				// broadcastCmd("mode", data.arg0);
 				broadcastPlayers();
