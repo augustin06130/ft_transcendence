@@ -11,9 +11,8 @@ export default function PongGameView() {
 
 	const gameMode = UseState<GameModeType>('local', (newValue, oldValue) => {
 		console.log(`Game mode changed from ${oldValue} to ${newValue}`);
-		if (modeSwitchButton)
-			modeSwitchButton.textContent = "Mode " + gameMode.get();
-		game.sendCmd("mode", gameMode.get());
+		// if (modeSwitchButton)
+		// 	modeSwitchButton.textContent = "Mode " + gameMode.get();
 	});
 
 	const p1Name = UseState<string>('Player 1', (newValue, _) => {
@@ -45,10 +44,7 @@ export default function PongGameView() {
 
 	const gameControls = () => {
 		modeSwitchButton = button({
-			onclick: () => {
-				if (!game.getIngame())
-					gameMode.set(gameModes[(gameModes.indexOf(gameMode.get()) + 1) % gameModes.length]);
-			},
+			onclick: () => game.sendCmd("mode", gameMode.get()),
 			className: "px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition"
 		}, "Mode " + gameMode.get());
 

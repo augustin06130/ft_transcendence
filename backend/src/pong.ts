@@ -149,7 +149,6 @@ export default function playPong(
 			case "mode":
 				if (currClient.registered && currClient === player1)
 					gameState.mode = data.arg0;
-				// broadcastCmd("mode", data.arg0);
 				broadcastPlayers();
 				break;
 		}
@@ -211,39 +210,11 @@ export default function playPong(
 
 	}
 
-	// 	broadcastCmd("setPlayer", 3);
-	// 	if (!p1)
-	// 		return broadcastCmd("error", "Internal error");
-	// 	sendCmd(p1, "setPlayer", 1);
-	//
-	// 	broadcastCmd("setName", "player1", (p1 as Client).username);
-	//
-	// 	switch (gameState.mode) {
-	// 		case "remote":
-	// 			if (!p2)
-	// 				return broadcastCmd("error", "Internal error");
-	// 			sendCmd(p2, "setPlayer", 2);
-	// 			broadcastCmd("setName", "player2", (p2 as Client).username);
-	// 			break;
-	// 		case "ai":
-	// 			broadcastCmd("setName", "player2", 'Computer');
-	// 			break;
-	// 		case "local":
-	// 			broadcastCmd("setName", "player2", 'Guest');
-	// 			break;
-	// 	}
-	// }
-
 	function startGame() {
 		if (gameState.ingame) {
 			console.log("already in game")
 			return;
 		}
-
-		// if (!selectPlayers()) {
-		// 	console.log("cannot start")
-		// 	return;
-		// }
 
 		gameState.ingame = true;
 		broadcastCmd("ingame", 1);
@@ -278,7 +249,7 @@ export default function playPong(
 		)
 			return false;
 		broadcastGame();
-		broadcastCmd("score", gameState.playerScore >= WINNING_SCORE ? "player" : "computer");
+		broadcastCmd("score", gameState.playerScore >= WINNING_SCORE ? (player1 as Client).username : (player2 as Client).username);
 		gameState.ingame = false;
 		broadcastCmd("ingame", 0);
 		clients.forEach(c => c.registered = false);
