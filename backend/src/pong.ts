@@ -145,7 +145,8 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
                 startGame();
                 break;
             case 'mode':
-                if (currClient.registered && currClient === player1) gameState.mode = gameModes[(gameModes.indexOf(gameState.mode) + 1) % 3];
+                if (currClient.registered && currClient === player1)
+                    gameState.mode = gameModes[(gameModes.indexOf(gameState.mode) + 1) % 3];
                 broadcastPlayers();
                 break;
         }
@@ -153,7 +154,7 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
 
     function registerClient() {
         console.log('registering', username);
-        clients.map((c) => {
+        clients.map(c => {
             if (c.username === username) {
                 c.registered = true;
                 sendCmd(c, 'registered');
@@ -189,7 +190,7 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
                 break;
         }
         if (player1 && player2) {
-            clients.forEach((c) => {
+            clients.forEach(c => {
                 if (c === player1) sendCmd(player1, 'role', 'player1');
                 else if (c === player2) sendCmd(player2, 'role', 'player2');
                 else sendCmd(c, 'role', 'spec');
@@ -235,7 +236,7 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
         broadcastCmd('score', gameState.playerScore >= WINNING_SCORE ? (player1 as Client).username : (player2 as Client).username);
         gameState.ingame = false;
         broadcastCmd('ingame', 0);
-        clients.forEach((c) => (c.registered = false));
+        clients.forEach(c => (c.registered = false));
         broadcastPosition();
         clients.push(clients.splice(clients.indexOf(player1 as Client), 1)[0]);
         if (player2?.socket) clients.push(clients.splice(clients.indexOf(player2 as Client), 1)[0]);
@@ -266,7 +267,8 @@ export default function playPong(socket: WebSocket, request: FastifyRequest, app
         gameState.ballY += gameState.ballSpeedY;
 
         // Top and bottom collisions
-        if (gameState.ballY < gameState.ballRadius || gameState.ballY > 1000 - gameState.ballRadius) gameState.ballSpeedY = -gameState.ballSpeedY;
+        if (gameState.ballY < gameState.ballRadius || gameState.ballY > 1000 - gameState.ballRadius)
+            gameState.ballSpeedY = -gameState.ballSpeedY;
 
         // Paddles bounce collisions
         playerPaddle();
