@@ -75,14 +75,14 @@ export default class PongGame {
 			onclick: () => this.sendCmd("ready")
 		});
 		this.overlays['register'] = overlay({
-			title: `Enter game`,
-			message: ``,
+			title: 'Enter game',
+			message: '',
 			labelName: "REGISTER",
 			onclick: () => this.sendCmd("register"),
 		});
 		this.overlays['score'] = overlay({
-			title: ``,
-			message: ``,
+			title: '',
+			message: '',
 			labelName: "PLAY AGAIN",
 			onclick: () => this.switchOverlay('register'),
 		});
@@ -160,8 +160,11 @@ export default class PongGame {
 		this.name1Set(data.arg1);
 		this.name2Set(data.arg2);
 
-		if (this.state.role === "spec")
+		(this.overlays['start'].children[2] as HTMLElement).style.visibility = "inherit";
+		if (this.state.role === "spec") {
+			(this.overlays['start'].children[2] as HTMLElement).style.visibility = "hidden";
 			this.topTextSet("Spectator");
+		}
 		else if (this.gameMode.get() === "local")
 			this.topTextSet(`<---> You are playing localy <--->`);
 		else if (this.state.role === "player1")
@@ -175,8 +178,6 @@ export default class PongGame {
 		if (!this.state.ingame)
 			return
 		this.handleResize();
-		// if (this.state.role === 3)
-		// 	this.topTextSet("Spectator");
 		this.switchOverlay();
 	}
 

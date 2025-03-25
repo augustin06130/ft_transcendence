@@ -21,7 +21,7 @@ type PongState = {
 	mode: "ai" | "local" | "remote";
 };
 
-const WINNING_SCORE = 10;
+const WINNING_SCORE = 1;
 
 // let connects = new Set<string>();
 type Client = {
@@ -72,6 +72,7 @@ export default function playPong(
 	app: FastifyInstance,
 ) {
 	const username = Math.floor(Math.random() * 1000000000).toString();
+
 	// const username = request.session.username ? request.session.username : "";
 
 	// if (username === "") {
@@ -155,6 +156,7 @@ export default function playPong(
 	}
 
 	function registerClient() {
+		console.log("registering", username);
 		clients.map(c => {
 			if (c.username === username) {
 				c.registered = true;
@@ -280,6 +282,9 @@ export default function playPong(
 		broadcastCmd("ingame", 0);
 		clients.forEach(c => c.registered = false);
 		broadcastPosition();
+		clients.push(clients.splice(clients.indexOf(player1 as Client), 1)[0]);
+		if (player2 !== aiClient && player2 !== guestClient)
+			clients.push(clients.splice(clients.indexOf(player2 as Client), 1)[0]);
 		return true;
 	}
 
