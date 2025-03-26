@@ -38,7 +38,7 @@ app.register(fastifyWebsocket, {
 
 app.register(async function (app) {
     app.get('/pong-ws', { websocket: true }, (socket, request) => {
-        playPong(socket, request, app);
+        playPong(socket, request);
     });
 });
 
