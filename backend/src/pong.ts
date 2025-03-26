@@ -1,7 +1,7 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 
-type GameModeType = 'ai' | 'local' | 'remote';
+type GameModeType = 'ai' | 'local' | 'remote' | 'auto';
 const gameModes: GameModeType[] = ['ai', 'local', 'remote'];
 
 type Cmd = {
@@ -57,7 +57,7 @@ const p2Client: Client = {
 
 let player1: Client | null, player2: Client | null;
 let clients: Client[] = [];
-let dir = 0;
+let dir = 1;
 let gameState: PongState = {
     ingame: false,
     ballX: 0,
@@ -150,7 +150,7 @@ export default function playPong(socket: WebSocket, request: FastifyRequest) {
                 break;
             case 'mode':
                 if (currClient.registered && currClient === player1)
-                    gameState.mode = gameModes[(gameModes.indexOf(gameState.mode) + 1) % 3];
+                    gameState.mode = gameModes[(gameModes.indexOf(gameState.mode) + 1) % gameModes.length];
                 broadcastPlayers();
                 break;
         }
@@ -225,13 +225,14 @@ export default function playPong(socket: WebSocket, request: FastifyRequest) {
 
         if (checkWinner()) return;
 
-        gameState.playerY = 500;
-        gameState.computerY = 500;
+        gameState.playerY = 500 - gameState.playerHeight / 2;
+        gameState.computerY = 500 - gameState.computerHeight / 2;
         gameState.ballX = 500;
         gameState.ballY = 500;
         gameState.ballAngle = (Math.PI * (2 * Math.random() - 1)) / 4;
-        if (dir++ % 2) gameState.ballAngle = (gameState.ballAngle + Math.PI) % (2 * Math.PI);
-        gameState.ballAngle = Math.PI;
+        if (dir++ % 2) {
+            gameState.ballAngle = (gameState.ballAngle + Math.PI) % (2 * Math.PI);
+        }
         gameState.ballSpeed = 2;
 
         broadcastGame();
@@ -243,8 +244,6 @@ export default function playPong(socket: WebSocket, request: FastifyRequest) {
     function initGame() {
         gameState.playerScore = 0;
         gameState.computerScore = 0;
-        gameState.playerY = 0;
-        gameState.computerY = 0;
     }
 
     function updateGame() {

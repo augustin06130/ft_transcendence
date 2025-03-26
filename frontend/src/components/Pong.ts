@@ -3,7 +3,7 @@ import { Setter, UseStateType } from '@framework/UseState';
 
 export const WINNING_SCORE = 1;
 
-export type GameModeType = 'ai' | 'local' | 'remote';
+export type GameModeType = 'ai' | 'local' | 'remote' | 'auto';
 export const gameModes: GameModeType[] = ['ai', 'local', 'remote'];
 
 type Role = 'player1' | 'player2' | 'local' | 'spec';
@@ -22,8 +22,8 @@ type GameState = {
 };
 
 type AiState = {
-    viewPrev: GameState;
-    view: GameState;
+    previous: GameState;
+    current: GameState;
 };
 
 type PongState = {
@@ -223,7 +223,7 @@ export default class PongGame {
         this.state.ingame = !!parseInt(data.arg0);
         if (!this.state.ingame) return;
         // if (this.gameMode.get() === 'ai')
-        this.computerIntervallId = setInterval(this.updateComputerView, 1000);
+        this.computerIntervallId = setInterval(this.updateComputerView, 100);
         this.handleResize();
         this.switchOverlay();
     }
@@ -249,8 +249,8 @@ export default class PongGame {
             role: 'spec',
             game: JSON.parse(JSON.stringify(zeroGameSate)),
             aiState: {
-                view: JSON.parse(JSON.stringify(zeroGameSate)),
-                viewPrev: JSON.parse(JSON.stringify(zeroGameSate)),
+                current: JSON.parse(JSON.stringify(zeroGameSate)),
+                previous: JSON.parse(JSON.stringify(zeroGameSate)),
             },
         };
         return this.state;
@@ -269,9 +269,12 @@ export default class PongGame {
         this.state.game.paddleWidth = (parseInt(data.arg9) / 1000) * this.state.canvasWidth;
 
         this.drawGame();
+
+        // this.autoPlayer();
+        if (this.gameMode.get() === 'auto') this.updateComputer();
         this.moveLeftPaddle();
 
-        this.updateComputer();
+        if (this.gameMode.get() === 'ai' || this.gameMode.get() === 'auto') this.updateComputer();
         this.moveRightPaddle();
     }
 
@@ -373,20 +376,83 @@ export default class PongGame {
         );
     }
 
+    /****************************************************/
+    /*********************** AI *************************/
+    /****************************************************/
+
     updateComputerView() {
-        this.state.aiState.viewPrev = JSON.parse(JSON.stringify(this.state.aiState.view));
-        this.state.aiState.view = JSON.parse(JSON.stringify(this.state.game));
+        this.state.aiState.previous = JSON.parse(JSON.stringify(this.state.aiState.current));
+        this.state.aiState.current = JSON.parse(JSON.stringify(this.state.game));
     }
 
     updateComputer() {
-        const m =
-            (this.state.aiState.view.ballY - this.state.aiState.viewPrev.ballY) /
-            (this.state.aiState.view.ballX - this.state.aiState.viewPrev.ballX);
-        const b = this.state.aiState.view.ballY - m * this.state.aiState.view.ballX;
-        const ballHitY = m * this.state.canvasWidth + b;
+        const [m, b] = this.linest(
+            this.state.aiState.current.ballX,
+            this.state.aiState.current.ballY,
+            this.state.aiState.previous.ballX,
+            this.state.aiState.previous.ballY
+        );
 
-        if (ballHitY - this.state.aiState.view.computerHeight / 2 > this.state.aiState.view.computerY)
-            this.state.deltaYcomputer = 1;
-        else this.state.deltaYcomputer = -1;
+        const ballHitYcomputer = this.findIntersectComputer(m, b);
+
+        if (
+            ballHitYcomputer >
+            this.state.aiState.current.computerY + this.state.aiState.current.computerHeight
+        ) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k' }));
+        } else if (ballHitYcomputer < this.state.aiState.current.computerY) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }));
+        } else {
+            window.dispatchEvent(new KeyboardEvent('keyup', { key: 'i' }));
+        }
+    }
+
+    linest(x1: number, y1: number, x2: number, y2: number) {
+        const m = (y2 - y1) / (x2 - x1);
+        return [m, y1 - m * x1];
+    }
+
+    findIntersectComputer(m: number, b: number): number {
+        const hitY = m * this.state.canvasWidth + b;
+        if (hitY < 0) {
+            return this.findIntersectComputer(-m, -b);
+        } else if (hitY > this.state.canvasHeight) {
+            return this.findIntersectComputer(-m, 2 * this.state.canvasHeight - b);
+        }
+
+        return hitY;
+    }
+
+    autoPlayer() {
+        const [m, b] = this.linest(
+            this.state.aiState.current.ballX,
+            this.state.aiState.current.ballY,
+            this.state.aiState.previous.ballX,
+            this.state.aiState.previous.ballY
+        );
+
+        const ballHitYplayer = this.findIntersectPlayer(m, b);
+
+        if (
+            ballHitYplayer + 1 >
+            this.state.aiState.current.playerY + this.state.aiState.current.playerHeight
+        ) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+        } else if (ballHitYplayer - 1 < this.state.aiState.current.playerY) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+        } else {
+            window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }));
+        }
+    }
+
+    findIntersectPlayer(m: number, b: number): number {
+        const hitY = b;
+        if (hitY < 0) {
+            return this.findIntersectPlayer(-m, -b);
+        } else if (hitY > this.state.canvasHeight) {
+            return this.findIntersectPlayer(-m, 2 * this.state.canvasHeight - b);
+        }
+
+        return hitY;
     }
 }
