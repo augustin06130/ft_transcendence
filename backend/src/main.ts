@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 import { CertifUser } from './login';
 import { logoutUser } from './logout';
 import { NewUser } from './register';
-import { CreateTableUser } from './db';
+import { CreateTableUser, CreateTableMessages } from './db';
 import playPong from './pong';
 import { connected } from 'process';
 import { readFile } from 'node:fs';
@@ -101,6 +101,7 @@ const start = async () => {
 
         // Créez la table 'users' si elle n'existe pas
         await CreateTableUser(db);
+        await CreateTableMessages(db);
 
         // Démarrez le serveur
         await app.listen({

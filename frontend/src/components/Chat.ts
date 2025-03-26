@@ -112,6 +112,7 @@ export default class ChatPage {
   currentUserId:string;
   messages:Message[];
   newMessage:string;
+  private socket: WebSocket | null = null;
 
   constructor() {
     this.friends = mockFriends
@@ -120,20 +121,97 @@ export default class ChatPage {
     this.messages = [];
     this.newMessage = "";
 
-    this.messagesEndRef = null; // This will be set in render
+    this.initWebSocket();
+
+    // this.messagesEndRef = null; // This will be set in render
   }
 
-  selectFriend(friend:Friend) {
+  private initWebSocket() {
+    this.socket = new WebSocket('ws://votre-url-websocket/chat');
+
+    this.socket.onopen = () => {
+      console.log('Connexion WebSocket établie');
+    };
+
+    this.socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      switch (data.type) {
+        case 'new_message':
+          this.handleNewMessage(data);
+          break;
+        case 'conversation_loaded':
+          this.handleConversationLoaded(data.messages);
+          break;
+        case 'error':
+          console.error('Erreur WebSocket:', data.message);
+          break;
+      }
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('Erreur WebSocket:', error);
+    };
+
+    this.socket.onclose = () => {
+      console.log('Connexion WebSocket fermée');
+      // Optionnel : tentative de reconnexion
+      setTimeout(() => this.initWebSocket(), 5000);
+    };
+  }
+
+  private handleNewMessage(messageData: any) {
+    if (this.selectedFriend && messageData.sender === this.selectedFriend.name) {
+      const newMessage = {
+        id: `msg_${Date.now()}`,
+        senderId: messageData.sender,
+        receiverId: this.currentUserId,
+        text: messageData.message,
+        timestamp: new Date(messageData.timestamp)
+      };
+
+      this.messages = [...this.messages, newMessage];
+      this.updateUI();
+    }
+  }
+
+  private handleConversationLoaded(messages: any[]) {
+    this.messages = messages.map(msg => ({
+      id: msg.id.toString(),
+      senderId: msg.sender_username,
+      receiverId: msg.receiver_username,
+      text: msg.content,
+      timestamp: new Date(msg.timestamp)
+    }));
+    this.updateUI();
+  }
+
+  selectFriend(friend: Friend) {
     this.selectedFriend = friend;
-    this.messages = mockMessages(friend, this.currentUserId);
+
+    // Charger l'historique de la conversation via WebSocket
+    if (this.socket) {
+      this.socket.send(JSON.stringify({
+        type: 'load_conversation',
+        target: friend.name
+      }));
+    }
+
     const el = document.getElementById("renderChatArea")
     el?.replaceChildren(this.renderChatArea())
   }
 
-  sendMessage(e:Event) {
+  sendMessage(e: Event) {
     e.preventDefault();
 
-    if (!this.newMessage.trim() || !this.selectedFriend) return;
+    if (!this.newMessage.trim() || !this.selectedFriend || !this.socket) return;
+
+    // Envoyer le message via WebSocket
+    this.socket.send(JSON.stringify({
+      type: 'send_message',
+      receiver: this.selectedFriend.name,
+      message: this.newMessage
+    }));
 
     const newMsg = {
       id: `msg_${Date.now()}`,
@@ -145,20 +223,14 @@ export default class ChatPage {
 
     this.messages = [...this.messages, newMsg];
     this.newMessage = "";
+    this.updateUI();
+  }
 
-    // Simulate a reply after a delay for online friends
-    if (this.selectedFriend.online) {
-      setTimeout(() => {
-        const replyMsg = {
-          id: `reply_${Date.now()}`,
-          senderId: this.selectedFriend.id,
-          receiverId: this.currentUserId,
-          text: this.getAutoReply(this.selectedFriend.name),
-          timestamp: new Date(),
-        };
-        this.messages = [...this.messages, replyMsg];
-        this.updateUI();
-      }, 2000 + Math.random() * 3000); // Random delay between 2-5 seconds
+  // Méthode utilitaire pour mettre à jour l'UI
+  private updateUI() {
+    const el = document.getElementById("renderChatArea")
+    if (el) {
+      el.replaceChildren(this.renderChatArea());
     }
   }
 
@@ -219,7 +291,7 @@ export default class ChatPage {
       div({ id: message.id, className: `flex ${message.senderId === this.currentUserId ? "justify-end" : "justify-start"}` },
         div({ className: `max-w-[80%] p-2 rounded ${message.senderId === this.currentUserId ? "bg-green-500/20 border border-green-500/30" : "bg-black border border-green-500/30"}` },
           div({ className: "flex items-center gap-2 mb-1" },
-            span({ className: "text-xs font-bold" }, 
+            span({ className: "text-xs font-bold" },
               message.senderId === this.currentUserId ? "YOU" : this.selectedFriend?.name),
             span({ className: "text-xs text-green-500/50 flex items-center gap-1" },
               // Clock({ className: "h-3 w-3" }),
@@ -255,9 +327,9 @@ export default class ChatPage {
           input({
             type: "text",
             value: this.newMessage,
-            onchange: (e) => { 
+            onchange: (e) => {
               this.newMessage = (e.target as any)?.value;
-              this.updateUI(); 
+              this.updateUI();
             },
             placeholder: "Type your message...",
             className: "w-full bg-transparent border-none outline-none p-2 text-green-500 placeholder-green-500/30"
