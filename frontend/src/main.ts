@@ -4,6 +4,27 @@ import { baseLinks } from "@framework/Routes";
 import { Routes } from "@framework/types";
 import { isLogged } from "./framework/auth";
 
+
+let roomId_g: string ;
+
+export function setId(id: string) {
+	roomId_g = id;
+}
+
+export function getId() {
+	return roomId_g.toString();
+}
+
+export function resetRoom() {
+	setId("");
+}
+
+
+
+
+
+
+
 function navBarRoutes(logged: boolean): Routes {
   const entry = document.getElementById("entry");
   if (entry) {
@@ -25,6 +46,7 @@ function navBarRoutes(logged: boolean): Routes {
       "/": baseLinks["/"],
       "/profile": baseLinks["/profile"],
       "/pong": baseLinks["/pong"],
+      "/room": baseLinks["/room"],
       "/chat": baseLinks["/chat"],
       "/login": baseLinks["/login"],
       "/register": baseLinks["/register"],
@@ -36,9 +58,9 @@ const routers = Router({
   ...navBarRoutes(isLogged.get()),
 });
 
-function renderApp() {
+export function renderApp() {
   // Get the updated routes based on the current state of isLogged
-  const routes = navBarRoutes(isLogged.get());
+  // const routes = navBarRoutes(isLogged.get());
 
   // Clear the existing content
 
@@ -50,11 +72,9 @@ function renderApp() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
-  // Initial render
+document.addEventListener("DOMContentLoaded", (_) => {
   renderApp();
 
-  // Re-render the app whenever isLogged changes
   isLogged.subscribe(() => {
     setTimeout(() => {
       renderApp(); // Re-render the entire app

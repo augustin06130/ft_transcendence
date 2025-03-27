@@ -1,5 +1,6 @@
 import { canvas, div, h2, p, button } from '@framework/tags';
 import { Setter, UseStateType } from '@framework/UseState';
+import { getId } from 'main';
 
 export const WINNING_SCORE = 1;
 
@@ -79,21 +80,21 @@ function overlay(option: {
 }
 
 export default class PongGame {
-	gameMode: UseStateType<GameMode>;
-	name1Set: Setter<string>;
-	name2Set: Setter<string>;
-	topTextSet: Setter<string>;
-	state: PongState;
-	canvasElement: HTMLCanvasElement;
-	overlays: { [key: string]: HTMLElement } = {};
-	socket: WebSocket;
-	computerIntervallId: number;
+	private gameMode: UseStateType<GameMode>;
+	private name1Set: Setter<string>;
+	private name2Set: Setter<string>;
+	private topTextSet: Setter<string>;
+	private state: PongState;
+	private canvasElement: HTMLCanvasElement;
+	private overlays: { [key: string]: HTMLElement } = {};
+	private socket: WebSocket;
+	private computerIntervallId: number;
 
 	constructor(
 		gameMode: UseStateType<GameMode>,
 		name1Set: Setter<string>,
 		name2Set: Setter<string>,
-		topTextSet: Setter<string>
+		topTextSet: Setter<string>,
 	) {
 		this.computerIntervallId = 0;
 		this.gameMode = gameMode;
@@ -140,11 +141,16 @@ export default class PongGame {
 		});
 		this.switchOverlay('register');
 
+
 		this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
-		this.socket.onopen = () => console.log('pong socket opened');
+		this.socket.onopen = () => this.sendCmd("roomId", getId());
 		this.socket.onmessage = event => this.messageHanle(event);
 		this.socket.onerror = err => console.error('Socket error:', err);
 		this.socket.onclose = () => this.displayError('You got disconnected');
+	}
+	
+	close() {
+		this.socket.close();
 	}
 
 	switchOverlay(name: string = '') {
