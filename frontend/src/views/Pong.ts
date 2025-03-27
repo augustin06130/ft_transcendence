@@ -1,5 +1,5 @@
 import { div, button, h1, p } from '@framework/tags';
-import PongGame, { WINNING_SCORE, GameModeType } from '@components/Pong';
+import PongGame, { WINNING_SCORE, GameMode as GameMode } from '@components/Pong';
 import UseState from '@framework/UseState';
 
 export default function PongGameView() {
@@ -8,7 +8,7 @@ export default function PongGameView() {
     let player1NameLabel: HTMLElement | null = null;
     let topLabel: HTMLElement | null = null;
 
-    const gameMode = UseState<GameModeType>('local', (newValue, _) => {
+    const gameMode = UseState<GameMode>('local', (newValue, _) => {
         if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
     });
 

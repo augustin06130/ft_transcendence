@@ -1,7 +1,7 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 
-type GameModeType = 'ai' | 'local' | 'remote' | 'auto';
+type GameModeType = 'ai' | 'local' | 'remote';
 const gameModes: GameModeType[] = ['ai', 'local', 'remote'];
 
 type Cmd = {
