@@ -127,6 +127,7 @@ async function insertImage(userId: number, imagePath: string, db: Database, para
   await db.run(`UPDATE users SET data = ? WHERE id = ?`, binaryData, userId);
   console.log(`Image ajoutée pour l'utilisateur ID ${userId}`);
 }
+
 async function retrieveImage(userId: number, outputPath: string, db: Database) {
   return new Promise<void>((resolve, reject) => {
       db.get<{ data: Buffer }>(

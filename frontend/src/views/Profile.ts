@@ -1,10 +1,3 @@
-// import TerminalBox, { withTerminalHostname } from "@components/TerminalBox";
-
-// export default function Profile() {
-//   const cmdName = withTerminalHostname("./about");
-//   return TerminalBox(cmdName);
-// }
-
 import { div, p, form, input, label, span, button, img } from "@framework/tags";
 import TerminalBox, { footer } from "@components/TerminalBox";
 import UseState from "@framework/UseState";
@@ -166,6 +159,7 @@ export default function Profile() {
 
   // Initialize state variables
   const username = UseState("", () => {});
+  const userId = UseState("", () => {});
   const email = UseState("", () => {});
   const phone = UseState("", () => {});
   const bio = UseState("", () => {});
@@ -186,38 +180,44 @@ export default function Profile() {
     return true;
   }
 
-  // Fetch user profile data on component mount
   function fetchUserProfile() {
     if (!checkAuth()) return;
     
     loading.set(true);
-    fetch('/api/profile', {
-      method: 'GET',
+    fetch('/getUser', {
+      method: 'POST', 
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        userId: userId.get(),
+      }),
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
+          throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
         }
         return response.json();
       })
       .then((data) => {
-        username.set(data.username || "");
-        email.set(data.email || "");
-        phone.set(data.phone || "");
-        bio.set(data.bio || "");
-        profilePicture.set(data.profilePicture || "");
-        dataLoaded.set(true);
-        loading.set(false);
+        console.log("Full response data:", data);
+        if (data.success && data.userData) {
+          username.set(data.userData.username || "");
+          email.set(data.userData.email || "");
+          phone.set(data.userData.phone || "");
+          bio.set(data.userData.bio || "");
+          profilePicture.set(data.userData.profilePicture || "");
+          dataLoaded.set(true);
+          loading.set(false);
+        } else {
+          throw new Error('User data is missing or the request failed');
+        }
       })
       .catch((err) => {
         console.error('Error fetching profile:', err);
         error.set(`ERROR: ${err.message}`);
         loading.set(false);
-        
-        // If there's an authentication error, redirect to login
+
         if (err.message.includes('authentication') || err.message.includes('unauthorized')) {
           isLogged.set(false);
           setTimeout(() => {
@@ -225,6 +225,7 @@ export default function Profile() {
           }, 1500);
         }
       });
+    
   }
 
   // Toggle edit mode
@@ -269,7 +270,7 @@ export default function Profile() {
   }
   
   function sendProfileUpdate(formData: FormData) {
-    fetch('/api/profile/update', {
+    fetch('/profile', {
       method: 'POST',
       body: formData,
     })
@@ -310,9 +311,9 @@ export default function Profile() {
   }
 
   // Initialize component - fetch user data
-  if (!dataLoaded.get() && !loading.get()) {
+  // if (!dataLoaded.get() && !loading.get()) {
     fetchUserProfile();
-  }
+  // }
 
   // Show loading state while fetching data
   if (loading.get() && !dataLoaded.get()) {

@@ -9,6 +9,8 @@ import { CertifUser } from './login';
 import { logoutUser } from './logout';
 import { NewUser } from './register';
 import { CreateTableUser } from './db';
+import { UserProfile } from './profile';
+import {GetCurrentUserData} from './getUser';
 
 dotenv.config();
 
@@ -59,6 +61,15 @@ app.post('/logout', async (request, reply) => {
   return logoutUser(request, reply);
 });
 
+app.post('/profile', async (request, reply) => {
+  const {username, userpassword, email, phone, bio, profilePicture} = request.body as { username: string, userpassword: string, email?: string, phone?: string, bio?: string, profilePicture?: string}
+  return UserProfile( username, userpassword, request, reply, db, email, phone, bio, profilePicture);
+});
+
+app.post('/getUser', async (request, reply) => {
+  const { userId } = request.body as { userId: string };
+  return GetCurrentUserData(request, reply, userId, db);
+});
 
 export function connectToDatabase() {
   const dbPath = './database.db';
@@ -85,7 +96,7 @@ const start = async () => {
       port: 80,
       host: '0.0.0.0',
     });
-    console.log('Server is listening on http://localhost:80');
+    console.log('Server is listening on http://localhost:8080');
   } catch (err) {
     console.error("Erreur lors du démarrage du serveur :", err);
     process.exit(1);
