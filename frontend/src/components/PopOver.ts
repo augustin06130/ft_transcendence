@@ -1,7 +1,8 @@
 import { div } from '@framework/tags';
 
 type PopOverElement = HTMLDivElement & { show: (msg: string) => void; hide: () => void };
-let PopOver = () => {
+
+function PopOver(): PopOverElement {
     let message: string = '';
 
     let result: any = div(
@@ -25,7 +26,7 @@ let PopOver = () => {
     };
 
     return result;
-};
+}
 
 const popOver: PopOverElement = PopOver();
 export default popOver;

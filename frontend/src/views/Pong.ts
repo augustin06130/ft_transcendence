@@ -3,14 +3,15 @@ import PongGame, { WINNING_SCORE, GameMode as GameMode } from '@components/Pong'
 import UseState from '@framework/UseState';
 import { roomId } from './Room';
 
-let game: PongGame | null = null;
+export let game: PongGame | null = null;
+
 export default function PongGameView() {
     let modeSwitchButton: HTMLElement | null = null;
     let player2NameLabel: HTMLElement | null = null;
     let player1NameLabel: HTMLElement | null = null;
     let topLabel: HTMLElement | null = null;
 
-    const gameMode = UseState<GameMode>('local', (newValue, _) => {
+    const gameMode = UseState<GameMode>('ai', (newValue, _) => {
         if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
     });
 
@@ -44,7 +45,7 @@ export default function PongGameView() {
     const gameControls = () => {
         modeSwitchButton = button(
             {
-                onclick: () => game.sendCmd('mode'),
+                onclick: () => game?.sendCmd('mode'),
                 className:
                     'px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition',
             },
@@ -89,7 +90,7 @@ export default function PongGameView() {
         return div(
             {},
             pongGameTitle(),
-            game.render(),
+            game?.render(),
             gameControls(),
             pongInstructions(),
             pongFooter()

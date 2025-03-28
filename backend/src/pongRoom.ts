@@ -100,7 +100,6 @@ export default class PongGame {
 
         const client = { username, socket, registered: false };
         this.clients.push(client);
-        this.broadcastPlayers();
         this.broadcastPosition();
         this.sendCmd(client, 'ingame', +this.gameState.ingame);
         socket.on('message', (message: any) => this.onMessageHandle(message, client));
@@ -110,11 +109,11 @@ export default class PongGame {
     private leaveGame(client: Client) {
         console.log(`User ${client.username} left`);
         if (client === this.player2 || client === this.player1) {
-            this.broadcastCmd('info', `${client.username} disconnected`);
-            this.setWinner(
-                client === this.player1 ? this.player2?.username : this.player1?.username
-            );
-            return;
+            this.broadcastCmd('info', `Player: ${client.username} disconnected`);
+            if (this.gameState.ingame)
+                this.setWinner(
+                    client === this.player1 ? this.player2?.username : this.player1?.username
+                );
         }
         this.clients = this.clients.filter((c: Client) => c.username !== client.username);
         this.broadcastPosition();
@@ -134,16 +133,6 @@ export default class PongGame {
         let obj = this.parse(cmd, ...args);
         this.clients.forEach((client: Client) => {
             if (client.socket && client.socket.readyState === 1) client.socket.send(obj);
-        });
-    }
-
-    private broadcastPosition() {
-        let obj: any = { cmd: 'queuePosition', arg1: this.getPlayerCount() };
-        let i = 1;
-        this.clients.forEach((client: Client) => {
-            if (client.registered) obj['arg0'] = i++;
-            if (client.socket && client.socket.readyState === 1)
-                client.socket.send(JSON.stringify(obj));
         });
     }
 
@@ -170,7 +159,7 @@ export default class PongGame {
         if (currClient.registered && currClient === this.player1)
             this.gameState.mode =
                 gameModes[(gameModes.indexOf(this.gameState.mode) + 1) % gameModes.length];
-        this.broadcastPlayers();
+        this.broadcastPosition();
     }
 
     private registerHandle(currClient: Client) {
@@ -180,7 +169,6 @@ export default class PongGame {
                 this.sendCmd(c, 'registered');
             }
         });
-        this.broadcastPlayers();
         this.broadcastPosition();
     }
 
@@ -224,6 +212,17 @@ export default class PongGame {
         }
     }
 
+    private broadcastPosition() {
+        let obj: any = { cmd: 'queuePosition', arg1: this.getPlayerCount() };
+        let i = 1;
+        this.clients.forEach((client: Client) => {
+            if (client.registered) obj['arg0'] = i++;
+            if (client.socket && client.socket.readyState === 1)
+                client.socket.send(JSON.stringify(obj));
+        });
+        this.broadcastPlayers();
+    }
+
     private startGame() {
         if (this.player2 === p2Client) return;
         if (this.gameState.ingame) {
@@ -237,7 +236,8 @@ export default class PongGame {
     }
 
     private startTurn() {
-        if (this.gameState.intervalId) clearInterval(this.gameState.intervalId);
+        clearInterval(this.gameState.intervalId);
+		this.gameState.intervalId = 0;
 
         if (this.checkWinner()) return;
 
@@ -348,7 +348,8 @@ export default class PongGame {
         this.broadcastCmd('score', winner);
         this.gameState.ingame = false;
         this.broadcastCmd('ingame', 0);
-         clearInterval(this.gameState.intervalId);
+        clearInterval(this.gameState.intervalId);
+		this.gameState.intervalId = 0;
         if (this.player2?.socket) {
             this.clients.push(this.clients.splice(this.clients.indexOf(this.player2), 1)[0]);
             this.player1.registered = false;

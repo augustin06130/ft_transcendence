@@ -1,12 +1,17 @@
 import { Routes } from '@framework/types';
 import { div } from '@framework/tags';
-import _404View from "@views/404";
+import _404View from '@views/404';
+import { roomId } from '@views/Room';
+import { game } from '@views/Pong';
 
 export function Router(routes: Routes) {
     let result = div({});
 
     function updateUrl(event: Event) {
         const detail = (event as any).detail;
+
+        console.log('event', event);
+        console.log('detail', detail);
 
         if (!(detail.to in routes)) {
             const route404 = '/404';
@@ -21,14 +26,21 @@ export function Router(routes: Routes) {
 
     window.addEventListener('url', updateUrl);
     if (window.location.pathname in routes)
-		result.replaceChildren(routes[window.location.pathname].view());
-    else
-		result.replaceChildren(_404View());
+        result.replaceChildren(routes[window.location.pathname].view());
+    else result.replaceChildren(_404View());
 
-    window.addEventListener('popstate', event => {
+    window.addEventListener('popstate', _ => {
         const path = window.location.pathname;
         result.replaceChildren(routes[path].view());
     });
     // (result as any).refresh = syncHash;
     return result;
+}
+
+export function switchPage(to: string) {
+    const from = location.pathname;
+    if (from === '/pong') {
+		game?.close();
+    }
+    window.dispatchEvent(new CustomEvent('url', { detail: { to, from } }));
 }

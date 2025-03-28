@@ -1,12 +1,21 @@
 import { div, h2, p, button } from '@framework/tags';
 
+export type OverlayElement = HTMLDivElement & {
+    show: () => void;
+    hide: () => void;
+    setTitle: (title: string) => void;
+    setMessage: (message: string) => void;
+    showButton: () => void;
+    hideButton: () => void;
+};
+
 export default function Overlay(option: {
     title: string;
     message: string;
     labelName: string;
     onclick: () => void;
-}): HTMLElement {
-    return div(
+}): OverlayElement {
+    let result: any = div(
         {
             className: 'absolute inset-0 flex flex-col items-center justify-center bg-black/80',
         },
@@ -21,4 +30,30 @@ export default function Overlay(option: {
             option.labelName
         )
     );
+
+    result.show = () => {
+        result.style.visibility = 'visible';
+    };
+
+    result.hide = () => {
+        result.style.visibility = 'hidden';
+    };
+
+    result.setTitle = (title: string) => {
+        result.children[0].innerHTML = title;
+    };
+
+    result.setMessage = (message: string) => {
+        result.children[1].innerHTML = message;
+    };
+
+    result.showButton = () => {
+        result.children[2].style.visibility = 'inherit';
+    };
+
+    result.hideButton = () => {
+        result.children[2].style.visibility = 'hidden';
+    };
+
+    return result;
 }

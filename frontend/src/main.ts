@@ -4,33 +4,39 @@ import { baseLinks } from '@framework/Routes';
 import { Routes } from '@framework/types';
 import { isLogged } from './framework/auth';
 import popOver from '@components/PopOver';
+import PopUp from '@components/PopUp';
+
+let pop = PopUp({
+    title: 'test popup',
+    message: 'hello popup !',
+    onConfirm: () => console.log('confirm'),
+    onReject: () => console.log('cancel'),
+});
 
 function navBarRoutes(logged: boolean): Routes {
     const entry = document.getElementById('entry');
     if (entry) {
         entry.innerHTML = ''; // Clear the container
     }
-    console.log('isLogged = ', isLogged.get());
 
     if (logged) {
-        // When logged in, include Pong and Chat
+		baseLinks
         return {
             '/': baseLinks['/'],
             '/profile': baseLinks['/profile'],
             '/room': baseLinks['/room'],
-            '/pong': baseLinks['/pong'],
             '/chat': baseLinks['/chat'],
+            '/pong': baseLinks['/pong'],
         };
     } else {
-        // When not logged in, include Login and Register
         return {
             '/': baseLinks['/'],
             '/profile': baseLinks['/profile'],
             '/room': baseLinks['/room'],
-            '/pong': baseLinks['/pong'],
             '/chat': baseLinks['/chat'],
             '/login': baseLinks['/login'],
             '/register': baseLinks['/register'],
+            '/pong': baseLinks['/pong'],
         };
     }
 }
@@ -52,7 +58,8 @@ export function renderApp() {
         { class: 'min-h-screen w-[100vw] bg-black text-green-500 font-mono p-4' },
         NavBar(navBarRoutes(isLogged.get())), // Pass the updated routes to NavBar
         routers, // Pass the updated routes to Router
-        popOver
+        popOver,
+		pop,
     );
 }
 

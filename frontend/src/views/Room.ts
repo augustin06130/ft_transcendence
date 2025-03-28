@@ -2,11 +2,12 @@ import { div, p, form, input } from '@framework/tags';
 import TerminalBox, { footer } from '@components/TerminalBox';
 import UseState from '@framework/UseState';
 import { State } from '@framework/types';
-import { renderApp } from 'main';
+import { switchPage } from '@framework/Router';
+import popOver from '@components/PopOver';
 
 export const roomId = UseState<string>('');
 
-function LoginForm(
+function RoomForm(
     joinHandler: (e: Event) => void,
     createHandler: (e: Event) => void,
     roomCode: State<string>
@@ -54,7 +55,6 @@ function LoginForm(
 export default function Room() {
     const roomCode = UseState('', () => {});
     const isMounted = UseState(false, () => {});
-    const error = UseState('', () => {});
 
     const handleMount = () => {
         isMounted.set(true);
@@ -66,7 +66,6 @@ export default function Room() {
     handleMount();
 
     function createHandler(_: Event) {
-        error.set('');
         fetch('/create-room', {
             method: 'GET',
         })
@@ -77,32 +76,39 @@ export default function Room() {
                 return response.json();
             })
             .then(data => {
-                join(data.roomId);
+                roomId.set(data.roomId);
+                switchPage('/pong');
             })
-            .catch(err => {
-                console.error(err);
-                error.set(err.message);
-            });
+            .catch(err => popOver.show(err));
     }
 
     function joinHandler(_: Event) {
-        error.set('');
-        if (!roomCode.get()) {
-            return error.set('ERROR: no code');
+        if (!roomCode.get() || roomCode.get().length !== 4) {
+            return popOver.show('Invalid Room Id');
         }
-        if (roomCode.get().length !== 4) {
-            return error.set('ERROR: invalid code length');
-        }
-        join(roomCode.get());
+
+        console.log('trying', roomCode.get());
+        fetch('/validate-roomid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                roomId: roomCode.get(),
+            }),
+        }).then(response => {
+            if (!response.ok) {
+                popOver.show('Connexion failed');
+            } else if (response.status == 204) {
+                popOver.show('Game not found');
+            } else {
+                roomId.set(roomCode.get());
+                switchPage('/pong');
+            }
+        });
     }
 
-    function join(id: string) {
-        roomId.set(id);
-        window.dispatchEvent(new CustomEvent('url', { detail: { to: '/pong' } }));
-        renderApp();
-    }
-
-    const formContent = LoginForm(joinHandler, createHandler, roomCode);
+    const formContent = RoomForm(joinHandler, createHandler, roomCode);
 
     return TerminalBox(
         'terminal@user:~/pong sudo usermod -a -G',
