@@ -2,8 +2,9 @@
     "name": "ft_transcendense",
     "version": "1.0.0",
     "scripts": {
-        "build": "npx esbuild src/main.ts --bundle --outfile=./public/js/bundle.js",
-        "hot-reload": "nodemon --watch ./src -e ts --exec 'npm run build'"
+        "build": "npx esbuild src/main.ts --bundle --outfile=./public/bundle.js",
+        "tailwind": "tailwindcss -i ./src/input.css -o ./public/output.css",
+        "hot-reload": "nodemon --watch ./src -e ts --exec 'npm run build && npm run tailwind'"
     },
     "type": "module",
     "devDependencies": {
@@ -12,6 +13,8 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
+        "@tailwindcss/cli": "^4.0.17",
+        "tailwindcss": "^4.0.17",
         "ws": "^8.18.1"
     }
 }

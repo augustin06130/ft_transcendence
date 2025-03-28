@@ -1,25 +1,33 @@
 services:
-  backend:
-    build:
-      context: ./backend
-    ports:
-      - "8080:80"
+  fastify:
+    container_name: fastify
+    restart: always
+    build: ./backend
+    ports: ["8080:80"]
     volumes:
       - ./backend:/backend
       - ./frontend/public:/backend/public
-    networks:
-      - app-network
+    networks: [transcendence]
+    depends_on:
+      # - tailwind
+      - frontend
 
   frontend:
-    build:
-      context: ./frontend
+    container_name: frontend
+    build: ./frontend
+    networks: [transcendence]
     volumes:
       - ./frontend:/frontend
-    depends_on:
-      - backend
-    networks:
-      - app-network
+    restart: always
+
+  # tailwind:
+  #   container_name: tailwind
+  #   build: ./tailwind
+  #   networks: [transcendence]
+  #   volumes:
+  #     - ./frontend:/frontend
+  #   restart: always
 
 networks:
-  app-network:
-    name: app-network
+  transcendence:
+    name: transcendence
