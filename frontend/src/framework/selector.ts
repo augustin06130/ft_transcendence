@@ -19,7 +19,7 @@ export function $(
   const entry = document.getElementById(id);
   if (entry) {
     Object.keys(attributes).forEach((key) => {
-      entry.setAttribute(key, attributes[key]);
+      entry.setAttribute(key, (attributes as any)[key]);
     });
     elements.forEach((child) => {
       entry.appendChild(child as HTMLElement);

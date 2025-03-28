@@ -1,6 +1,8 @@
-import { canvas, div, h2, p, button } from '@framework/tags';
+import { canvas, div } from '@framework/tags';
+import Overlay from './Overlay';
 import { Setter, UseStateType } from '@framework/UseState';
-import { getId } from 'main';
+import { roomId } from '@views/Room';
+import popOver from './PopOver';
 
 export const WINNING_SCORE = 1;
 
@@ -56,29 +58,6 @@ type Cmd = {
 	[key: `arg${number}`]: string;
 };
 
-function overlay(option: {
-	title: string;
-	message: string;
-	labelName: string;
-	onclick: () => void;
-}): HTMLElement {
-	return div(
-		{
-			className: 'absolute inset-0 flex flex-col items-center justify-center bg-black/80',
-		},
-		h2({ className: 'text-2xl font-bold mb-4' }, option.title),
-		p({ className: 'mb-6' }, option.message),
-		button(
-			{
-				onclick: option.onclick,
-				className:
-					'px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition',
-			},
-			option.labelName
-		)
-	);
-}
-
 export default class PongGame {
 	private gameMode: UseStateType<GameMode>;
 	private name1Set: Setter<string>;
@@ -115,25 +94,25 @@ export default class PongGame {
 
 		this.state = this.reset();
 
-		this.overlays['start'] = overlay({
+		this.overlays['start'] = Overlay({
 			title: 'TERMINAL PONG',
 			message: `First to ${WINNING_SCORE} wins`,
 			labelName: 'READY',
 			onclick: () => this.sendCmd('ready'),
 		});
-		this.overlays['register'] = overlay({
+		this.overlays['register'] = Overlay({
 			title: 'Enter game',
 			message: '',
 			labelName: 'REGISTER',
 			onclick: () => this.sendCmd('register'),
 		});
-		this.overlays['score'] = overlay({
+		this.overlays['score'] = Overlay({
 			title: '',
 			message: '',
 			labelName: 'PLAY AGAIN',
 			onclick: () => this.switchOverlay('register'),
 		});
-		this.overlays['error'] = overlay({
+		this.overlays['error'] = Overlay({
 			title: 'Error',
 			message: 'An error occured',
 			labelName: 'RETRY',
@@ -143,7 +122,7 @@ export default class PongGame {
 
 
 		this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
-		this.socket.onopen = () => this.sendCmd("roomId", getId());
+		this.socket.onopen = () => this.sendCmd("roomId", roomId.get());
 		this.socket.onmessage = event => this.messageHanle(event);
 		this.socket.onerror = err => console.error('Socket error:', err);
 		this.socket.onclose = () => this.displayError('You got disconnected');
@@ -179,9 +158,6 @@ export default class PongGame {
 			case 'score':
 				this.scoreHandle(data);
 				break;
-			case 'error':
-				this.displayError(data.arg0);
-				break;
 			case 'ingame':
 				this.inGameHandle(data);
 				break;
@@ -190,6 +166,12 @@ export default class PongGame {
 					`Your position in the queue: ${data.arg0}/${data.arg1} for the next game`;
 				this.overlays['register'].children[1].innerHTML =
 					`Players in the waiting room: ${data.arg1}`;
+				break;
+			case 'error':
+				this.displayError(data.arg0);
+				break;
+			case 'info':
+				popOver.show(data.arg0);
 				break;
 		}
 	}
