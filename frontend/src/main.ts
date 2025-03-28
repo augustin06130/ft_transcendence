@@ -4,14 +4,6 @@ import { baseLinks } from '@framework/Routes';
 import { Routes } from '@framework/types';
 import { isLogged } from './framework/auth';
 import popOver from '@components/PopOver';
-import PopUp from '@components/PopUp';
-
-let pop = PopUp({
-    title: 'test popup',
-    message: 'hello popup !',
-    onConfirm: () => console.log('confirm'),
-    onReject: () => console.log('cancel'),
-});
 
 function navBarRoutes(logged: boolean): Routes {
     const entry = document.getElementById('entry');
@@ -59,7 +51,6 @@ export function renderApp() {
         NavBar(navBarRoutes(isLogged.get())), // Pass the updated routes to NavBar
         routers, // Pass the updated routes to Router
         popOver,
-		pop,
     );
 }
 

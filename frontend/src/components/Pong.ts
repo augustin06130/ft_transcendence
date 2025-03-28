@@ -3,7 +3,6 @@ import Overlay, { OverlayElement } from './Overlay';
 import { Setter, UseStateType } from '@framework/UseState';
 import { roomId } from '@views/Room';
 import popOver from './PopOver';
-import { renderApp } from 'main';
 
 export const WINNING_SCORE = 1;
 
@@ -116,20 +115,6 @@ export default class PongGame {
             labelName: 'RETRY',
             onclick: () => {},
         });
-        // this.overlays['room'] = Overlay({
-        //     title: 'No room',
-        //     message: 'You must join a room !',
-        //     labelName: 'go to room',
-        //     onclick: () => {
-        //         window.dispatchEvent(new CustomEvent('url', { detail: { to: '/room', from: } }));
-        //         renderApp();
-        //     },
-        // });
-
-        // if (roomId.get() === '') {
-        //     this.switchOverlay('room');
-        //     return;
-        // }
         this.switchOverlay('register');
 
         this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
@@ -142,9 +127,13 @@ export default class PongGame {
         };
     }
 
-    close() {
+    public close() {
         this.socket.close();
     }
+
+    public isPlayer() {
+		return this.state.role !== 'spec';
+	};
 
     private switchOverlay(name: string = '') {
         Object.entries(this.overlays).forEach(([key, overlay]) =>
@@ -152,7 +141,7 @@ export default class PongGame {
         );
     }
 
-    messageHanle(msg: MessageEvent) {
+    private messageHanle(msg: MessageEvent) {
         const data: Cmd = JSON.parse(msg.data);
         if (data.cmd != 'update') console.log('ws data:', data);
         switch (data.cmd) {
@@ -189,7 +178,7 @@ export default class PongGame {
         }
     }
 
-    scoreHandle(data: Cmd) {
+    private scoreHandle(data: Cmd) {
         this.overlays['score'].setTitle(`${data.arg0} WON !`);
         this.overlays['score'].setMessage(
             `score ${this.state.game.playerScore} - ${this.state.game.computerScore}`
@@ -202,7 +191,7 @@ export default class PongGame {
         }
     }
 
-    setNameHandle(data: Cmd) {
+    private setNameHandle(data: Cmd) {
         this.handleResize();
         this.gameMode.set(data.arg0 as GameMode);
 
@@ -213,15 +202,14 @@ export default class PongGame {
         if (this.state.role === 'spec') {
             this.overlays['start'].hideButton();
             this.topTextSet('Spectator');
-        } else if (this.gameMode.get() === 'local')
-            this.topTextSet(`◄► You are playing localy ◄►`);
+        } else if (this.gameMode.get() === 'local') this.topTextSet(`◄► You are playing localy ◄►`);
         else if (this.state.role === 'player1')
             this.topTextSet(`◄◄ You are playing as ${data.arg1} ◄◄`);
         else if (this.state.role === 'player2')
             this.topTextSet(`►► You are playing as ${data.arg2} ►►`);
     }
 
-    inGameHandle(data: Cmd) {
+    private inGameHandle(data: Cmd) {
         this.state.ingame = !!parseInt(data.arg0);
         if (!this.state.ingame) return;
         if (this.gameMode.get() === 'ai')
@@ -230,18 +218,18 @@ export default class PongGame {
         this.switchOverlay();
     }
 
-    displayError(msg: string) {
+    private displayError(msg: string) {
         this.overlays['error'].setMessage(msg);
         this.switchOverlay('error');
     }
 
-    sendCmd(cmd: string, ...args: string[]) {
+    public sendCmd(cmd: string, ...args: string[]) {
         let obj: Cmd = { cmd: cmd };
         args.forEach((arg, i) => (obj[`arg${i}`] = arg));
         this.socket.send(JSON.stringify(obj));
     }
 
-    reset() {
+    private reset() {
         this.state = {
             ingame: false,
             deltaYplayer: 0,
@@ -258,7 +246,7 @@ export default class PongGame {
         return this.state;
     }
 
-    updateGame(data: Cmd) {
+    private updateGame(data: Cmd) {
         this.switchOverlay('');
         this.state.game.ballX = (parseInt(data.arg0) / 1000) * this.state.canvasWidth;
         this.state.game.ballY = (parseInt(data.arg1) / 1000) * this.state.canvasHeight;
@@ -279,12 +267,12 @@ export default class PongGame {
         this.moveRightPaddle();
     }
 
-    moveLeftPaddle() {
+    private moveLeftPaddle() {
         if (this.state.role === 'player1')
             this.sendCmd('paddle', 'player', this.state.deltaYplayer.toString());
     }
 
-    moveRightPaddle() {
+    private moveRightPaddle() {
         if (
             (this.state.role === 'player1' && this.gameMode.get() === 'ai') ||
             (this.state.role === 'player1' && this.gameMode.get() === 'local') ||
@@ -293,21 +281,21 @@ export default class PongGame {
             this.sendCmd('paddle', 'computer', this.state.deltaYcomputer.toString());
     }
 
-    handleKeyDown(e: KeyboardEvent) {
+    private handleKeyDown(e: KeyboardEvent) {
         if (e.key === 'w' || e.key === 'W') this.state.deltaYplayer = -1;
         else if (e.key === 's' || e.key === 'S') this.state.deltaYplayer = 1;
         if (e.key === 'i' || e.key === 'I') this.state.deltaYcomputer = -1;
         else if (e.key === 'k' || e.key === 'K') this.state.deltaYcomputer = 1;
     }
 
-    handleKeyUp(e: KeyboardEvent) {
+    private handleKeyUp(e: KeyboardEvent) {
         if (e.key === 'w' || e.key === 'W' || e.key === 's' || e.key === 'S')
             this.state.deltaYplayer = 0;
         if (e.key === 'i' || e.key === 'I' || e.key === 'k' || e.key === 'K')
             this.state.deltaYcomputer = 0;
     }
 
-    handleResize() {
+    private handleResize() {
         const container = this.canvasElement.parentElement;
         if (!container) return;
 
@@ -320,7 +308,7 @@ export default class PongGame {
         this.drawGame();
     }
 
-    drawGame() {
+    private drawGame() {
         const ctx = this.canvasElement.getContext('2d');
         if (!ctx) return;
 
@@ -369,7 +357,7 @@ export default class PongGame {
         );
     }
 
-    render() {
+    public render() {
         return div(
             { className: 'relative w-full', style: { height: '60vh' } },
             this.canvasElement,
@@ -381,12 +369,12 @@ export default class PongGame {
     /*********************** AI *************************/
     /****************************************************/
 
-    updateComputerView() {
+    private updateComputerView() {
         this.state.aiState.previous = JSON.parse(JSON.stringify(this.state.aiState.current));
         this.state.aiState.current = JSON.parse(JSON.stringify(this.state.game));
     }
 
-    updateComputer() {
+    private updateComputer() {
         const [m, b] = this.linest(
             this.state.aiState.current.ballX,
             this.state.aiState.current.ballY,
@@ -408,19 +396,18 @@ export default class PongGame {
         }
     }
 
-    linest(x1: number, y1: number, x2: number, y2: number) {
+    private linest(x1: number, y1: number, x2: number, y2: number) {
         const m = (y2 - y1) / (x2 - x1);
         return [m, y1 - m * x1];
     }
 
-    findIntersectComputer(m: number, b: number): number {
+    private findIntersectComputer(m: number, b: number): number {
         const hitY = m * this.state.canvasWidth + b;
         if (hitY < 0) {
             return this.findIntersectComputer(-m, -b);
         } else if (hitY > this.state.canvasHeight) {
             return this.findIntersectComputer(-m, 2 * this.state.canvasHeight - b);
         }
-
         return hitY;
     }
 

@@ -3,6 +3,7 @@ import { div } from '@framework/tags';
 import _404View from '@views/404';
 import { roomId } from '@views/Room';
 import { game } from '@views/Pong';
+import popUp from '@components/PopUp';
 
 export function Router(routes: Routes) {
     let result = div({});
@@ -39,8 +40,13 @@ export function Router(routes: Routes) {
 
 export function switchPage(to: string) {
     const from = location.pathname;
-    if (from === '/pong') {
-		game?.close();
+    console.log(from);
+    if (from === '/pong' && game && game?.isPlayer()) {
+        if (popUp('Leaver game', 'you will lose the game if you leave !')) {
+            game?.close();
+        } else {
+            return;
+        }
     }
     window.dispatchEvent(new CustomEvent('url', { detail: { to, from } }));
 }
