@@ -245,6 +245,7 @@ export default class PongGame {
 	}
 
 	private startTurn() {
+		this.broadcastGame();
 		clearInterval(this.gameState.intervalId);
 		this.gameState.intervalId = 0;
 
@@ -283,11 +284,11 @@ export default class PongGame {
 		this.playerPaddle();
 		this.computerPaddle();
 
-		if (this.gameState.ballX < this.gameState.ballRadius) {
+		if (this.gameState.ballX < this.gameState.ballRadius / 2) {
 			this.gameState.computerScore++;
 			this.startTurn();
 		}
-		if (this.gameState.ballX > 1000 - this.gameState.ballRadius) {
+		if (this.gameState.ballX > 1000 - this.gameState.ballRadius / 2) {
 			this.gameState.playerScore++;
 			this.startTurn();
 		}

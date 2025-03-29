@@ -20,13 +20,11 @@ export function validate_roomId(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export function join_room(socket: WebSocket, request: FastifyRequest) {
-	console.log('joining');
 	socket.on('message', (msg: any) => {
 		const data = JSON.parse(msg);
 		if (data.cmd !== 'roomId' || !pongRooms.has(data.arg0)) {
 			return
 		};
-		console.log('joining id', data.arg0);
 		pongRooms.get(data.arg0)?.joinGame(socket, request);
 	});
 	socket.on('close', () => console.log("game counts:", pongRooms.size));
