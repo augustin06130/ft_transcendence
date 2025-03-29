@@ -1,5 +1,5 @@
 import { canvas, div } from '@framework/tags';
-import Overlay, { OverlayElement } from './Overlay';
+import Overlay from './Overlay';
 import { Setter, UseStateType } from '@framework/UseState';
 import { roomId } from '@views/Room';
 import popOver from './PopOver';
@@ -69,7 +69,7 @@ export default class PongGame {
 	private canvasElement: HTMLCanvasElement;
 	private state: PongState = this.reset();
 	private computerIntervallId: number = 0;
-	private overlays: { [key: string]: OverlayElement } = {};
+	private overlays: { [key: string]: Overlay } = {};
 	public leavePopUp: PopUpElement;
 
 	constructor(
@@ -98,34 +98,35 @@ export default class PongGame {
 
 		this.leavePopUp = popUp("Leave", "If you leave this page, you will loose the game")
 
-		this.overlays['start'] = Overlay({
-			title: 'TERMINAL PONG',
-			message: `First to ${WINNING_SCORE} wins`,
-			labelName: 'READY',
-			onclick: () => this.sendCmd('ready'),
-		});
-		this.overlays['register'] = Overlay({
-			title: 'Enter game',
-			message: '',
-			labelName: 'REGISTER',
-			onclick: () => this.sendCmd('register'),
-		});
-		this.overlays['score'] = Overlay({
-			title: '',
-			message: '',
-			labelName: 'PLAY AGAIN',
-			onclick: () => this.switchOverlay('register'),
-		});
-		this.overlays['error'] = Overlay({
-			title: 'Error',
-			message: 'An error occured',
-			labelName: 'RETRY',
-			onclick: () => { },
-		});
+		this.overlays['start'] = new Overlay(
+			'TERMINAL PONG',
+			`First to ${WINNING_SCORE} wins`,
+			'READY',
+			() => this.sendCmd('ready'),
+		);
+		this.overlays['register'] = new Overlay(
+			'Enter game',
+			'',
+			'REGISTER',
+			() => this.sendCmd('register'),
+		);
+		this.overlays['score'] = new Overlay(
+			'',
+			'',
+			'PLAY AGAIN',
+			() => this.switchOverlay('register'),
+		);
+		this.overlays['error'] = new Overlay(
+			'Error',
+			'An error occured',
+			'RETRY',
+			() => { },
+		);
 		this.switchOverlay('register');
-
 		this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
-		this.socket.onopen = () => this.sendCmd('roomId', roomId.get());
+		this.socket.onopen = () => {
+			this.sendCmd('roomId', roomId.get());
+		};
 		this.socket.onmessage = event => this.messageHanle(event);
 		this.socket.onerror = err => console.error('Socket error:', err);
 		this.socket.onclose = () => {
@@ -135,6 +136,7 @@ export default class PongGame {
 	}
 
 	public close() {
+		// roomId.set('');
 		this.socket.close();
 	}
 
@@ -143,9 +145,15 @@ export default class PongGame {
 	};
 
 	private switchOverlay(name: string = '') {
-		Object.entries(this.overlays).forEach(([key, overlay]) =>
-			key === name ? overlay.show() : overlay.hide()
-		);
+		console.log("overlays", name);
+		Object.keys(this.overlays).forEach((key) => {
+			if (key === name) {
+				this.overlays[key].show()
+			}
+			else {
+				this.overlays[key].hide()
+			}
+		});
 	}
 
 	private messageHanle(msg: MessageEvent) {
@@ -254,7 +262,7 @@ export default class PongGame {
 	}
 
 	private updateGame(data: Cmd) {
-		this.switchOverlay('');
+		// this.switchOverlay('');
 		this.state.game.ballX = (parseInt(data.arg0) / 1000) * this.state.canvasWidth;
 		this.state.game.ballY = (parseInt(data.arg1) / 1000) * this.state.canvasHeight;
 		this.state.game.playerY = (parseInt(data.arg2) / 1000) * this.state.canvasHeight;
@@ -369,7 +377,7 @@ export default class PongGame {
 			{ className: 'relative w-full', style: { height: '60vh' } },
 			this.canvasElement,
 			this.leavePopUp,
-			...Object.values(this.overlays)
+			...Object.values(this.overlays).map(o => o.render())
 		);
 	}
 

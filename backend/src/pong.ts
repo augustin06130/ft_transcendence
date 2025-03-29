@@ -1,7 +1,7 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 
-const WINNING_SCORE = 10;
+const WINNING_SCORE = 1;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
@@ -119,7 +119,7 @@ export default class PongGame {
 		}
 		this.clients = this.clients.filter((c: Client) => c.username !== client.username);
 		this.broadcastPosition();
-		if (this.getPlayerCount() < 1) {
+		if (this.clients.length < 1) {
 			this.kill();
 		}
 	}
@@ -149,8 +149,12 @@ export default class PongGame {
 				this.registerHandle(currClient);
 				break;
 			case 'paddle':
-				if (data.arg0 === 'player') this.updatePlayerPaddle(parseInt(data.arg1));
-				else this.updateComputerPaddle(parseInt(data.arg1));
+				if (data.arg0 === 'player') {
+					this.updatePlayerPaddle(parseInt(data.arg1));
+				}
+				else {
+					this.updateComputerPaddle(parseInt(data.arg1));
+				}
 				break;
 			case 'ready':
 				this.startGame();
@@ -355,8 +359,8 @@ export default class PongGame {
 		this.broadcastCmd('ingame', 0);
 		clearInterval(this.gameState.intervalId);
 		this.gameState.intervalId = 0;
-		if (this.player2?.socket) {
-			this.clients.push(this.clients.splice(this.clients.indexOf(this.player2), 1)[0]);
+		if (this.player1?.socket) {
+			this.clients.push(this.clients.splice(this.clients.indexOf(this.player1), 1)[0]);
 			this.player1.registered = false;
 		}
 		if (this.player2?.socket) {

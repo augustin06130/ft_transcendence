@@ -1,59 +1,59 @@
 import { div, h2, p, button } from '@framework/tags';
 
-export type OverlayElement = HTMLDivElement & {
-    show: () => void;
-    hide: () => void;
-    setTitle: (title: string) => void;
-    setMessage: (message: string) => void;
-    showButton: () => void;
-    hideButton: () => void;
-};
+// export type OverlayElement = HTMLDivElement & {
+// 	show: () => void;
+// 	hide: () => void;
+// 	setTitle: (title: string) => void;
+// 	setMessage: (message: string) => void;
+// 	showButton: () => void;
+// 	hideButton: () => void;
+// };
 
-export default function Overlay(option: {
-    title: string;
-    message: string;
-    labelName: string;
-    onclick: () => void;
-}): OverlayElement {
-    let result: any = div(
-        {
-            className: 'absolute inset-0 flex flex-col items-center justify-center bg-black/80',
-        },
-        h2({ className: 'text-2xl font-bold mb-4' }, option.title),
-        p({ className: 'mb-6' }, option.message),
-        button(
-            {
-                onclick: option.onclick,
-                className:
-                    'px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition',
-            },
-            option.labelName
-        )
-    );
+export default class Overlay {
+	private div: HTMLDivElement;
+	private titleLabel: HTMLHeadingElement;
+	private messageLabel: HTMLParagraphElement;
+	private buttonLabel: HTMLButtonElement;
+	constructor(
+		title: string,
+		message: string,
+		labelName: string,
+		onclick: () => void,
+	) {
+		this.titleLabel = h2({ className: 'text-2xl font-bold mb-4' }, title);
+		this.messageLabel = p({ className: 'mb-6' }, message);
+		this.buttonLabel = button({ onclick: onclick, className: 'px-6 py-2 border border-green-500 rounded hover:bg-green-500/20 transition', }, labelName);
 
-    result.show = () => {
-        result.style.visibility = 'visible';
-    };
+		this.div = div({ className: 'absolute inset-0 flex flex-col items-center justify-center bg-black/80', },
+			this.titleLabel,
+			this.messageLabel,
+			this.buttonLabel,
+		);
+	}
 
-    result.hide = () => {
-        result.style.visibility = 'hidden';
-    };
+	show = () => {
+		this.div.style.visibility = 'visible';
+	};
 
-    result.setTitle = (title: string) => {
-        result.children[0].innerHTML = title;
-    };
+	hide = () => {
+		this.div.style.visibility = 'hidden';
+	};
 
-    result.setMessage = (message: string) => {
-        result.children[1].innerHTML = message;
-    };
+	setTitle = (title: string) => {
+		this.titleLabel.innerHTML = title;
+	};
 
-    result.showButton = () => {
-        result.children[2].style.visibility = 'inherit';
-    };
+	setMessage = (message: string) => {
+		this.messageLabel.innerHTML = message;
+	};
 
-    result.hideButton = () => {
-        result.children[2].style.visibility = 'hidden';
-    };
+	showButton = () => {
+		this.buttonLabel.style.visibility = 'inherit';
+	};
 
-    return result;
+	hideButton = () => {
+		this.buttonLabel.style.visibility = 'hidden';
+	};
+
+	render = () => this.div
 }

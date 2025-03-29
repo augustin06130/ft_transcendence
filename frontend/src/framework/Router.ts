@@ -1,18 +1,13 @@
 import { Routes } from '@framework/types';
 import { div } from '@framework/tags';
 import _404View from '@views/404';
-import { roomId } from '@views/Room';
 import { game } from '@views/Pong';
-import popUp from '@components/PopUp';
 
 export function Router(routes: Routes) {
 	let result = div({});
 
 	function updateUrl(event: Event) {
 		const detail = (event as any).detail;
-
-		console.log('event', event);
-		console.log('detail', detail);
 
 		if (!(detail.to in routes)) {
 			const route404 = '/404';
@@ -40,16 +35,18 @@ export function Router(routes: Routes) {
 
 export function switchPage(to: string) {
 	const from = location.pathname;
-	console.log(from);
-	if (from === '/pong' && game?.isPlayer()) {
-		game.leavePopUp.show((response: boolean) => {
-			console.log('coucou', response);
-			if (!response)
-				return;
-			game?.close();
-			window.dispatchEvent(new CustomEvent('url', { detail: { to, from } }));
-		})
-		return;
+
+	if (from === '/pong') {
+		if (game?.isPlayer()) {
+			game.leavePopUp.show((response: boolean) => {
+				if (!response)
+					return;
+				game?.close();
+				window.dispatchEvent(new CustomEvent('url', { detail: { from, to } }));
+			})
+			return;
+		}
+		game?.close();
 	}
-	window.dispatchEvent(new CustomEvent('url', { detail: { to, from } }));
+	window.dispatchEvent(new CustomEvent('url', { detail: { from, to } }));
 }

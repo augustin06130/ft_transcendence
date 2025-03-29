@@ -46,5 +46,3 @@ export const baseLinks = {
         label: 'Chat',
     },
 };
-
-console.log(baseLinks);
