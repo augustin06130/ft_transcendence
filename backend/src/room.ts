@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 import PongGame from './pong';
 
-const pongRooms = new Map<string, PongGame>();
+export const pongRooms = new Map<string, PongGame>();
 
 export function create_room(_: FastifyRequest, reply: FastifyReply) {
 	let roomId = Math.floor(Math.random() * 9999)

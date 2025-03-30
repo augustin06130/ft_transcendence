@@ -126,6 +126,7 @@
     "npmlog": "^6.0.2",
     "on-exit-leak-free": "^2.1.2",
     "once": "^1.4.0",
+    "oo-ascii-tree": "^1.110.0",
     "p-map": "^4.0.0",
     "path-is-absolute": "^1.0.1",
     "picomatch": "^2.3.1",

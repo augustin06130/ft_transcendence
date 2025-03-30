@@ -11,7 +11,7 @@ import { CertifUser } from './login';
 import { logoutUser } from './logout';
 import { NewUser } from './register';
 import { CreateTableUser } from './db';
-import { create_room, validate_roomId, join_room } from './room';
+import { create_room, validate_roomId, join_room, pongRooms } from './room';
 
 
 dotenv.config();
@@ -49,6 +49,12 @@ app.register(fastifySession, {
 });
 
 app.get('/create-room', create_room);
+
+app.post('/tournament', (request: FastifyRequest, reply: FastifyReply) => {
+	const { roomId } = request.body as { roomId: string };
+	reply.header('Content-Type', 'text/plain');
+	reply.send(pongRooms.get(roomId)?.tournamentTree());
+});
 
 app.post('/validate-roomid', validate_roomId);
 

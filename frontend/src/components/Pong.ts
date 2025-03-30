@@ -71,6 +71,7 @@ export default class PongGame {
 	private computerIntervallId: number = 0;
 	private overlays: { [key: string]: Overlay } = {};
 	public leavePopUp: PopUpElement;
+	private userName: string;
 
 	constructor(
 		gameMode: UseStateType<GameMode>,
@@ -80,6 +81,7 @@ export default class PongGame {
 	) {
 		if (roomId.get() === '')
 			switchPage('/room');
+		this.userName = '';
 		this.gameMode = gameMode;
 		this.name1Set = name1Set;
 		this.name2Set = name2Set;
@@ -163,8 +165,8 @@ export default class PongGame {
 			case 'registered':
 				this.switchOverlay('start');
 				break;
-			case 'role':
-				this.state.role = data.arg0 as Role;
+			case 'username':
+				this.userName = data.arg0;
 				break;
 			case 'setNames':
 				this.setNameHandle(data);
@@ -209,19 +211,35 @@ export default class PongGame {
 	private setNameHandle(data: Cmd) {
 		this.handleResize();
 		this.gameMode.set(data.arg0 as GameMode);
-
 		this.name1Set(data.arg1);
 		this.name2Set(data.arg2);
 
+
+		// set role depending on userName
+		if (this.userName === data.arg1) {
+			this.state.role = 'player1';
+		}
+		else if (this.userName === data.arg2) {
+			this.state.role = 'player2';
+		}
+		else
+			this.state.role = 'spec';
+
+		// set texts depending on role and gamemode
 		this.overlays['start'].showButton();
 		if (this.state.role === 'spec') {
 			this.overlays['start'].hideButton();
 			this.topTextSet('Spectator');
-		} else if (this.gameMode.get() === 'local') this.topTextSet(`◄► You are playing localy ◄►`);
-		else if (this.state.role === 'player1')
+		}
+		else if (this.gameMode.get() === 'local') {
+			this.topTextSet(`◄► You are playing localy ◄►`);
+		}
+		else if (this.state.role === 'player1') {
 			this.topTextSet(`◄◄ You are playing as ${data.arg1} ◄◄`);
-		else if (this.state.role === 'player2')
+		}
+		else if (this.state.role === 'player2') {
 			this.topTextSet(`►► You are playing as ${data.arg2} ►►`);
+		}
 	}
 
 	private inGameHandle(data: Cmd) {

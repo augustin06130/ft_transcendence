@@ -1,14 +1,5 @@
 import { div, h2, p, button } from '@framework/tags';
 
-// export type OverlayElement = HTMLDivElement & {
-// 	show: () => void;
-// 	hide: () => void;
-// 	setTitle: (title: string) => void;
-// 	setMessage: (message: string) => void;
-// 	showButton: () => void;
-// 	hideButton: () => void;
-// };
-
 export default class Overlay {
 	private div: HTMLDivElement;
 	private titleLabel: HTMLHeadingElement;
@@ -29,6 +20,18 @@ export default class Overlay {
 			this.messageLabel,
 			this.buttonLabel,
 		);
+		this.div.style.visibility = 'hidden';
+	}
+
+	setInnerHtml = (html: string) => {
+		this.div.innerHTML = html;
+	}
+	setContnet = (div: HTMLDivElement) => {
+		this.div.replaceChildren(div);
+	}
+
+	setHideOnClick = () => {
+		this.div.addEventListener('click', () => this.hide())
 	}
 
 	show = () => {

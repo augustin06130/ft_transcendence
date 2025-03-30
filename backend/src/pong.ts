@@ -1,7 +1,8 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
+import Tournament from './tournament';
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 10;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
@@ -31,13 +32,13 @@ type PongState = {
 	ballSpeed: number;
 };
 
-type Client = {
+export type Client = {
 	username: string;
 	socket: WebSocket | null;
 	registered: boolean;
 };
 
-const aiClient: Client = {
+export const aiClient: Client = {
 	username: 'computer',
 	socket: null,
 	registered: false,
@@ -65,6 +66,7 @@ export default class PongGame {
 	private player1: Client = p1Client;
 	private player2: Client = p2Client;
 	private clients: Client[] = [];
+	private tournament: Tournament = new Tournament;
 	private dir: number = 1;
 	private kill: () => void;
 	private gameState: PongState = {
@@ -92,8 +94,13 @@ export default class PongGame {
 		this.kill = kill;
 	}
 
+	public tournamentTree(): string {
+		return this.tournament.tree();
+	}
+
 	public joinGame(socket: WebSocket, request: FastifyRequest) {
 		let username: string;
+		// dev only
 		if (request.session.username) {
 			username = request.session.username;
 		} else {
@@ -101,9 +108,12 @@ export default class PongGame {
 		}
 
 		const client = { username, socket, registered: false };
+
 		this.clients.push(client);
 		this.broadcastPosition();
 		this.sendCmd(client, 'ingame', +this.gameState.ingame);
+		this.sendCmd(client, 'username', username);
+
 		socket.on('message', (message: any) => this.onMessageHandle(message, client));
 		socket.on('close', () => this.leaveGame(client));
 	}
@@ -117,7 +127,8 @@ export default class PongGame {
 					client === this.player1 ? this.player2?.username : this.player1?.username
 				);
 		}
-		this.clients = this.clients.filter((c: Client) => c.username !== client.username);
+		this.tournament.removePlayer(client);
+		// this.clients = this.clients.filter((c: Client) => c !== client);
 		this.broadcastPosition();
 		if (this.clients.length < 1) {
 			this.kill();
@@ -149,12 +160,7 @@ export default class PongGame {
 				this.registerHandle(currClient);
 				break;
 			case 'paddle':
-				if (data.arg0 === 'player') {
-					this.updatePlayerPaddle(parseInt(data.arg1));
-				}
-				else {
-					this.updateComputerPaddle(parseInt(data.arg1));
-				}
+				this.handlePaddle(data);
 				break;
 			case 'ready':
 				this.startGame();
@@ -164,75 +170,26 @@ export default class PongGame {
 				break;
 		}
 	}
-	private changeModeHanble(currClient: Client) {
-		if (currClient.registered && currClient === this.player1)
-			this.gameState.mode =
-				gameModes[(gameModes.indexOf(this.gameState.mode) + 1) % gameModes.length];
-		this.broadcastPosition();
-	}
 
 	private registerHandle(currClient: Client) {
-		this.clients.map(c => {
-			if (c.username === currClient.username) {
-				c.registered = true;
-				this.sendCmd(c, 'registered');
-			}
-		});
+		currClient.registered = true;
+		this.tournament.addPlayer(currClient);
+		this.sendCmd(currClient, 'registered');
 		this.broadcastPosition();
 	}
 
-	private getPlayerCount() {
-		return this.clients.reduce((tot, c) => tot + +c.registered, 0);
-	}
-
-	private get2Players() {
-		let p1: Client | null = null;
-		let p2: Client | null = null;
-		this.clients.forEach((c: Client) => {
-			if (c.registered && !p1) p1 = c;
-			else if (c.registered && !p2) p2 = c;
-		});
-		return [p1 || p1Client, p2 || p2Client];
-	}
-
-	private broadcastPlayers() {
-		[this.player1, this.player2] = this.get2Players();
-		if (!this.player2) this.player2 = p2Client;
-		switch (this.gameState.mode) {
-			case 'local':
-				this.player2 = guestClient;
-				break;
-			case 'ai':
-				this.player2 = aiClient;
-				break;
+	private handlePaddle(data: Cmd) {
+		if (data.arg0 === 'player') {
+			this.playerPaddlePos(parseInt(data.arg1));
 		}
-		if (this.player1 && this.player2) {
-			this.clients.forEach(c => {
-				if (c === this.player1) this.sendCmd(this.player1, 'role', 'player1');
-				else if (c === this.player2) this.sendCmd(this.player2, 'role', 'player2');
-				else this.sendCmd(c, 'role', 'spec');
-			});
-			this.broadcastCmd(
-				'setNames',
-				this.gameState.mode,
-				this.player1.username,
-				this.player2.username
-			);
+		else {
+			this.computerPaddlePos(parseInt(data.arg1));
 		}
-	}
-
-	private broadcastPosition() {
-		let obj: any = { cmd: 'queuePosition', arg1: this.getPlayerCount() };
-		let i = 1;
-		this.clients.forEach((client: Client) => {
-			if (client.registered) obj['arg0'] = i++;
-			if (client.socket && client.socket.readyState === 1)
-				client.socket.send(JSON.stringify(obj));
-		});
-		this.broadcastPlayers();
 	}
 
 	private startGame() {
+
+		console.log('start', `${this.player1?.username} vs. ${this.player2?.username}`)
 		if (this.player2 === p2Client) return;
 		if (this.gameState.ingame) {
 			console.log('already in game');
@@ -240,8 +197,108 @@ export default class PongGame {
 		}
 		this.gameState.ingame = true;
 		this.broadcastCmd('ingame', 1);
-		this.initGame();
+		this.gameState.playerScore = 0;
+		this.gameState.computerScore = 0;
 		this.startTurn();
+	}
+
+	private changeModeHanble(currClient: Client) {
+		if (currClient.registered && currClient === this.player1) {
+			this.gameState.mode =
+				gameModes[(gameModes.indexOf(this.gameState.mode) + 1) % gameModes.length];
+		}
+		this.broadcastPosition();
+	}
+
+	private getPlayerCount() {
+		return this.clients.reduce((tot, c) => tot + +c.registered, 0);
+	}
+
+	// private get2Players() {
+	// 	let p1: Client | null = null;
+	// 	let p2: Client | null = null;
+	// 	this.clients.forEach((c: Client) => {
+	// 		if (c.registered && !p1) {
+	// 			p1 = c;
+	// 		}
+	// 		else if (c.registered && !p2) {
+	// 			p2 = c;
+	// 		}
+	// 	});
+	// 	return [p1 || p1Client, p2 || p2Client];
+	// }
+
+	private broadcastPlayers() {
+
+		if (this.gameState.mode === 'remote') {
+			let match = this.tournament.getNextMatch();
+			if (!match)
+				return this.broadcastCmd('info', 'tournament finished');
+			this.player1 = match.player1 as Client;
+			this.player2 = match.player2 as Client;
+		}
+		else {
+			const p = this.clients.find(c => c.registered);
+			if (!p) {
+				return this.broadcastCmd('info', 'no registered player in the room');
+			}
+			this.player1 = p;
+			if (this.gameState.mode === 'local') {
+				this.player2 = guestClient;
+			}
+			else {
+				this.player2 = aiClient;
+			}
+		}
+		//sends its role to every client
+		// this.clients.forEach(c => {
+		// 	if (c === this.player1) {
+		// 		this.sendCmd(this.player1, 'role', 'player1');
+		// 	}
+		// 	else if (c === this.player2) {
+		// 		this.sendCmd(this.player2, 'role', 'player2');
+		// 	}
+		// 	else {
+		// 		this.sendCmd(c, 'role', 'spec');
+		// 	}
+		// });
+
+		this.broadcastCmd(
+			'setNames',
+			this.gameState.mode,
+			this.player1.username,
+			this.player2.username
+		);
+	}
+
+	private broadcastPosition() {
+		let obj: any = { cmd: 'queuePosition', arg1: this.getPlayerCount() };
+		let i = 1;
+		this.clients.forEach((client: Client) => {
+			if (client.registered) {
+				obj['arg0'] = i++;
+			}
+			if (client.socket && client.socket.readyState === 1) {
+				client.socket.send(JSON.stringify(obj));
+			}
+		});
+		this.broadcastPlayers();
+	}
+
+	private broadcastGame() {
+		this.broadcastCmd(
+			'update',
+			this.gameState.ballX, // 0
+			this.gameState.ballY, // 1
+			this.gameState.playerY, // 2
+			this.gameState.computerY, // 3
+			this.gameState.playerScore, // 4
+			this.gameState.computerScore, // 5
+			this.gameState.playerHeight, // 6
+			this.gameState.computerHeight, // 7
+			this.gameState.ballRadius, // 8
+			this.gameState.paddleWidth // 9
+		);
 	}
 
 	private startTurn() {
@@ -267,11 +324,6 @@ export default class PongGame {
 		}, 1000);
 	}
 
-	private initGame() {
-		this.gameState.playerScore = 0;
-		this.gameState.computerScore = 0;
-	}
-
 	private updateGame() {
 		this.gameState.ballX += this.gameState.ballSpeed * Math.cos(this.gameState.ballAngle);
 		this.gameState.ballY += -this.gameState.ballSpeed * Math.sin(this.gameState.ballAngle);
@@ -281,8 +333,8 @@ export default class PongGame {
 			this.gameState.ballY > 1000 - this.gameState.ballRadius
 		)
 			this.gameState.ballAngle += 2 * (Math.PI - this.gameState.ballAngle);
-		this.playerPaddle();
-		this.computerPaddle();
+		this.playerPaddleBounce();
+		this.computerPaddleBounce();
 
 		if (this.gameState.ballX < this.gameState.ballRadius / 2) {
 			this.gameState.computerScore++;
@@ -295,7 +347,7 @@ export default class PongGame {
 		this.broadcastGame();
 	}
 
-	private playerPaddle() {
+	private playerPaddleBounce() {
 		if (
 			this.gameState.ballX < this.gameState.paddleWidth + this.gameState.ballRadius &&
 			this.gameState.ballY > this.gameState.playerY &&
@@ -308,7 +360,7 @@ export default class PongGame {
 		}
 	}
 
-	private computerPaddle() {
+	private computerPaddleBounce() {
 		if (
 			this.gameState.ballX > 1000 - this.gameState.paddleWidth - this.gameState.ballRadius &&
 			this.gameState.ballY > this.gameState.computerY &&
@@ -321,7 +373,7 @@ export default class PongGame {
 		}
 	}
 
-	private updatePlayerPaddle(delta: number) {
+	private playerPaddlePos(delta: number) {
 		this.gameState.playerY += delta * this.gameState.playerSpeed;
 		this.gameState.playerY = Math.max(this.gameState.playerY, 0);
 		this.gameState.playerY = Math.min(
@@ -330,7 +382,7 @@ export default class PongGame {
 		);
 	}
 
-	private updateComputerPaddle(delta: number) {
+	private computerPaddlePos(delta: number) {
 		this.gameState.computerY += delta * this.gameState.computerSpeed;
 		this.gameState.computerY = Math.max(this.gameState.computerY, 0);
 		this.gameState.computerY = Math.min(
@@ -360,30 +412,6 @@ export default class PongGame {
 		this.broadcastCmd('ingame', 0);
 		clearInterval(this.gameState.intervalId);
 		this.gameState.intervalId = 0;
-		if (this.player1?.socket) {
-			this.clients.push(this.clients.splice(this.clients.indexOf(this.player1), 1)[0]);
-			this.player1.registered = false;
-		}
-		if (this.player2?.socket) {
-			this.clients.push(this.clients.splice(this.clients.indexOf(this.player2), 1)[0]);
-			this.player2.registered = false;
-		}
 		this.broadcastPosition();
-	}
-
-	private broadcastGame() {
-		this.broadcastCmd(
-			'update',
-			this.gameState.ballX, // 0
-			this.gameState.ballY, // 1
-			this.gameState.playerY, // 2
-			this.gameState.computerY, // 3
-			this.gameState.playerScore, // 4
-			this.gameState.computerScore, // 5
-			this.gameState.playerHeight, // 6
-			this.gameState.computerHeight, // 7
-			this.gameState.ballRadius, // 8
-			this.gameState.paddleWidth // 9
-		);
 	}
 }
