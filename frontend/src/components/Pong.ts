@@ -40,6 +40,7 @@ type PongState = {
 	ingame: boolean;
 	game: GameState;
 	aiState: AiState;
+	continue: boolean;
 };
 
 const zeroGameSate = {
@@ -101,13 +102,13 @@ export default class PongGame {
 		this.leavePopUp = popUp("Leave", "If you leave this page, you will loose the game")
 
 		this.overlays['start'] = new Overlay(
-			'TERMINAL PONG',
+			'',
 			`First to ${WINNING_SCORE} wins`,
 			'READY',
 			() => this.sendCmd('ready'),
 		);
 		this.overlays['register'] = new Overlay(
-			'Enter game',
+			'Register for the next game of tournament',
 			'',
 			'REGISTER',
 			() => this.sendCmd('register'),
@@ -116,7 +117,14 @@ export default class PongGame {
 			'',
 			'',
 			'PLAY AGAIN',
-			() => this.switchOverlay('register'),
+			() => {
+				if (this.state.continue) {
+					this.sendCmd('next');
+					this.switchOverlay('start')
+				}
+				else
+					this.switchOverlay('register')
+			},
 		);
 		this.overlays['error'] = new Overlay(
 			'Error',
@@ -147,7 +155,6 @@ export default class PongGame {
 	};
 
 	private switchOverlay(name: string = '') {
-		console.log("overlays", name);
 		Object.keys(this.overlays).forEach((key) => {
 			if (key === name) {
 				this.overlays[key].show()
@@ -186,6 +193,9 @@ export default class PongGame {
 				);
 				this.overlays['register'].setMessage(`Players in the waiting room: ${data.arg1}`);
 				break;
+			case 'next':
+				this.switchOverlay('start')
+				break;
 			case 'error':
 				this.displayError(data.arg0);
 				break;
@@ -213,6 +223,7 @@ export default class PongGame {
 		this.gameMode.set(data.arg0 as GameMode);
 		this.name1Set(data.arg1);
 		this.name2Set(data.arg2);
+		this.overlays['start'].setTitle(data.arg3)
 
 
 		// set role depending on userName
@@ -243,7 +254,9 @@ export default class PongGame {
 	}
 
 	private inGameHandle(data: Cmd) {
-		this.state.ingame = !!parseInt(data.arg0);
+		this.state.ingame = parseInt(data.arg0) > 0;
+		this.state.continue = (this.gameMode.get() === 'remote') && (parseInt(data.arg0) === -1)
+		this.state.continue = parseInt(data.arg0) === -1
 		if (!this.state.ingame) return;
 		if (this.gameMode.get() === 'ai')
 			this.computerIntervallId = setInterval(this.updateComputerView, 100);
@@ -270,6 +283,7 @@ export default class PongGame {
 			canvasWidth: 0,
 			canvasHeight: 0,
 			role: 'spec',
+			continue: false,
 			game: JSON.parse(JSON.stringify(zeroGameSate)),
 			aiState: {
 				current: JSON.parse(JSON.stringify(zeroGameSate)),

@@ -12,7 +12,7 @@ export default function PongGameView() {
 	let player2NameLabel: HTMLElement | null = null;
 	let player1NameLabel: HTMLElement | null = null;
 	let topLabel: HTMLElement | null = null;
-	let tournamentOverlay: TournamentOverlay = new TournamentOverlay(`Tournament: ${roomId.get}`);
+	let tournamentOverlay: TournamentOverlay = new TournamentOverlay(`Tournament tree: ${roomId.get()}`);
 
 	const gameMode = UseState<GameMode>('ai', (newValue, _) => {
 		if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
@@ -65,14 +65,16 @@ export default function PongGameView() {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ roomId: roomId.get() }),
 				}).then(resp => {
+					if (resp.status === 412)
+						throw ('Not in tournament mode')
 					if (!resp.ok)
-						popOver.show('Connexion failed');
+						throw ('Connection failed')
 					return resp.text();
 				}).then((html) => {
 					tournamentOverlay.show();
 					console.log(html)
 					tournamentOverlay.setHtml(html);
-				});
+				}).catch(r => popOver.show(r));
 			}
 		}, 'view tournament');
 

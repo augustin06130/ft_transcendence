@@ -53,7 +53,12 @@ app.get('/create-room', create_room);
 app.post('/tournament', (request: FastifyRequest, reply: FastifyReply) => {
 	const { roomId } = request.body as { roomId: string };
 	reply.header('Content-Type', 'text/plain');
-	reply.send(pongRooms.get(roomId)?.tournamentTree());
+	if (pongRooms.get(roomId)?.tournament.mode === 'remote') {
+		reply.send(pongRooms.get(roomId)?.tournamentTree());
+	}
+	else {
+		reply.code(412).send()
+	}
 });
 
 app.post('/validate-roomid', validate_roomId);

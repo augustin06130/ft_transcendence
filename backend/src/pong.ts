@@ -1,9 +1,11 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
-import Tournament from './tournament';
+import Tournament, { Match } from './tournament';
 
-const WINNING_SCORE = 10;
+const WINNING_SCORE = 3;
 
+// dev only
+let idCount: number = 1;
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
 
@@ -27,7 +29,6 @@ type PongState = {
 	playerSpeed: number;
 	computerSpeed: number;
 	paddleWidth: number;
-	mode: GameMode;
 	ballAngle: number;
 	ballSpeed: number;
 };
@@ -35,38 +36,13 @@ type PongState = {
 export type Client = {
 	username: string;
 	socket: WebSocket | null;
-	registered: boolean;
-};
-
-export const aiClient: Client = {
-	username: 'computer',
-	socket: null,
-	registered: false,
-};
-
-const guestClient: Client = {
-	username: 'guest',
-	socket: null,
-	registered: false,
-};
-
-const p1Client: Client = {
-	username: 'player1',
-	socket: null,
-	registered: false,
-};
-
-const p2Client: Client = {
-	username: 'player2',
-	socket: null,
-	registered: false,
 };
 
 export default class PongGame {
-	private player1: Client = p1Client;
-	private player2: Client = p2Client;
+	private player1: Client | undefined;
+	private player2: Client | undefined;
 	private clients: Client[] = [];
-	private tournament: Tournament = new Tournament;
+	public tournament: Tournament = new Tournament;
 	private dir: number = 1;
 	private kill: () => void;
 	private gameState: PongState = {
@@ -83,7 +59,6 @@ export default class PongGame {
 		computerScore: 0,
 		ballRadius: 12,
 		intervalId: 0,
-		mode: 'ai',
 		playerSpeed: 6,
 		computerSpeed: 6,
 		paddleWidth: 10,
@@ -95,7 +70,7 @@ export default class PongGame {
 	}
 
 	public tournamentTree(): string {
-		return this.tournament.tree();
+		return this.tournament.stringify().join('\n');
 	}
 
 	public joinGame(socket: WebSocket, request: FastifyRequest) {
@@ -104,15 +79,15 @@ export default class PongGame {
 		if (request.session.username) {
 			username = request.session.username;
 		} else {
-			username = Math.floor(Math.random() * 1000000000).toString();
+			username = (idCount++).toString();
 		}
 
-		const client = { username, socket, registered: false };
+		const client = { username, socket };
+		this.sendCmd(client, 'username', username);
 
 		this.clients.push(client);
 		this.broadcastPosition();
 		this.sendCmd(client, 'ingame', +this.gameState.ingame);
-		this.sendCmd(client, 'username', username);
 
 		socket.on('message', (message: any) => this.onMessageHandle(message, client));
 		socket.on('close', () => this.leaveGame(client));
@@ -124,11 +99,11 @@ export default class PongGame {
 			this.broadcastCmd('info', `Player: ${client.username} disconnected`);
 			if (this.gameState.ingame)
 				this.setWinner(
-					client === this.player1 ? this.player2?.username : this.player1?.username
+					(client === this.player1 ? this.player2 : this.player1) as Client
 				);
 		}
 		this.tournament.removePlayer(client);
-		// this.clients = this.clients.filter((c: Client) => c !== client);
+		this.clients = this.clients.filter((c: Client) => c !== client);
 		this.broadcastPosition();
 		if (this.clients.length < 1) {
 			this.kill();
@@ -166,13 +141,15 @@ export default class PongGame {
 				this.startGame();
 				break;
 			case 'mode':
-				this.changeModeHanble(currClient);
+				this.changeModeHanble();
+				break;
+			case 'next':
+				this.broadcastCmd('next');
 				break;
 		}
 	}
 
 	private registerHandle(currClient: Client) {
-		currClient.registered = true;
 		this.tournament.addPlayer(currClient);
 		this.sendCmd(currClient, 'registered');
 		this.broadcastPosition();
@@ -189,11 +166,11 @@ export default class PongGame {
 
 	private startGame() {
 
-		console.log('start', `${this.player1?.username} vs. ${this.player2?.username}`)
-		if (this.player2 === p2Client) return;
+		if (!this.player1?.socket) {
+			return this.broadcastCmd('info', 'not enough player is the room')
+		}
 		if (this.gameState.ingame) {
-			console.log('already in game');
-			return;
+			return console.log('already in game');
 		}
 		this.gameState.ingame = true;
 		this.broadcastCmd('ingame', 1);
@@ -202,80 +179,38 @@ export default class PongGame {
 		this.startTurn();
 	}
 
-	private changeModeHanble(currClient: Client) {
-		if (currClient.registered && currClient === this.player1) {
-			this.gameState.mode =
-				gameModes[(gameModes.indexOf(this.gameState.mode) + 1) % gameModes.length];
-		}
+	private changeModeHanble() {
+		this.tournament.mode =
+			gameModes[(gameModes.indexOf(this.tournament.mode) + 1) % gameModes.length];
 		this.broadcastPosition();
 	}
 
-	private getPlayerCount() {
-		return this.clients.reduce((tot, c) => tot + +c.registered, 0);
-	}
-
-	// private get2Players() {
-	// 	let p1: Client | null = null;
-	// 	let p2: Client | null = null;
-	// 	this.clients.forEach((c: Client) => {
-	// 		if (c.registered && !p1) {
-	// 			p1 = c;
-	// 		}
-	// 		else if (c.registered && !p2) {
-	// 			p2 = c;
-	// 		}
-	// 	});
-	// 	return [p1 || p1Client, p2 || p2Client];
-	// }
-
 	private broadcastPlayers() {
-
-		if (this.gameState.mode === 'remote') {
-			let match = this.tournament.getNextMatch();
-			if (!match)
-				return this.broadcastCmd('info', 'tournament finished');
+		let matchString;
+		let match = this.tournament.nextMatch();
+		if (match) {
 			this.player1 = match.player1 as Client;
 			this.player2 = match.player2 as Client;
+			matchString = Tournament.getMatchString(match);
 		}
 		else {
-			const p = this.clients.find(c => c.registered);
-			if (!p) {
-				return this.broadcastCmd('info', 'no registered player in the room');
-			}
-			this.player1 = p;
-			if (this.gameState.mode === 'local') {
-				this.player2 = guestClient;
-			}
-			else {
-				this.player2 = aiClient;
-			}
+			matchString = 'Not enough players in the room';
 		}
-		//sends its role to every client
-		// this.clients.forEach(c => {
-		// 	if (c === this.player1) {
-		// 		this.sendCmd(this.player1, 'role', 'player1');
-		// 	}
-		// 	else if (c === this.player2) {
-		// 		this.sendCmd(this.player2, 'role', 'player2');
-		// 	}
-		// 	else {
-		// 		this.sendCmd(c, 'role', 'spec');
-		// 	}
-		// });
 
 		this.broadcastCmd(
 			'setNames',
-			this.gameState.mode,
-			this.player1.username,
-			this.player2.username
+			this.tournament.mode,
+			this.player1?.username || 'Player1',
+			this.player2?.username || 'Player2',
+			matchString,
 		);
 	}
 
 	private broadcastPosition() {
-		let obj: any = { cmd: 'queuePosition', arg1: this.getPlayerCount() };
+		let obj: any = { cmd: 'queuePosition', arg1: this.tournament.players.length };
 		let i = 1;
 		this.clients.forEach((client: Client) => {
-			if (client.registered) {
+			if (this.tournament.players.includes(client)) {
 				obj['arg0'] = i++;
 			}
 			if (client.socket && client.socket.readyState === 1) {
@@ -399,19 +334,30 @@ export default class PongGame {
 			return false;
 		this.setWinner(
 			this.gameState.playerScore >= WINNING_SCORE
-				? this.player1.username
-				: this.player2.username
+				? this.player1 as Client
+				: this.player2 as Client
 		);
 		return true;
 	}
 
-	private setWinner(winner: string) {
-		this.broadcastGame();
-		this.broadcastCmd('score', winner);
-		this.gameState.ingame = false;
-		this.broadcastCmd('ingame', 0);
+	private setWinner(winner: Client) {
 		clearInterval(this.gameState.intervalId);
 		this.gameState.intervalId = 0;
+
+		if (this.tournament.mode === 'remote') {
+			let playedMatch = this.tournament.nextMatch() as Match;
+			playedMatch.winner = winner;
+		}
+		// this.broadcastGame();
+		this.broadcastCmd('score', winner.username);
+		if (this.tournament.mode === 'remote' && this.tournament.nextMatch()) {
+			this.broadcastCmd('ingame', -1);
+		}
+		else {
+			this.tournament = new Tournament;
+			this.broadcastCmd('ingame', 0);
+		}
+		this.gameState.ingame = false;
 		this.broadcastPosition();
 	}
 }
