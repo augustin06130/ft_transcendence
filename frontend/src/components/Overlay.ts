@@ -23,17 +23,6 @@ export default class Overlay {
 		this.div.style.visibility = 'hidden';
 	}
 
-	setInnerHtml = (html: string) => {
-		this.div.innerHTML = html;
-	}
-	setContnet = (div: HTMLDivElement) => {
-		this.div.replaceChildren(div);
-	}
-
-	setHideOnClick = () => {
-		this.div.addEventListener('click', () => this.hide())
-	}
-
 	show = () => {
 		this.div.style.visibility = 'visible';
 	};

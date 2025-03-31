@@ -3,7 +3,7 @@ import PongGame, { WINNING_SCORE, GameMode as GameMode } from '@components/Pong'
 import UseState from '@framework/UseState';
 import { roomId } from './Room';
 import popOver from '@components/PopOver';
-import Overlay from '@components/Overlay';
+import TournamentOverlay from '@components/TournamenOverlay';
 
 export let game: PongGame | null = null;
 
@@ -12,8 +12,7 @@ export default function PongGameView() {
 	let player2NameLabel: HTMLElement | null = null;
 	let player1NameLabel: HTMLElement | null = null;
 	let topLabel: HTMLElement | null = null;
-	let tournamentOverlay: Overlay = new Overlay('', '', '', () => { })
-	tournamentOverlay.setHideOnClick();
+	let tournamentOverlay: TournamentOverlay = new TournamentOverlay(`Tournament: ${roomId.get}`);
 
 	const gameMode = UseState<GameMode>('ai', (newValue, _) => {
 		if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
@@ -72,8 +71,7 @@ export default function PongGameView() {
 				}).then((html) => {
 					tournamentOverlay.show();
 					console.log(html)
-					let div_array = html.split('\n').map(line => div({}, line));
-					tournamentOverlay?.setContnet(div({}, ...div_array));
+					tournamentOverlay.setHtml(html);
 				});
 			}
 		}, 'view tournament');
