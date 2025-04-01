@@ -37,7 +37,7 @@ export function switchPage(to: string) {
 	const from = location.pathname;
 
 	if (from === '/pong') {
-		if (game?.isPlayer()) {
+		if (game?.isPlayer() && !game.isError) {
 			game.leavePopUp.show((response: boolean) => {
 				if (!response)
 					return;

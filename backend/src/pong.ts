@@ -146,6 +146,7 @@ export default class PongGame {
             return console.log('already in game');
         }
         this.match = this.tournament.nextMatch();
+		this.match!.date = Date.now();
         this.gameState.ingame = true;
         this.broadcastCmd('ingame', 1);
         this.gameState.playerScore = 0;

@@ -73,6 +73,7 @@ export default class PongGame {
     private overlays: { [key: string]: Overlay } = {};
     public leavePopUp: PopUpElement;
     private userName: string;
+    public isError: boolean = false;
 
     constructor(
         gameMode: UseStateType<GameMode>,
@@ -115,7 +116,9 @@ export default class PongGame {
                 this.switchOverlay('start');
             } else this.switchOverlay('register');
         });
-        this.overlays['error'] = new Overlay('Error', 'An error occured', 'RETRY', () => {});
+        this.overlays['error'] = new Overlay('Error', 'An error occured', 'Home', () => {
+            location.href = 'www.yoursite.com';
+        });
         this.switchOverlay('register');
         this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
         this.socket.onopen = () => {
@@ -139,6 +142,7 @@ export default class PongGame {
     }
 
     private switchOverlay(name: string = '') {
+        if (name === 'error') this.isError = true;
         Object.keys(this.overlays).forEach(key => {
             if (key === name) {
                 this.overlays[key].show();
