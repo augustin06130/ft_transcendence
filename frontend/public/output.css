@@ -1920,6 +1920,9 @@
     --tw-sepia: sepia(100%);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
+  .\!filter {
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,) !important;
+  }
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
@@ -2082,8 +2085,17 @@
     --tw-outline-style: solid;
     outline-style: solid;
   }
+  .\[k\:K\] {
+    k: K;
+  }
   .\[key\:string\] {
     key: string;
+  }
+  .\[level\:20\] {
+    level: 20;
+  }
+  .\[level\:xxx\] {
+    level: xxx;
   }
   .backface-hidden {
     backface-visibility: hidden;
@@ -2212,6 +2224,9 @@
       border-top-width: 0px;
     }
   }
+}
+b {
+  font-weight: 10em;
 }
 @property --tw-translate-x {
   syntax: "*";

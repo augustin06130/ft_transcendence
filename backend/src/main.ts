@@ -67,6 +67,12 @@ app.register(async function(app) {
 	app.get('/pong-ws', { websocket: true }, join_room);
 });
 
+app.get('/style.css', (_: FastifyRequest, reply: FastifyReply) => {
+	readFile(path.join(__dirname, '../public/style.css'), (err: any, fileBuffer: any) => {
+		reply.header('Content-Type', 'text/css');
+		reply.send(err || fileBuffer);
+	});
+});
 app.get('/output.css', (_: FastifyRequest, reply: FastifyReply) => {
 	readFile(path.join(__dirname, '../public/output.css'), (err: any, fileBuffer: any) => {
 		reply.header('Content-Type', 'text/css');
