@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Database } from 'sqlite3';
 import bcrypt from 'bcrypt';
-import { VerifUser } from './db';
+import { VerifUser } from './user';
 
 declare module '@fastify/session' {
 	interface FastifySessionObject {

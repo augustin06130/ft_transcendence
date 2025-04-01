@@ -10,8 +10,9 @@ import dotenv from 'dotenv';
 import { CertifUser } from './login';
 import { logoutUser } from './logout';
 import { NewUser } from './register';
-import { CreateTableUser } from './db';
+import { CreateTableUser } from './user';
 import { create_room, validate_roomId, join_room, pongRooms } from './room';
+import { createTableMatches } from './matches';
 
 
 dotenv.config();
@@ -19,7 +20,7 @@ dotenv.config();
 const port: number = 80;
 const host: string = '0.0.0.0';
 
-const db = connectToDatabase(); // Attendez que la connexion soit établie
+export const db = connectToDatabase(); // Attendez que la connexion soit établie
 
 if (!process.env.SESSION_SECRET) {
 	console.log('SESSION_SECRET chargé avec succès :', process.env.SESSION_SECRET);
@@ -131,6 +132,7 @@ const start = async () => {
 
 		// Créez la table 'users' si elle n'existe pas
 		await CreateTableUser(db);
+		// await createTableMatches(db);
 
 		// Démarrez le serveur
 		await app.listen({ port, host });

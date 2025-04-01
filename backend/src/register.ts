@@ -1,6 +1,6 @@
 import { FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt';
-import {CheckUserExists, CreateNewUser} from './db';
+import {CheckUserExists, CreateNewUser} from './user';
 import { Database } from 'sqlite3';
 
 declare module '@fastify/session' {

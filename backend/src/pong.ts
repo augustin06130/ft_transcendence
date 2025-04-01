@@ -1,42 +1,16 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
-import Tournament, { Match } from './tournament';
+import Tournament from './tournament';
+import { addMatch } from './matches';
+import { db } from './main';
+import { Match, Client, Cmd, PongState } from './types';
 
-const WINNING_SCORE = 3;
+const WINNING_SCORE = 1;
 
 // dev only
 let idCount: number = 1;
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
-
-type Cmd = {
-    cmd: string;
-    [key: `arg${number}`]: string;
-};
-
-type PongState = {
-    ingame: boolean;
-    ballX: number;
-    ballY: number;
-    playerY: number;
-    computerY: number;
-    playerHeight: number;
-    computerHeight: number;
-    playerScore: number;
-    computerScore: number;
-    ballRadius: number;
-    intervalId: ReturnType<typeof setInterval> | null;
-    playerSpeed: number;
-    computerSpeed: number;
-    paddleWidth: number;
-    ballAngle: number;
-    ballSpeed: number;
-};
-
-export type Client = {
-    username: string;
-    socket: WebSocket | null;
-};
 
 export default class PongGame {
     private player1: Client | undefined;
@@ -45,6 +19,7 @@ export default class PongGame {
     public tournament: Tournament = new Tournament();
     private dir: number = 1;
     private kill: () => void;
+    private match: Match | null = null;
     private gameState: PongState = {
         ingame: false,
         ballX: 0,
@@ -61,7 +36,7 @@ export default class PongGame {
         playerSpeed: 6,
         computerSpeed: 6,
         paddleWidth: 10,
-		intervalId: null,
+        intervalId: null,
     };
 
     constructor(kill: () => void) {
@@ -156,8 +131,10 @@ export default class PongGame {
     private handlePaddle(data: Cmd) {
         if (data.arg0 === 'player') {
             this.playerPaddlePos(parseInt(data.arg1));
+            this.match!.travel1 += this.gameState.playerSpeed;
         } else {
             this.computerPaddlePos(parseInt(data.arg1));
+            this.match!.travel1 += this.gameState.computerSpeed;
         }
     }
 
@@ -168,10 +145,12 @@ export default class PongGame {
         if (this.gameState.ingame) {
             return console.log('already in game');
         }
+        this.match = this.tournament.nextMatch();
         this.gameState.ingame = true;
         this.broadcastCmd('ingame', 1);
         this.gameState.playerScore = 0;
         this.gameState.computerScore = 0;
+        this.match!.rally = 0;
         this.startTurn();
     }
 
@@ -300,6 +279,7 @@ export default class PongGame {
                 (this.gameState.ballY - this.gameState.computerY) / this.gameState.computerHeight;
             this.gameState.ballAngle = ((Math.PI * (2 * pos + 3)) / 4) % (2 * Math.PI);
             this.gameState.ballSpeed += 0.2;
+            this.match!.rally++;
         }
     }
 
@@ -338,10 +318,14 @@ export default class PongGame {
     private setWinner(winner: Client) {
         if (this.gameState.intervalId) clearInterval(this.gameState.intervalId);
         this.gameState.intervalId = null;
-        if (this.tournament.mode === 'remote') {
-            let playedMatch = this.tournament.nextMatch() as Match;
-            playedMatch.winner = winner;
-        }
+        if (!this.match) return console.error('not match set at the end on the match');
+        this.match.winner = winner;
+        this.match.score1 = this.gameState.playerScore;
+        this.match.score2 = this.gameState.computerScore;
+        this.match.duration = Date.now() - this.match.date;
+
+        addMatch(db, this.match);
+
         this.broadcastCmd('score', winner.username);
         if (this.tournament.mode === 'remote' && this.tournament.nextMatch()) {
             this.broadcastCmd('ingame', -1);

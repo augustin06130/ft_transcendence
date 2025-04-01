@@ -1,12 +1,5 @@
-import { Client, GameMode } from './pong';
-
-export type Match = {
-    player1: Client | null;
-    player2: Client | null;
-    left: Match | null;
-    right: Match | null;
-    winner: Client | null;
-};
+import { GameMode } from './pong';
+import { Client, Match, MatchTree } from './types';
 
 const aiClient: Client = {
     username: 'computer',
@@ -18,49 +11,60 @@ const guestClient: Client = {
     socket: null,
 };
 
+export function emptyMatch(): Match {
+    return {
+        player1: null,
+        player2: null,
+        winner: null,
+        rally: 0,
+        score1: 0,
+        score2: 0,
+        date: 0,
+        duration: 0,
+        travel1: 0,
+        travel2: 0,
+    };
+}
+
+export function emptyNode(match: Match = emptyMatch()): MatchTree {
+    return {
+        match,
+        left: null,
+        right: null,
+    };
+}
+
 export default class Tournament {
-    private matches: Match;
+    private matches: MatchTree;
     public players: Client[];
     public started: boolean;
     public mode: GameMode;
     constructor() {
         this.mode = 'ai';
         this.players = [];
-        this.matches = {
-            player1: null,
-            player2: null,
-            left: null,
-            right: null,
-            winner: null,
-        };
+        this.matches = { match: emptyMatch(), left: null, right: null };
         this.started = false;
     }
 
-    buildMatchs(players: Client[]): Match {
-        let result: Match = {
-            player1: null,
-            player2: null,
-            left: null,
-            right: null,
-            winner: null,
-        };
+    buildMatchs(players: Client[]): MatchTree {
+        let node = emptyNode();
 
         if (players.length === 0) {
             throw 'Error: no player in Tournament';
         } else if (players.length === 1) {
-            result.player1 = players[0];
+            node.match.player1 = players[0];
         } else if (players.length === 2) {
-            result.player1 = players[0];
-            result.player2 = players[1];
+            node.match.player1 = players[0];
+            node.match.player2 = players[1];
         } else if (players.length === 3) {
-            result.player1 = players[0];
-            result.right = this.buildMatchs(players.slice(1));
+            node.match.player1 = players[0];
+            node.right = this.buildMatchs(players.slice(1));
         } else {
             const middle = Math.floor(players.length / 2);
-            result.left = this.buildMatchs(players.slice(0, middle));
-            result.right = this.buildMatchs(players.slice(middle));
+            node.left = this.buildMatchs(players.slice(0, middle));
+            node.right = this.buildMatchs(players.slice(middle));
         }
-        return result;
+        return node;
     }
 
     addPlayer(player: Client) {
@@ -74,45 +78,38 @@ export default class Tournament {
     }
 
     makeMatch(player2: Client): Match {
-        return {
-            player1: this.players[0],
-            player2,
-            left: null,
-            right: null,
-            winner: null,
-        };
+        let result = emptyMatch();
+        result.player1 = this.players[0];
+        result.player2 = player2;
+        return result;
     }
 
-    nextMatch(match: Match = this.matches): Match | null {
+    nextMatch(node: MatchTree = this.matches): Match | null {
         if (this.mode === 'ai') return this.makeMatch(aiClient);
         if (this.mode === 'local') return this.makeMatch(guestClient);
         if (this.players.length < 2) return null;
-        if (!match.player2) {
-            if (!match.right) throw 'error match tree right';
-            if (match.right.winner) {
-                match.player2 = match.right.winner;
+        if (!node.match.player2) {
+            if (!node.right) throw 'error match tree right';
+            if (node.right.match.winner) {
+                node.match.player2 = node.right.match.winner;
             } else {
-                return this.nextMatch(match.right);
+                return this.nextMatch(node.right);
             }
         }
-        if (!match.player1) {
-            if (!match.left) throw 'error match tree left';
-            if (match.left.winner) {
-                match.player1 = match.left.winner;
+        if (!node.match.player1) {
+            if (!node.left) throw 'error match tree left';
+            if (node.left.match.winner) {
+                node.match.player1 = node.left.match.winner;
             } else {
-                return this.nextMatch(match.left);
+                return this.nextMatch(node.left);
             }
         }
-        if (match.player1 && match.player2 && !match.winner) {
+        if (node.match.player1 && node.match.player2 && !node.match.winner) {
             this.started = true;
-            return match;
+            return node.match;
         }
         this.started = false;
         return null;
-    }
-
-    setWinner(match: Match, winner: Client) {
-        match.winner = winner;
     }
 
     static getMatchString(match: Match, player2: string | null = null): string {
@@ -121,9 +118,9 @@ export default class Tournament {
 
     stringify(
         lines: string[] = [],
-        match: Match = this.matches,
+        node: MatchTree = this.matches,
         depth: number = 0,
-        matchUp: Match = this.matches,
+        NodeUp: MatchTree = this.matches,
         lineUp: string = ''
     ) {
         let line: string = '';
@@ -136,13 +133,13 @@ export default class Tournament {
                     line += ' ';
                 }
             }
-            if (match === matchUp.left) {
-                if (matchUp.right) {
+            if (node === NodeUp.left) {
+                if (NodeUp.right) {
                     line += '├─ ';
                 } else {
                     line += '└─ ';
                 }
-            } else if (match === matchUp.right) {
+            } else if (node === NodeUp.right) {
                 line += '└─ ';
             }
         } else {
@@ -150,15 +147,18 @@ export default class Tournament {
         }
 
         let cur = this.nextMatch();
-        if (cur === match) line += '<em class="current_match">';
-        line += Tournament.getMatchString(match);
-        if (cur === match) line += '</em>';
+        if (cur === node.match) line += '<em class="current_match">';
+        line += Tournament.getMatchString(node.match);
+        if (cur === node.match) line += '</em>';
+
         lines.push(line);
-        if (match.left) this.stringify(lines, match.left, depth + 1, match, line);
-        if (match.right) this.stringify(lines, match.right, depth + 1, match, line);
+        if (node.left) this.stringify(lines, node.left, depth + 1, node, line);
+        if (node.right) this.stringify(lines, node.right, depth + 1, node, line);
         return lines;
     }
 }
+
+// **********************TEST**********************
 
 // export type Client = {
 // 	username: string;
