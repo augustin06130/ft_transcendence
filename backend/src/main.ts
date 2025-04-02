@@ -4,6 +4,7 @@ import fastifySession from '@fastify/session';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
 import { readFile } from 'node:fs';
+import { getMatches } from './matches';
 
 import path from 'path';
 import dotenv from 'dotenv';
@@ -47,6 +48,12 @@ app.register(fastifySession, {
 		maxAge: 86400, // Durée de vie du cookie en secondes (1 jour)
 		path: '/', // Chemin du cookie
 	},
+});
+
+app.get('/getstats', async (request: FastifyRequest, reply: FastifyReply) => {
+	const { name } = request.query as { name: string };
+	await getMatches(db, 0, 0);
+	reply.send({ coucou: "bisous" });
 });
 
 app.get('/create-room', create_room);
@@ -132,7 +139,7 @@ const start = async () => {
 
 		// Créez la table 'users' si elle n'existe pas
 		await CreateTableUser(db);
-		// await createTableMatches(db);
+		await createTableMatches(db);
 
 		// Démarrez le serveur
 		await app.listen({ port, host });

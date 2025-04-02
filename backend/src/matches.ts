@@ -68,12 +68,10 @@ export async function addMatch(db: Database, match: Match) {
 
 export async function getMatches(db: Database, start: number, end: number) {
     return new Promise<Match[]>((resolve, reject) => {
-        const sql = `
-			SELECT * FROM matches LIMIT ${start},${end};
-		`;
+        const sql = `SELECT * FROM matches;`;
 
-        const params = [start, end];
-        db.all<Match>(sql, params, (err, rows) => {
+        // const params = [start, end];
+        db.all<Match>(sql, null, (err, rows) => {
             if (err) {
                 console.error('Error while retrieving matches', err.message);
                 reject(new Error(`Cannot retrieve matches: ${err.message}`));
@@ -84,3 +82,4 @@ export async function getMatches(db: Database, start: number, end: number) {
         });
     });
 }
+
