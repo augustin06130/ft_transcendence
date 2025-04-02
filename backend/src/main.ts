@@ -123,8 +123,8 @@ const start = async () => {
 		// Connexion à la base de données
 		// db = await connectToDatabase(); // Attendez que la connexion soit établie
 
-        // Créez la table 'users' si elle n'existe pas
-        await CreateTableUser(db);
+		// Créez la table 'users' si elle n'existe pas
+		await CreateTableUser(db);
 
 		// Démarrez le serveur
 		await app.listen({ port, host });
