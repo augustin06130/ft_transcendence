@@ -1,339 +1,363 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
+import Tournament, { Match } from './tournament';
 
-type GameModeType = 'ai' | 'local' | 'remote' | 'auto';
-const gameModes: GameModeType[] = ['ai', 'local', 'remote'];
+const WINNING_SCORE = 3;
+
+// dev only
+let idCount: number = 1;
+export type GameMode = 'ai' | 'local' | 'remote';
+const gameModes: GameMode[] = ['ai', 'local', 'remote'];
 
 type Cmd = {
-    cmd: string;
-    [key: `arg${number}`]: string;
+	cmd: string;
+	[key: `arg${number}`]: string;
 };
 
 type PongState = {
-    ingame: boolean;
-    ballX: number;
-    ballY: number;
-    playerY: number;
-    computerY: number;
-    playerHeight: number;
-    computerHeight: number;
-    playerScore: number;
-    computerScore: number;
-    ballRadius: number;
-    intervalId: number;
-    playerSpeed: number;
-    computerSpeed: number;
-    paddleWidth: number;
-    mode: GameModeType;
-    ballAngle: number;
-    ballSpeed: number;
+	ingame: boolean;
+	ballX: number;
+	ballY: number;
+	playerY: number;
+	computerY: number;
+	playerHeight: number;
+	computerHeight: number;
+	playerScore: number;
+	computerScore: number;
+	ballRadius: number;
+	intervalId: number;
+	playerSpeed: number;
+	computerSpeed: number;
+	paddleWidth: number;
+	ballAngle: number;
+	ballSpeed: number;
 };
 
-const WINNING_SCORE = 30;
-
-type Client = {
-    username: string;
-    socket: WebSocket | null;
-    registered: boolean;
+export type Client = {
+	username: string;
+	socket: WebSocket | null;
 };
 
-const aiClient: Client = {
-    username: 'computer',
-    socket: null,
-    registered: false,
-};
+export default class PongGame {
+	private player1: Client | undefined;
+	private player2: Client | undefined;
+	private clients: Client[] = [];
+	public tournament: Tournament = new Tournament;
+	private dir: number = 1;
+	private kill: () => void;
+	private gameState: PongState = {
+		ingame: false,
+		ballX: 0,
+		ballY: 0,
+		ballAngle: 0,
+		ballSpeed: 0,
+		playerY: 0,
+		computerY: 0,
+		playerHeight: 200,
+		computerHeight: 200,
+		playerScore: 0,
+		computerScore: 0,
+		ballRadius: 12,
+		intervalId: 0,
+		playerSpeed: 6,
+		computerSpeed: 6,
+		paddleWidth: 10,
+	};
 
-const guestClient: Client = {
-    username: 'guest',
-    socket: null,
-    registered: false,
-};
+	constructor(kill: () => void) {
+		this.updateGame = this.updateGame.bind(this);
+		this.kill = kill;
+	}
 
-const p2Client: Client = {
-    username: 'player2',
-    socket: null,
-    registered: false,
-};
+	public tournamentTree(): string {
+		return this.tournament.stringify().join('\n');
+	}
 
-let player1: Client | null, player2: Client | null;
-let clients: Client[] = [];
-let dir = 1;
-let gameState: PongState = {
-    ingame: false,
-    ballX: 0,
-    ballY: 0,
-    ballAngle: 0,
-    ballSpeed: 0,
-    playerY: 0,
-    computerY: 0,
-    playerHeight: 200,
-    computerHeight: 200,
-    playerScore: 0,
-    computerScore: 0,
-    ballRadius: 12,
-    intervalId: 0,
-    mode: 'ai',
-    playerSpeed: 6,
-    computerSpeed: 6,
-    paddleWidth: 10,
-};
+	public joinGame(socket: WebSocket, request: FastifyRequest) {
+		let username: string;
+		// dev only
+		if (request.session.username) {
+			username = request.session.username;
+		} else {
+			username = (idCount++).toString();
+		}
 
-export default function playPong(socket: WebSocket, request: FastifyRequest) {
-    let username: string;
-    if (request.session.username) username = request.session.username;
-    else username = Math.floor(Math.random() * 1000000000).toString();
+		const client = { username, socket };
+		this.sendCmd(client, 'username', username);
 
-    // if (username === "") {
-    //   sendCmd(socket, "error", "You must be logged to play !");
-    //   socket.close();
-    //   return;
-    // }
+		this.clients.push(client);
+		this.broadcastPosition();
+		this.sendCmd(client, 'ingame', +this.gameState.ingame);
 
-    const currClient = { username, socket, registered: false };
-    clients.push(currClient);
-    broadcastPlayers();
-    broadcastPosition();
-    sendCmd(currClient, 'ingame', +gameState.ingame);
+		socket.on('message', (message: any) => this.onMessageHandle(message, client));
+		socket.on('close', () => this.leaveGame(client));
+	}
 
-    socket.on('message', (message: any) => onMessageHandle(message));
+	private leaveGame(client: Client) {
+		console.log(`User ${client.username} left`);
+		if (client === this.player2 || client === this.player1) {
+			this.broadcastCmd('info', `Player: ${client.username} disconnected`);
+			if (this.gameState.ingame)
+				this.setWinner(
+					(client === this.player1 ? this.player2 : this.player1) as Client
+				);
+		}
+		this.tournament.removePlayer(client);
+		this.clients = this.clients.filter((c: Client) => c !== client);
+		this.broadcastPosition();
+		if (this.clients.length < 1) {
+			this.kill();
+		}
+	}
 
-    socket.on('close', () => {
-        console.log(`User ${username} left`);
-        clients = clients.filter((c: Client) => c.username !== username);
-        broadcastPosition();
-    });
+	private parse(cmd: string, ...args: (string | number)[]) {
+		let obj: any = { cmd: cmd };
+		args.forEach((arg, i) => (obj[`arg${i}`] = arg));
+		return JSON.stringify(obj);
+	}
 
-    /************************************************/
-    /*                   Functions                  */
-    /************************************************/
+	private sendCmd(client: Client, cmd: string, ...args: (string | number)[]) {
+		if (client.socket) client.socket.send(this.parse(cmd, ...args));
+	}
 
-    function parse(cmd: string, ...args: (string | number)[]) {
-        let obj: any = { cmd: cmd };
-        args.forEach((arg, i) => (obj[`arg${i}`] = arg));
-        return JSON.stringify(obj);
-    }
+	private broadcastCmd(cmd: string, ...args: (string | number)[]) {
+		let obj = this.parse(cmd, ...args);
+		this.clients.forEach((client: Client) => {
+			if (client.socket && client.socket.readyState === 1) client.socket.send(obj);
+		});
+	}
 
-    function sendCmd(client: Client, cmd: string, ...args: (string | number)[]) {
-        if (client.socket) client.socket.send(parse(cmd, ...args));
-    }
+	private onMessageHandle(msg: string, currClient: Client) {
+		const data: Cmd = JSON.parse(msg);
+		if (data.cmd !== 'paddle') console.log(data);
+		switch (data.cmd) {
+			case 'register':
+				this.registerHandle(currClient);
+				break;
+			case 'paddle':
+				this.handlePaddle(data);
+				break;
+			case 'ready':
+				this.startGame();
+				break;
+			case 'mode':
+				this.changeModeHanble();
+				break;
+			case 'next':
+				this.broadcastCmd('next');
+				break;
+		}
+	}
 
-    function broadcastCmd(cmd: string, ...args: (string | number)[]) {
-        let obj = parse(cmd, ...args);
-        clients.forEach((client: Client) => {
-            if (client.socket && client.socket.readyState === 1) client.socket.send(obj);
-        });
-    }
+	private registerHandle(currClient: Client) {
+		this.tournament.addPlayer(currClient);
+		this.sendCmd(currClient, 'registered');
+		this.broadcastPosition();
+	}
 
-    function broadcastPosition() {
-        let obj: any = { cmd: 'queuePosition', arg1: getPlayerCount() };
-        let i = 1;
-        clients.forEach((client: Client) => {
-            if (client.registered) obj['arg0'] = i++;
-            if (client.socket && client.socket.readyState === 1)
-                client.socket.send(JSON.stringify(obj));
-        });
-    }
+	private handlePaddle(data: Cmd) {
+		if (data.arg0 === 'player') {
+			this.playerPaddlePos(parseInt(data.arg1));
+		}
+		else {
+			this.computerPaddlePos(parseInt(data.arg1));
+		}
+	}
 
-    function onMessageHandle(msg: any) {
-        const data: Cmd = JSON.parse(msg);
-        if (data.cmd !== 'paddle') console.log(data);
-        switch (data.cmd) {
-            case 'register':
-                registerClient();
-                break;
-            case 'paddle':
-                if (data.arg0 === 'player') updatePlayerPaddle(parseInt(data.arg1));
-                else updateComputerPaddle(parseInt(data.arg1));
-                break;
-            case 'ready':
-                startGame();
-                break;
-            case 'mode':
-                if (currClient.registered && currClient === player1)
-                    gameState.mode = gameModes[(gameModes.indexOf(gameState.mode) + 1) % gameModes.length];
-                broadcastPlayers();
-                break;
-        }
-    }
+	private startGame() {
 
-    function registerClient() {
-        console.log('registering', username);
-        clients.map(c => {
-            if (c.username === username) {
-                c.registered = true;
-                sendCmd(c, 'registered');
-            }
-        });
-        broadcastPlayers();
-        broadcastPosition();
-    }
+		if (!this.player1?.socket) {
+			return this.broadcastCmd('info', 'not enough player is the room')
+		}
+		if (this.gameState.ingame) {
+			return console.log('already in game');
+		}
+		this.gameState.ingame = true;
+		this.broadcastCmd('ingame', 1);
+		this.gameState.playerScore = 0;
+		this.gameState.computerScore = 0;
+		this.startTurn();
+	}
 
-    function getPlayerCount() {
-        return clients.reduce((tot, c) => tot + +c.registered, 0);
-    }
+	private changeModeHanble() {
+		this.tournament.mode =
+			gameModes[(gameModes.indexOf(this.tournament.mode) + 1) % gameModes.length];
+		this.broadcastPosition();
+	}
 
-    function get2Players() {
-        let p1: Client | null = null;
-        let p2: Client | null = null;
-        clients.forEach((c: Client) => {
-            if (c.registered && !p1) p1 = c;
-            else if (c.registered && !p2) p2 = c;
-        });
-        return [p1, p2];
-    }
+	private broadcastPlayers() {
+		let matchString;
+		let match = this.tournament.nextMatch();
+		if (match) {
+			this.player1 = match.player1 as Client;
+			this.player2 = match.player2 as Client;
+			matchString = Tournament.getMatchString(match);
+		}
+		else {
+			matchString = 'Not enough players in the room';
+		}
 
-    function broadcastPlayers() {
-        [player1, player2] = get2Players();
-        if (!player2) player2 = p2Client;
-        switch (gameState.mode) {
-            case 'local':
-                player2 = guestClient;
-                break;
-            case 'ai':
-                player2 = aiClient;
-                break;
-        }
-        if (player1 && player2) {
-            clients.forEach(c => {
-                if (c === player1) sendCmd(player1, 'role', 'player1');
-                else if (c === player2) sendCmd(player2, 'role', 'player2');
-                else sendCmd(c, 'role', 'spec');
-            });
-            broadcastCmd(
-                'setNames',
-                gameState.mode,
-                (player1 as Client).username,
-                (player2 as Client).username
-            );
-        }
-    }
+		this.broadcastCmd(
+			'setNames',
+			this.tournament.mode,
+			this.player1?.username || 'Player1',
+			this.player2?.username || 'Player2',
+			matchString,
+		);
+	}
 
-    function startGame() {
-        if (player2 === p2Client) return;
-        if (gameState.ingame) {
-            console.log('already in game');
-            return;
-        }
-        gameState.ingame = true;
-        broadcastCmd('ingame', 1);
-        initGame();
-        startTurn();
-    }
+	private broadcastPosition() {
+		let obj: any = { cmd: 'queuePosition', arg1: this.tournament.players.length };
+		let i = 1;
+		this.clients.forEach((client: Client) => {
+			if (this.tournament.players.includes(client)) {
+				obj['arg0'] = i++;
+			}
+			if (client.socket && client.socket.readyState === 1) {
+				client.socket.send(JSON.stringify(obj));
+			}
+		});
+		this.broadcastPlayers();
+	}
 
-    function startTurn() {
-        if (gameState.intervalId) clearInterval(gameState.intervalId);
+	private broadcastGame() {
+		this.broadcastCmd(
+			'update',
+			this.gameState.ballX, // 0
+			this.gameState.ballY, // 1
+			this.gameState.playerY, // 2
+			this.gameState.computerY, // 3
+			this.gameState.playerScore, // 4
+			this.gameState.computerScore, // 5
+			this.gameState.playerHeight, // 6
+			this.gameState.computerHeight, // 7
+			this.gameState.ballRadius, // 8
+			this.gameState.paddleWidth // 9
+		);
+	}
 
-        if (checkWinner()) return;
+	private startTurn() {
+		this.broadcastGame();
+		clearInterval(this.gameState.intervalId);
+		this.gameState.intervalId = 0;
 
-        gameState.playerY = 500 - gameState.playerHeight / 2;
-        gameState.computerY = 500 - gameState.computerHeight / 2;
-        gameState.ballX = 500;
-        gameState.ballY = 500;
-        gameState.ballAngle = (Math.PI * (2 * Math.random() - 1)) / 4;
-        if (dir++ % 2) {
-            gameState.ballAngle = (gameState.ballAngle + Math.PI) % (2 * Math.PI);
-        }
-        gameState.ballSpeed = 2;
+		if (this.checkWinner()) return;
 
-        broadcastGame();
-        setTimeout(() => {
-            gameState.intervalId = setInterval(updateGame, 5) as any;
-        }, 1000);
-    }
+		this.gameState.playerY = 500 - this.gameState.playerHeight / 2;
+		this.gameState.computerY = 500 - this.gameState.computerHeight / 2;
+		this.gameState.ballX = 500;
+		this.gameState.ballY = 500;
+		this.gameState.ballAngle = (Math.PI * (2 * Math.random() - 1)) / 4;
+		if (this.dir++ % 2) {
+			this.gameState.ballAngle = (this.gameState.ballAngle + Math.PI) % (2 * Math.PI);
+		}
+		this.gameState.ballSpeed = 2;
 
-    function initGame() {
-        gameState.playerScore = 0;
-        gameState.computerScore = 0;
-    }
+		this.broadcastGame();
+		setTimeout(() => {
+			this.gameState.intervalId = setInterval(this.updateGame, 5) as any;
+		}, 1000);
+	}
 
-    function updateGame() {
-        gameState.ballX += gameState.ballSpeed * Math.cos(gameState.ballAngle);
-        gameState.ballY += -gameState.ballSpeed * Math.sin(gameState.ballAngle);
+	private updateGame() {
+		this.gameState.ballX += this.gameState.ballSpeed * Math.cos(this.gameState.ballAngle);
+		this.gameState.ballY += -this.gameState.ballSpeed * Math.sin(this.gameState.ballAngle);
 
-        if (gameState.ballY < gameState.ballRadius || gameState.ballY > 1000 - gameState.ballRadius)
-            gameState.ballAngle += 2 * (Math.PI - gameState.ballAngle);
-        playerPaddle();
-        computerPaddle();
+		if (
+			this.gameState.ballY < this.gameState.ballRadius ||
+			this.gameState.ballY > 1000 - this.gameState.ballRadius
+		)
+			this.gameState.ballAngle += 2 * (Math.PI - this.gameState.ballAngle);
+		this.playerPaddleBounce();
+		this.computerPaddleBounce();
 
-        if (gameState.ballX < gameState.ballRadius) {
-            gameState.computerScore++;
-            startTurn();
-        }
-        if (gameState.ballX > 1000 - gameState.ballRadius) {
-            gameState.playerScore++;
-            startTurn();
-        }
-        broadcastGame();
-    }
+		if (this.gameState.ballX < this.gameState.ballRadius / 2) {
+			this.gameState.computerScore++;
+			this.startTurn();
+		}
+		if (this.gameState.ballX > 1000 - this.gameState.ballRadius / 2) {
+			this.gameState.playerScore++;
+			this.startTurn();
+		}
+		this.broadcastGame();
+	}
 
-    function playerPaddle() {
-        if (
-            gameState.ballX < gameState.paddleWidth + gameState.ballRadius &&
-            gameState.ballY > gameState.playerY &&
-            gameState.ballY < gameState.playerY + gameState.playerHeight
-        ) {
-            const pos = (gameState.ballY - gameState.playerY) / gameState.playerHeight;
-            gameState.ballAngle = ((Math.PI * (1 - 2 * pos)) / 4) % (2 * Math.PI);
-            gameState.ballSpeed += 0.2;
-        }
-    }
+	private playerPaddleBounce() {
+		if (
+			this.gameState.ballX < this.gameState.paddleWidth + this.gameState.ballRadius &&
+			this.gameState.ballY > this.gameState.playerY &&
+			this.gameState.ballY < this.gameState.playerY + this.gameState.playerHeight
+		) {
+			const pos =
+				(this.gameState.ballY - this.gameState.playerY) / this.gameState.playerHeight;
+			this.gameState.ballAngle = ((Math.PI * (1 - 2 * pos)) / 4) % (2 * Math.PI);
+			this.gameState.ballSpeed += 0.2;
+		}
+	}
 
-    function computerPaddle() {
-        if (
-            gameState.ballX > 1000 - gameState.paddleWidth - gameState.ballRadius &&
-            gameState.ballY > gameState.computerY &&
-            gameState.ballY < gameState.computerY + gameState.computerHeight
-        ) {
-            const pos = (gameState.ballY - gameState.computerY) / gameState.computerHeight;
-            gameState.ballAngle = ((Math.PI * (2 * pos + 3)) / 4) % (2 * Math.PI);
-            gameState.ballSpeed += 0.2;
-        }
-    }
+	private computerPaddleBounce() {
+		if (
+			this.gameState.ballX > 1000 - this.gameState.paddleWidth - this.gameState.ballRadius &&
+			this.gameState.ballY > this.gameState.computerY &&
+			this.gameState.ballY < this.gameState.computerY + this.gameState.computerHeight
+		) {
+			const pos =
+				(this.gameState.ballY - this.gameState.computerY) / this.gameState.computerHeight;
+			this.gameState.ballAngle = ((Math.PI * (2 * pos + 3)) / 4) % (2 * Math.PI);
+			this.gameState.ballSpeed += 0.2;
+		}
+	}
 
-    function updatePlayerPaddle(delta: number) {
-        gameState.playerY += delta * gameState.playerSpeed;
-        gameState.playerY = Math.max(gameState.playerY, 0);
-        gameState.playerY = Math.min(gameState.playerY, 1000 - gameState.playerHeight);
-    }
+	private playerPaddlePos(delta: number) {
+		this.gameState.playerY += delta * this.gameState.playerSpeed;
+		this.gameState.playerY = Math.max(this.gameState.playerY, 0);
+		this.gameState.playerY = Math.min(
+			this.gameState.playerY,
+			1000 - this.gameState.playerHeight
+		);
+	}
 
-    function updateComputerPaddle(delta: number) {
-        gameState.computerY += delta * gameState.computerSpeed;
-        gameState.computerY = Math.max(gameState.computerY, 0);
-        gameState.computerY = Math.min(gameState.computerY, 1000 - gameState.computerHeight);
-    }
+	private computerPaddlePos(delta: number) {
+		this.gameState.computerY += delta * this.gameState.computerSpeed;
+		this.gameState.computerY = Math.max(this.gameState.computerY, 0);
+		this.gameState.computerY = Math.min(
+			this.gameState.computerY,
+			1000 - this.gameState.computerHeight
+		);
+	}
 
-    function checkWinner() {
-        if (gameState.playerScore < WINNING_SCORE && gameState.computerScore < WINNING_SCORE)
-            return false;
-        broadcastGame();
-        broadcastCmd(
-            'score',
-            gameState.playerScore >= WINNING_SCORE
-                ? (player1 as Client).username
-                : (player2 as Client).username
-        );
-        gameState.ingame = false;
-        broadcastCmd('ingame', 0);
-        clients.forEach(c => (c.registered = false));
-        broadcastPosition();
-        clients.push(clients.splice(clients.indexOf(player1 as Client), 1)[0]);
-        if (player2?.socket) clients.push(clients.splice(clients.indexOf(player2 as Client), 1)[0]);
-        return true;
-    }
+	private checkWinner() {
+		if (
+			this.gameState.playerScore < WINNING_SCORE &&
+			this.gameState.computerScore < WINNING_SCORE
+		)
+			return false;
+		this.setWinner(
+			this.gameState.playerScore >= WINNING_SCORE
+				? this.player1 as Client
+				: this.player2 as Client
+		);
+		return true;
+	}
 
-    function broadcastGame() {
-        broadcastCmd(
-            'update',
-            gameState.ballX, // 0
-            gameState.ballY, // 1
-            gameState.playerY, // 2
-            gameState.computerY, // 3
-            gameState.playerScore, // 4
-            gameState.computerScore, // 5
-            gameState.playerHeight, // 6
-            gameState.computerHeight, // 7
-            gameState.ballRadius, // 8
-            gameState.paddleWidth // 9
-        );
-    }
+	private setWinner(winner: Client) {
+		clearInterval(this.gameState.intervalId);
+		this.gameState.intervalId = 0;
+
+		if (this.tournament.mode === 'remote') {
+			let playedMatch = this.tournament.nextMatch() as Match;
+			playedMatch.winner = winner;
+		}
+		// this.broadcastGame();
+		this.broadcastCmd('score', winner.username);
+		if (this.tournament.mode === 'remote' && this.tournament.nextMatch()) {
+			this.broadcastCmd('ingame', -1);
+		}
+		else {
+			this.tournament = new Tournament;
+			this.broadcastCmd('ingame', 0);
+		}
+		this.gameState.ingame = false;
+		this.broadcastPosition();
+	}
 }

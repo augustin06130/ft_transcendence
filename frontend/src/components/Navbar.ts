@@ -48,7 +48,6 @@ function terminalTypewriter(text: string, containerId: string) {
         currentIndex++;
         setTimeout(typeNextChar, 150); // Vitesse de frappe (150 ms par caractère)
       } else {
-        // Ajouter un curseur clignotant après la fin de la frappe
         const cursor = document.createElement("span");
         cursor.className = "inline-block w-2 h-4 bg-green-500 ml-1 animate-pulse";
         container.appendChild(cursor);
@@ -72,7 +71,7 @@ function terminalTypewriter(text: string, containerId: string) {
 }
 
 export function NavBar(routes: { [key: string]: { label: string } }) {
-  const buttons = Object.entries(routes).map((route) =>
+  const buttons = Object.entries(routes).filter(route => route[1].label ).map((route) =>
     navBarLink(route[0], route[1].label)
   );
 

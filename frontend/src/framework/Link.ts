@@ -1,28 +1,24 @@
-import { a } from "@framework/tags";
-import { Args, HTMLElementProperties } from "@framework/types";
+import { a } from '@framework/tags';
+import { Args, HTMLElementProperties } from '@framework/types';
+import { switchPage } from './Router';
 
 export default function Link(
-  attributes: HTMLElementProperties<'a'>,
-  to: string,
-  ...children: Args[]
+    attributes: HTMLElementProperties<'a'>,
+    to: string,
+    ...children: Args[]
 ) {
-  const linkElement = a(
-    {
-      ...attributes,
-      href: to,
-    },
-    ...children
-  );
+    const linkElement = a(
+        {
+            ...attributes,
+            href: to,
+        },
+        ...children
+    );
 
-  linkElement.addEventListener("click", (event) => {
-    event.preventDefault();
-    const myEvent = new CustomEvent("url", {
-      detail: {
-        to: to,
-      },
+    linkElement.addEventListener('click', event => {
+        event.preventDefault();
+        switchPage(to);
     });
-    window.dispatchEvent(myEvent);
-  });
 
-  return linkElement;
+    return linkElement;
 }

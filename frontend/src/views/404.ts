@@ -2,6 +2,7 @@ import { div, p, button, span } from '@framework/tags';
 import TerminalBox from '@components/TerminalBox';
 import CommandOutput from '@components/CommandOutput';
 import { isLogged } from '@framework/auth';
+import { switchPage } from '@framework/Router';
 
 function fakeSystemInfo() {
     const label = `$ cd ${window.location.pathname}`;
@@ -41,7 +42,7 @@ function LogoutButton() {
     const handleLogout = async () => {
         try {
             const response = await fetch('/logout', {
-                method: 'POST', // Pas besoin de l'en-tête Content-Type
+                method: 'POST',
             });
 
             if (response.ok) {
@@ -49,7 +50,8 @@ function LogoutButton() {
                 // Mettre à jour l'état de connexion
                 isLogged.set(false);
                 // Rediriger vers la page d'accueil
-                window.dispatchEvent(new CustomEvent('url', { detail: { to: '/' } }));
+                // window.dispatchEvent(new CustomEvent('url', { detail: { to: '/' } }));
+				switchPage('/');
             } else {
                 // Afficher les détails de l'erreur
                 const errorMessage = await response.text();
