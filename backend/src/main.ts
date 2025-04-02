@@ -52,8 +52,7 @@ app.register(fastifySession, {
 
 app.get('/getstats', async (request: FastifyRequest, reply: FastifyReply) => {
 	const { name } = request.query as { name: string };
-	await getMatches(db, 0, 0);
-	reply.send({ coucou: "bisous" });
+	reply.send(await getMatches(db, 0, 1000));
 });
 
 app.get('/create-room', create_room);

@@ -1,34 +1,56 @@
 import { div, p, ul, li } from '@framework/tags';
 import TerminalBox, { footer } from '@components/TerminalBox';
 import { PieChart, LineChart } from '@components/charts';
+import { Match } from 'types';
 
 export default function StatsView(name: string = 'global') {
 
-	fetch(`./getstats?name=${name}`, {
-		method: 'GET',
-	}).then((response) => {
-		if (!response.ok) {
-			throw new Error('stat fecting failed');
+	fetch(`./getstats?name=${name}`).then(resp => {
+		if (!resp.ok) {
+			throw ('Error getching stats');
 		}
-		return response.json();
-	}).then(data => {
-		console.log('data', data);
-	})
+		return resp.json();
+	}).then((data: Match[]) => {
+		console.log(data);
+		setWinLosePie(data);
+		setGameModePie(data);
+		setReturnRatePie(data);
+		scoreLine.setData(...data.map((m, i) => { return { x: i, y: (m.player2?.username === name ? m.score2 : m.score1) } }));
+		rallyLine.setData(...data.map((m, i) => { return { x: i, y: m.rally } }));
+		durationLine.setData(...data.map((m, i) => { return { x: i, y: m.duration / 1000 } }));
+		setTravelLine(data);
+		distanceDurationLine.setData(...data.map((m) => { return { x: (m.player2?.username === name ? m.travel2 : m.travel1) / 1000, y: m.duration / 1000 } }))
+		durationScoreLine.setData(...data.map((m) => { return { x: m.duration / 1000, y: (m.player2?.username === name ? m.score2 : m.score1) } }))
+		liMatchPlayer.innerText = `Match played: ${data.length}`;
+		liWin.innerText = `Win: ${data.reduce((acc, m) => (m.winner?.username === name || name === 'global') ? acc + 1 : acc, 0)}`;
+		liLose.innerText = `Loose: ${data.reduce((acc, m) => (m.winner?.username !== name || name === 'global') ? acc + 1 : acc, 0)}`;
+		liCurrentStreak.innerText = `Current win streak: ${getCurrentWinStreak(data)}`;
+		liLongestStreak.innerText = `Longest win streak: ${getLongestWinStreak(data)}`;
+		liAverageSocre.innerText = `Average score: ${(data.reduce((acc, m) => (m.player2?.username === name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		liAverageSocreWin.innerText = `Average winning score: ${(data.filter(m => m.winner?.username === name).reduce((acc, m) => (m.player2?.username === name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		liAverageSocreLose.innerText = `Average loosing score: ${(data.filter(m => m.winner?.username !== name).reduce((acc, m) => (m.player2?.username === name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		liAverageDistance.innerText = `Average paddle distance travel: ${(data.reduce((acc, m) => (m.player2?.username === name) ? acc + m.travel2 : acc + m.travel1, 0) / 1000 / data.length).toFixed(2)} field`
+		liTotalDistance.innerText = `Total paddle distance travel: ${Math.floor(data.reduce((acc, m) => ((m.player2?.username === name) ? acc + m.travel2 : acc + m.travel1), 0) / 1000)} field`;
+		liAverageDuration.innerText = `Average match duration: ${(data.reduce((acc, m) => acc + m.duration / 1000, 0) / data.length).toFixed(2)} s`
+		liTotalDuration.innerText = `Total play time: ${data.reduce((acc, m) => acc + m.duration / 1000 / 60, 0).toFixed(2)} min`;
+		liFirstMatch.innerText = `First match: ${(new Date(Math.min(...data.map(m => m.date))).toLocaleString())}`;
+		liLastMath.innerText = `Latest match: ${(new Date(Math.max(...data.map(m => m.date))).toLocaleString())}`;
+	});
 
-	const winLosePie = new PieChart(
-		'win/lose',
-		{ name: 'AI', value: 5 },
-		{ name: 'Local', value: 2 },
-		{ name: 'Remote', value: 15 }
-	);
-	const gameModePie = new PieChart('Game modes', { name: 'Win', value: 3 }, { name: 'Lose', value: 1 });
-	const rallySuccesPie = new PieChart('Return rate', { name: 'Returned', value: 3 }, { name: 'Failed', value: 1 });
-	const scoreLine = new LineChart('Score evolution', { x: 0, y: 0 });
-	const rallyPerLine = new LineChart('Average rally per match', { x: 0, y: 0 });
-	const durationLine = new LineChart('Match duration (s)', { x: 0, y: 0 });
-	const travelLine = new LineChart('Travel distance per match (field)', { x: 0, y: 0 });
-	const distanceScoreLine = new LineChart('Travel distance vs. Score (field/point)', { x: 0, y: 0 });
-	const durationScoreLine = new LineChart('Match duration vs. Score (s/point)', { x: 0, y: 0 });
+	const winLosePie = new PieChart('Win/Lose');
+	const gameModePie = new PieChart('Game modes');
+	const returnRatePie = new PieChart('Return rate');
+	const scoreLine = new LineChart('Score evolution');
+	const rallyLine = new LineChart('Rally per match');
+	const durationLine = new LineChart('Match duration (s)');
+	const travelLine = new LineChart('Travel distance per match (field)');
+	const distanceDurationLine = new LineChart('Travel distance vs. Duration (field/s)', false);
+	const durationScoreLine = new LineChart('Match duration vs. Score (point/s)', false);
+
+	// li({}, `Tournament won: ${Math.floor(Math.random() * 100)}`);
+	const liMatchPlayer = li({}), liWin = li({}), liLose = li({}), liCurrentStreak = li({}), liLongestStreak = li({});
+	const liAverageSocre = li({}), liAverageSocreWin = li({}), liAverageSocreLose = li({}), liAverageDistance = li({});
+	const liTotalDistance = li({}), liTotalDuration = li({}), liAverageDuration = li({}), liFirstMatch = li({}), liLastMath = li({});
 
 	return TerminalBox(
 		'terminal@user:~/stats',
@@ -42,36 +64,116 @@ export default function StatsView(name: string = 'global') {
 			),
 			div({ className: 'p-4 ' },
 				ul({ className: 'list-disc' },
-					li({}, `Match played: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Win: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Loose: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Current win streak: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Longest win streak: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Average score: ${Math.floor(Math.random() * 10)}`),
-					li({}, `Average winning score: ${Math.floor(Math.random() * 10)}`),
-					li({}, `Average loosing score: ${Math.floor(Math.random() * 10)}`),
-					li({}, `Tournament won: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Average paddle distance travel: ${Math.floor(Math.random() * 100)} field`),
-					li({}, `Total paddle distance travel: ${Math.floor(Math.random() * 100)} field`),
-					li({}, `Total play time: ${Math.floor(Math.random() * 100)} h`),
-					li({}, `Average match duration: ${Math.floor(Math.random() * 100)} s`),
-					li({}, `First match: ${Math.floor(Math.random() * 100)}`),
-					li({}, `Latest match: ${Math.floor(Math.random() * 100)}`),
+					liMatchPlayer,
+					liWin,
+					liLose,
+					liCurrentStreak,
+					liLongestStreak,
+					liAverageSocre,
+					liAverageSocreWin,
+					liAverageSocreLose,
+					liAverageDistance,
+					liTotalDistance,
+					liAverageDuration,
+					liTotalDuration,
+					liFirstMatch,
+					liLastMath,
 				),
 			),
 			div(
 				{ className: 'grid grid-cols-3 gap-10' },
 				winLosePie.render(),
 				gameModePie.render(),
-				rallySuccesPie.render(),
+				returnRatePie.render(),
 				scoreLine.render(),
-				rallyPerLine.render(),
+				rallyLine.render(),
 				durationLine.render(),
 				travelLine.render(),
-				distanceScoreLine.render(),
+				distanceDurationLine.render(),
 				durationScoreLine.render(),
 			)
 		),
 		footer()
 	);
+
+	function setGameModePie(matches: Match[]) {
+		const result = [{ name: 'AI', value: 0 }, { name: 'Local', value: 0 }, { name: 'Remote', value: 0 }];
+		matches.forEach(match => {
+			if (match.player2?.username === 'computer') {
+				result[0].value++;
+			} else if (match.player2?.username === 'Guest') {
+				result[1].value++;
+			}
+			else {
+				result[2].value++;
+			}
+		});
+		gameModePie.setData(...result);
+	}
+
+	function setWinLosePie(matches: Match[]) {
+		const result = [{ name: 'Win', value: 0 }, { name: 'Lose', value: 0 }];
+		if (name === 'global') {
+			result[0].value = matches.length;
+			result[1].value = matches.length;
+		}
+		else {
+			matches.forEach(match => {
+				if (match.winner?.username === name) {
+					result[0].value++;
+				} else {
+					result[1].value++;
+				}
+			});
+		}
+		winLosePie.setData(...result);
+	}
+
+	function setReturnRatePie(matches: Match[]) {
+		const result = [{ name: 'Success', value: 0 }, { name: 'Fail', value: 0 }];
+		result[0].value = matches.reduce((acc, match) => acc + match.rally, 0);
+		if (name === 'global') {
+			result[1].value = matches.reduce((acc, match) => acc + match.score1 + match.score2, 0);
+		}
+		else {
+			result[1].value = matches.reduce((acc, match) => acc + (match.player1?.username === name ? match.score1 : match.score2), 0);
+		}
+		returnRatePie.setData(...result);
+	}
+
+	function setTravelLine(matches: Match[]) {
+		if (name === 'global') {
+			travelLine.setData(...matches.map((m, i) => { return { x: i, y: (m.travel1 + m.travel2) / 1000 } }))
+		}
+		else {
+			travelLine.setData(...matches.map((m, i) => { return { x: i, y: (m.player1?.username === name ? m.travel1 : m.travel2) / 1000 } }))
+		}
+	}
+
+	function getCurrentWinStreak(data: Match[]) {
+		let streak = 0;
+		for (let m of data.reverse()) {
+			if (m.winner?.username !== name) {
+				break;
+			}
+			streak++;
+		}
+		return streak;
+	}
+
+	function getLongestWinStreak(data: Match[]) {
+		let streak = 0;
+		let max = 0;
+		for (let m of data.reverse()) {
+			if (m.winner?.username !== name) {
+				max = Math.max(streak, max);
+				streak = 0;
+			}
+			streak++;
+		}
+		return Math.max(streak, max);
+	}
+	function getAverageWinningScore(data: Match[]) {
+	}
+
 }

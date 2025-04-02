@@ -14,10 +14,10 @@ export async function CreateTableUser(db: Database): Promise<void> {
       )`;
         db.run(sql, err => {
             if (err) {
-                console.error('Error creating table:', err.message); // Log the error
+                console.error('Error creating table:', err.message);
                 reject(err);
             } else {
-                console.log("The table 'users' has been created successfully."); // Log success
+                console.log("The table 'users' has been created successfully.");
                 resolve();
             }
         });
@@ -28,9 +28,9 @@ export async function VerifUser(username: string, db: Database) {
     return new Promise<any>((resolve, reject) => {
         db.get('SELECT id, password FROM users WHERE username = ?', [username], (err, row) => {
             if (err) {
-                reject(err); // Rejeter la promesse en cas d'erreur
+                reject(err);
             } else {
-                resolve(row); // Résoudre la promesse avec le résultat de la requête
+                resolve(row);
             }
         });
     });

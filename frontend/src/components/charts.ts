@@ -14,6 +14,7 @@ class Chart {
 	canvasElement: HTMLCanvasElement;
 	side: number = 0;
 	private title: string;
+
 	constructor(title: string) {
 		this.title = title;
 		this.canvasElement = canvas({
@@ -42,14 +43,19 @@ class Chart {
 }
 
 export class PieChart extends Chart {
-	private total: number;
-	private data: Section[];
+	private data: Section[] = [];
 	private radius: number = 0;
+	private total: number = 0;
 
-	constructor(title: string, ...sections: Section[]) {
+	constructor(title: string) {
 		super(title);
-		this.total = sections.reduce((tot, point) => tot + point.value, 0);
+		this.setData({ name: 'Pong', value: 1 }, { name: 'Ping', value: 1 })
+	}
+
+	setData(...sections: Section[]) {
 		this.data = sections;
+		this.total = this.data.reduce((tot, point) => tot + point.value, 0);
+		this.drawChart();
 	}
 
 	handleResize() {
@@ -88,11 +94,12 @@ export class PieChart extends Chart {
 			nextAngle = ((acc + point.value + nextPoint.value) / this.total) * 2 * Math.PI;
 			midAngle = (nextAngle + angle) / 2;
 
-			x = this.side / 2 - (this.radius / 2) * Math.cos(midAngle) - point.name.length * 5;
-			y = this.side / 2 - (this.radius / 2) * Math.sin(midAngle) + 5;
+			const txt = `${nextPoint.name} ${nextPoint.value}`
+			x = this.side / 2 - (this.radius / 2) * Math.cos(midAngle) - txt.length * 5;
+			y = this.side / 2 - (this.radius / 2) * Math.sin(midAngle) + 20;
 
 			ctx.font = '16px mono';
-			ctx.fillText(point.name, x, y);
+			ctx.fillText(txt, x, y);
 
 			acc += point.value;
 		}
@@ -100,22 +107,30 @@ export class PieChart extends Chart {
 }
 
 export class LineChart extends Chart {
-	private data: Point[];
+	private data: Point[] = [];
 	private scaleX: number = 0;
 	private scaleY: number = 0;
 	private origin: Point = { x: 0, y: 0 };
 	private axisLength: number = 0;
-	private minX: number;
-	private maxX: number;
-	private minY: number;
-	private maxY: number;
-	constructor(title: string, ...data: Point[]) {
+	private minX: number = 0;
+	private maxX: number = 0;
+	private minY: number = 0;
+	private maxY: number = 0;
+	private drawLines: boolean;
+
+	constructor(title: string, drawLines: boolean = true) {
 		super(title);
+		this.setData({ x: 0, y: 0 }, { x: 1, y: 500 }, { x: 2, y: 200 });
+		this.drawLines = drawLines;
+	}
+
+	setData(...data: Point[]) {
 		this.data = data;
-		this.minX = data.reduce((min, p) => (p.x < min ? p.x : min), data[0].x);
-		this.maxX = data.reduce((max, p) => (p.x > max ? p.x : max), data[0].x);
-		this.minY = data.reduce((min, p) => (p.y < min ? p.y : min), data[0].y);
-		this.maxY = data.reduce((max, p) => (p.y > max ? p.y : max), data[0].y);
+		this.minX = 0;
+		this.maxX = Math.max(...this.data.map(v => v.x));
+		this.minY = 0;
+		this.maxY = Math.max(...this.data.map(v => v.y));
+		this.handleResize();
 	}
 
 	handleResize() {
@@ -149,15 +164,15 @@ export class LineChart extends Chart {
 		ctx.stroke();
 
 		ctx.font = '12px mono';
-		ctx.fillText(this.data[0].x.toString(), this.origin.x, this.origin.y + 23);
+		ctx.fillText(this.minX.toString(), this.origin.x, this.origin.y + 23);
 		ctx.fillText(
-			this.data[this.data.length - 1].x.toString(),
+			this.maxX.toString(),
 			this.side * 0.9,
 			this.origin.y + 23
 		);
-		ctx.fillText(this.data[0].y.toString(), this.origin.x - 23, this.origin.y - 5);
+		ctx.fillText(this.minY.toString(), this.origin.x - 23, this.origin.y - 5);
 		ctx.fillText(
-			this.data[this.data.length - 1].y.toString(),
+			this.maxY.toString(),
 			this.origin.x - 23,
 			this.side * 0.1 - 5
 		);
@@ -172,7 +187,7 @@ export class LineChart extends Chart {
 			ctx.arc(x, y, 3, 0, Math.PI * 2);
 			ctx.fill();
 
-			if (i > 0) {
+			if (i > 0 && this.drawLines) {
 				ctx.beginPath();
 				ctx.moveTo(prevX as number, prevY as number);
 				ctx.lineTo(x, y);
