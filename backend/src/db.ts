@@ -120,6 +120,19 @@ export async function EditUserInfo(
   });
 }
 
+export async function getUserIdByUsername(username: string, db: Database): Promise<number | null> {
+  return new Promise((resolve, reject) => {
+      db.get(
+          'SELECT id FROM users WHERE username = ?',
+          [username],
+          (err, row: { id: number } | undefined) => {
+              if (err) reject(err);
+              else resolve(row?.id ?? null);
+          }
+      );
+  });
+}
+
 
 async function insertImage(userId: number, imagePath: string, db: Database, params: any) {
   const binaryData = fs.readFileSync(imagePath);
