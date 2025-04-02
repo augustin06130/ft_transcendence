@@ -7,6 +7,7 @@ import Contact from '@views/Contact';
 import PongGameView from '@views/Pong';
 import ChatView from '@views/Chat';
 import Room from '@views/Room';
+import StatsView from '@views/Stats';
 
 export const baseLinks = {
     '/': {
@@ -44,5 +45,9 @@ export const baseLinks = {
     '/chat': {
         view: ChatView,
         label: 'Chat',
+    },
+    '/stats': {
+        view: StatsView,
+        label: 'Stats',
     },
 };

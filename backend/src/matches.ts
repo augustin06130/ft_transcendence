@@ -55,8 +55,6 @@ export async function addMatch(db: Database, match: Match) {
         params[0] = match.player1?.username as string;
         params[1] = match.player2?.username as string;
         params[2] = match.winner?.username as string;
-        console.log(objectToStr(match));
-        console.log(params);
         db.run(sql, params, err => {
             if (err) {
                 console.error('Error while inserting match', err.message);
