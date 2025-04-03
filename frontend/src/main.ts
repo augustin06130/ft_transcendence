@@ -18,7 +18,6 @@ function navBarRoutes(logged: boolean): Routes {
             '/profile': baseLinks['/profile'],
             '/room': baseLinks['/room'],
             '/chat': baseLinks['/chat'],
-            '/stats': baseLinks['/stats'],
             '/pong': baseLinks['/pong'],
         };
     } else {
@@ -27,7 +26,6 @@ function navBarRoutes(logged: boolean): Routes {
             '/profile': baseLinks['/profile'],
             '/room': baseLinks['/room'],
             '/chat': baseLinks['/chat'],
-            '/stats': baseLinks['/stats'],
             '/login': baseLinks['/login'],
             '/register': baseLinks['/register'],
             '/pong': baseLinks['/pong'],

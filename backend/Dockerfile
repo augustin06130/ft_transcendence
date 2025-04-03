@@ -13,12 +13,12 @@ RUN npm install
 RUN npm install -g nodemon
 RUN npm install fastify@5.0.0 \
 	@fastify/cookie@11.0.0 \
-	ws \
+	@fastify/jwt@9.1.0 \
 	@fastify/websocket@11.0.2 \
-	@types/ws \
 	fastify-static@4.0.0 \
+	ws \
+	@types/ws \
 	sqlite3 \
-	@fastify/session@11.0.0 \
 	sqlite \
 	bcrypt
 

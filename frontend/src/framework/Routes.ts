@@ -1,13 +1,12 @@
 import Home from '@views/Home';
 import Login from '@views/Login';
 import Register from '@views/Register';
-import Profile from '@views/Profile';
+import ProfileView from '@views/Profile';
 import Project from '@views/Project';
 import Contact from '@views/Contact';
 import PongGameView from '@views/Pong';
 import ChatView from '@views/Chat';
 import Room from '@views/Room';
-import StatsView from '@views/Stats';
 
 export const baseLinks = {
     '/': {
@@ -15,7 +14,7 @@ export const baseLinks = {
         label: 'Home',
     },
     '/profile': {
-        view: Profile,
+        view: ProfileView,
         label: 'Profile',
     },
     '/project': {
@@ -45,9 +44,5 @@ export const baseLinks = {
     '/chat': {
         view: ChatView,
         label: 'Chat',
-    },
-    '/stats': {
-        view: StatsView,
-        label: 'Stats',
     },
 };

@@ -51,8 +51,9 @@ export default class PongGame {
 	public joinGame(socket: WebSocket, request: FastifyRequest) {
 		let username: string;
 		// dev only
-		if (request.session.username) {
-			username = request.session.username;
+		console.log(request.user)
+		if (request.user) {
+			username = (request.user as any).username
 		} else {
 			username = (idCount++).toString();
 		}

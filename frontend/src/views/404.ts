@@ -19,7 +19,6 @@ function animatedCaret() {
 }
 
 function footer() {
-    // prettier-ignore
     return div({ className: "mt-8 text-green-400/70 text-sm text-center relative" },
     p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`),
     isLogged.get() ? LogoutButton() : null // Afficher le bouton uniquement si l'utilisateur est connecté
@@ -27,7 +26,6 @@ function footer() {
 }
 
 export default function _404View() {
-    // prettier-ignore
     const el = [
     div({ className: "space-y-4" },
       fakeSystemInfo(),

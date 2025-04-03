@@ -15,7 +15,7 @@ export type Args = HTMLElement |SVGSVGElement| string | null | undefined;
 export type Routes = {
   [key: string]: {
     view: () => HTMLElement;
-    label: string; // Ajoutez cette ligne
+    label: string;
     [key: string]: any;
   };
 };

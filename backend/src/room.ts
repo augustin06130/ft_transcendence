@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 import PongGame from './pong';
 
-export const pongRooms = new Map<string, PongGame>();
+const pongRooms = new Map<string, PongGame>();
 
 export function create_room(_: FastifyRequest, reply: FastifyReply) {
 	let roomId = Math.floor(Math.random() * 9999)
@@ -29,3 +29,15 @@ export function join_room(socket: WebSocket, request: FastifyRequest) {
 	});
 	socket.on('close', () => console.log("game counts:", pongRooms.size));
 }
+
+export function get_tree(request: FastifyRequest, reply: FastifyReply) {
+	const { roomId } = request.body as { roomId: string };
+	reply.header('Content-Type', 'text/plain');
+	if (pongRooms.get(roomId)?.tournament.mode === 'remote') {
+		reply.send(pongRooms.get(roomId)?.tournamentTree());
+	}
+	else {
+		reply.code(412).send()
+	}
+}
+

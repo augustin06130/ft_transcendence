@@ -4,7 +4,7 @@ export default class TournamentOverlay {
     private div: HTMLDivElement;
     private titleLabel: HTMLHeadingElement;
     constructor() {
-        this.titleLabel = h2({ className: ' font-bold mb-4' }, 'terminal@user:~/tournament tree:');
+        this.titleLabel = h2({ className: ' font-bold mb-4' }, 'tournament tree:');
         this.div = this.getCore('')
         this.div.style.visibility = 'hidden';
         this.div.addEventListener('click', () => this.hide());

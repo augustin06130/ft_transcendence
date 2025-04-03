@@ -1,5 +1,7 @@
 import { Database } from 'sqlite3';
-import { Match, Client } from './types';
+import { Match } from './types';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { db } from './main';
 
 export async function createTableMatches(db: Database): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
@@ -83,5 +85,10 @@ export async function getMatches(db: Database, start: number, end: number) {
 			resolve(rows);
 		});
 	});
+}
+
+export async function get_stats(request: FastifyRequest, reply: FastifyReply) {
+	const { name } = request.query as { name: string };
+	reply.send(await getMatches(db, 0, 1000));
 }
 

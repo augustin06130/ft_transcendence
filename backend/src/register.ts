@@ -3,12 +3,6 @@ import bcrypt from 'bcrypt';
 import {CheckUserExists, CreateNewUser} from './user';
 import { Database } from 'sqlite3';
 
-declare module '@fastify/session' {
-    interface FastifySessionObject {
-        username?: string;
-    }
-}
-
 export async function NewUser(
   username: string,
   email: string,

@@ -32,7 +32,6 @@ export function $(
     })
   }
 
-  // Create a MutationObserver to watch for new elements
   const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
@@ -43,6 +42,5 @@ export function $(
       });
   });
 
-  // Start observing the document (or a specific parent container)
   observer.observe(entry!, { childList: true, subtree: true });
 }

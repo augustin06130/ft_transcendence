@@ -1,5 +1,5 @@
 import { div, p, form, input } from '@framework/tags';
-import TerminalBox, { footer } from '@components/TerminalBox';
+import TerminalBox, { BoxFooter, footer } from '@components/TerminalBox';
 import UseState from '@framework/UseState';
 import { State } from '@framework/types';
 import { switchPage } from '@framework/Router';
@@ -110,7 +110,7 @@ export default function Room() {
 	const formContent = RoomForm(joinHandler, createHandler, roomCode);
 
 	return TerminalBox(
-		'terminal@user:~/pong sudo usermod -a -G',
+		'pong sudo usermod -a -G',
 		div(
 			{
 				className: `mx-auto max-w-md border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10 transition-opacity duration-500 ${isMounted.get() ? 'opacity-100' : 'opacity-0'}`,
@@ -124,11 +124,7 @@ export default function Room() {
 				)
 			),
 			formContent,
-			div(
-				{ className: 'mt-6 text-green-400/70 text-xs border-t border-green-500/30 pt-4' },
-				p({}, `$ Last update: ${new Date().toLocaleString()}`),
-				p({}, '$ System status: Online')
-			)
+			BoxFooter(),
 		),
 		footer()
 	);
