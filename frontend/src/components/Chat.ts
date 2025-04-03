@@ -434,6 +434,12 @@ type Message = {
   text: string;
   timestamp: Date;
 };
+  type WSMessage =
+    | { type: 'new_message', sender: string, message: string, timestamp: string }
+    | { type: 'conversation_loaded', messages: any[] }
+    | { type: 'user_status_update', onlineUsers: string[] }
+    | { type: 'online_users', users: string[] }
+    | { type: 'error', message: string };
 
 export default class ChatPage {
   friends: Friend[];
@@ -474,49 +480,65 @@ export default class ChatPage {
     }
   }
 
+
   private initWebSocket() {
     // Utilisez le host actuel pour la connexion WebSocket
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    this.socket = new WebSocket(`${wsProtocol}//${window.location.host}/chat-ws`);
+    const connect = (attempt = 0) => {
+      const maxDelay = 30000; // 30s max delay
+      const delay = Math.min(1000 * Math.pow(2, attempt), maxDelay);
 
-    this.socket.onopen = () => {
-      console.log('Connexion WebSocket établie');
+      this.socket = new WebSocket(`${wsProtocol}//${window.location.host}/chat-ws`);
+
+      this.socket.onopen = () => {
+        console.log('WebSocket connected');
+        // Resubscribe to current conversation if any
+        if (this.selectedFriend) {
+          this.loadConversation(this.selectedFriend);
+        }
+      };
+
+      this.socket.onclose = () => {
+        console.log(`WebSocket closed. Reconnecting in ${delay/1000}s...`);
+        setTimeout(() => connect(attempt + 1), delay);
+      };
+
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Message WebSocket reçu:', data);
+
+        switch (data.type) {
+          case 'new_message':
+            this.handleNewMessage(data);
+            break;
+          case 'conversation_loaded':
+            this.handleConversationLoaded(data.messages);
+            break;
+          case 'user_status_update':
+            this.handleUserStatusUpdate(data.onlineUsers);
+            break;
+          case 'online_users':
+            this.handleOnlineUsers(data.users);
+            break;
+          case 'error':
+            console.error('Erreur WebSocket:', data.message);
+            break;
+        }
+      };
+
+      this.socket.onerror = (error) => {
+        console.error('Erreur WebSocket:', error);
+      };
+
+      this.socket.onclose = () => {
+        console.log('Connexion WebSocket fermée');
+        // Tentative de reconnexion après un délai
+        setTimeout(() => connect(attempt + 1), delay);
+      };
     };
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Message WebSocket reçu:', data);
-
-      switch (data.type) {
-        case 'new_message':
-          this.handleNewMessage(data);
-          break;
-        case 'conversation_loaded':
-          this.handleConversationLoaded(data.messages);
-          break;
-        case 'user_status_update':
-          this.handleUserStatusUpdate(data.onlineUsers);
-          break;
-        case 'online_users':
-          this.handleOnlineUsers(data.users);
-          break;
-        case 'error':
-          console.error('Erreur WebSocket:', data.message);
-          break;
-      }
-    };
-
-    this.socket.onerror = (error) => {
-      console.error('Erreur WebSocket:', error);
-    };
-
-    this.socket.onclose = () => {
-      console.log('Connexion WebSocket fermée');
-      // Tentative de reconnexion après un délai
-      setTimeout(() => this.initWebSocket(), 5000);
-    };
+    connect();
   }
-
   private handleNewMessage(messageData: any) {
     // Vérifier si le message provient de l'ami sélectionné ou est destiné à l'utilisateur actuel
     const senderFriend = this.findFriendByName(messageData.sender);
@@ -588,54 +610,68 @@ export default class ChatPage {
     return this.friends.find(f => f.name === name);
   }
 
+  // selectFriend(friend: Friend) {
+  //   this.selectedFriend = friend;
+
+  //   // Charger l'historique de la conversation via WebSocket
+  //   if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+  //     this.socket.send(JSON.stringify({
+  //       type: 'load_conversation',
+  //       target: friend.name
+  //     }));
+  //   } else {
+  //     console.error('WebSocket non connecté. Impossible de charger la conversation.');
+  //   }
+
+  //   const el = document.getElementById("renderChatArea");
+  //   el?.replaceChildren(this.renderChatArea());
+  // }
+
   selectFriend(friend: Friend) {
     this.selectedFriend = friend;
-
-    // Charger l'historique de la conversation via WebSocket
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify({
-        type: 'load_conversation',
-        target: friend.name
-      }));
-    } else {
-      console.error('WebSocket non connecté. Impossible de charger la conversation.');
-    }
-
-    const el = document.getElementById("renderChatArea");
-    el?.replaceChildren(this.renderChatArea());
+    this.loadConversation(friend);
+    this.scrollToBottom(); // Scroll after loading new conversation
+    this.updateUI();
   }
 
-  sendMessage(e: Event) {
-    e.preventDefault();
+// Improved message sending
+private async sendMessage(e: Event) {
+  e.preventDefault();
 
-    if (!this.newMessage.trim() || !this.selectedFriend || !this.socket) return;
+  if (!this.newMessage.trim() || !this.selectedFriend || !this.socket) return;
 
-    // Vérifier que la connexion WebSocket est ouverte
-    if (this.socket.readyState !== WebSocket.OPEN) {
-      console.error('WebSocket non connecté. Impossible d\'envoyer le message.');
-      return;
-    }
+  try {
+    const messageToSend = this.newMessage;
+    this.newMessage = ""; // Clear input immediately for better UX
 
-    // Envoyer le message via WebSocket
-    this.socket.send(JSON.stringify({
-      type: 'send_message',
-      receiver: this.selectedFriend.name,
-      message: this.newMessage
-    }));
-
-    // Ajouter également le message à l'interface locale
+    // Optimistic UI update
+    const tempId = `temp_${Date.now()}`;
     const newMsg = {
-      id: `msg_${Date.now()}`,
+      id: tempId,
       senderId: this.currentUsername,
       receiverId: this.selectedFriend.name,
-      text: this.newMessage,
+      text: messageToSend,
       timestamp: new Date(),
     };
 
     this.messages = [...this.messages, newMsg];
-    this.newMessage = "";
     this.updateUI();
+
+    // Actual send
+    this.socket.send(JSON.stringify({
+      type: 'send_message',
+      receiver: this.selectedFriend.name,
+      message: messageToSend
+    }));
+
+    // Scroll to bottom
+    this.scrollToBottom();
+
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    // Show error to user
   }
+}
 
   // Méthode utilitaire pour mettre à jour l'UI
   private updateUI() {
@@ -654,8 +690,31 @@ export default class ChatPage {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
+  private renderConnectionStatus() {
+    const status = this.socket?.readyState;
+    let text = '';
+    let color = '';
+
+    switch(status) {
+      case WebSocket.OPEN:
+        text = 'Connected';
+        color = 'green';
+        break;
+      case WebSocket.CONNECTING:
+        text = 'Connecting...';
+        color = 'yellow';
+        break;
+      default:
+        text = 'Disconnected';
+        color = 'red';
+    }
+
+    return div({ className: `connection-status ${color}` }, text);
+  }
+
   render() {
     return div({ className: "mx-auto" },
+      this.renderConnectionStatus(),
       div({ className: "border border-green-500/30 rounded bg-black/80 shadow-lg shadow-green-500/10 flex flex-col md:flex-row h-[calc(100vh-12rem)]" },
         div({ id: "renderChatArea", className: "flex-1 flex flex-col border-r border-green-500/30" },
           this.renderChatArea()
@@ -667,7 +726,6 @@ export default class ChatPage {
     );
   }
 
-// Modifiez les méthodes comme suit :
 
 renderChatArea() {
   return div({ className: "flex-1 flex flex-col border-r border-green-500/30" },
@@ -692,6 +750,20 @@ renderFriendsList() {
   );
 }
 
+private loadConversation(friend: Friend) {
+  if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    this.socket.send(JSON.stringify({
+      type: 'load_conversation',
+      target: friend.name
+    }));
+  }
+}
+
+private scrollToBottom() {
+  const messagesEnd = document.getElementById("messagesEnd");
+  messagesEnd?.scrollIntoView({ behavior: "smooth" });
+}
+
 // renderFriendsList() {
 //   return [
 //     div({ className: "p-4 border-b border-green-500/30" },
@@ -706,6 +778,21 @@ renderFriendsList() {
 //     )
 //   ];
 // }
+private handleWebSocketError(error: any) {
+  console.error('WebSocket error:', error);
+
+  // Show user-friendly error message
+  const chatArea = document.getElementById("renderChatArea");
+  if (chatArea) {
+    chatArea.innerHTML = '';
+    chatArea.appendChild(
+      div(
+        { className: "error-message" },
+        "Connection error. Reconnecting..."
+      )
+    );
+  }
+}
 
   renderChatHeader() {
     return div({ className: "p-4 border-b border-green-500/30 flex items-center gap-2" },

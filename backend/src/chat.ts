@@ -6,6 +6,32 @@ import { saveMessage, getConversationMessages } from './db'; // Assurez-vous d'a
 // Stockage des connexions WebSocket actives
 const activeConnections: Map<string, Set<WebSocket>> = new Map();
 
+// Add these interfaces
+interface ChatMessage {
+    type: string;
+    [key: string]: any;
+  }
+
+  interface SendMessageData extends ChatMessage {
+    type: 'send_message';
+    receiver: string;
+    message: string;
+  }
+
+  interface LoadConversationData extends ChatMessage {
+    type: 'load_conversation';
+    target: string;
+  }
+
+  // Improved session validation
+  function validateSession(request: FastifyRequest): string {
+    const username = request.session.username;
+    if (!username || typeof username !== 'string') {
+      throw new Error('Invalid session');
+    }
+    return username;
+  }
+
 export function setupChatWebSocket(socket: WebSocket, request: FastifyRequest, db: Database) {
     const username = request.session.username;
     if (!username) {
@@ -57,11 +83,16 @@ export function setupChatWebSocket(socket: WebSocket, request: FastifyRequest, d
     });
 }
 
-async function handleSendMessage(
-    senderUsername: string,
-    data: any,
-    db: Database
-) {
+  // Improved message handling
+    async function handleSendMessage(
+        senderUsername: string,
+        data: SendMessageData,
+        db: Database
+    ) {
+        // Validate message content
+        if (!data.message || data.message.length > 1000) {
+        throw new Error('Invalid message content');
+        }
     const { receiver, message } = data;
 
     // Récupérer les ID des utilisateurs

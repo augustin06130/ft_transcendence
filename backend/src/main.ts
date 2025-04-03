@@ -168,8 +168,8 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const app: FastifyInstance = Fastify({
-    logger: true,
-    trustProxy: true
+	logger: true,
+	trustProxy: true
 });
 
 app.register(fastifyWebsocket, {
@@ -188,7 +188,7 @@ app.register(fastifySession, {
 		secure: process.env.NODE_ENV === 'production', // Activé en production
 		httpOnly: true,
 		maxAge: 86400000, // 24 heures en millisecondes
-        path: '/',
+		path: '/',
 	},
 });
 
@@ -209,12 +209,12 @@ app.post('/validate-roomid', validate_roomId);
 // Routes pour les WebSockets
 app.register(async function(app) {
 	// WebSocket pour le jeu
-    app.get('/pong-ws', { websocket: true }, join_room);
+	app.get('/pong-ws', { websocket: true }, join_room);
 
-    // WebSocket pour le chat
-    app.get('/chat-ws', { websocket: true }, (connection, req) => {
-        setupChatWebSocket(connection, req, db);
-    });
+	// WebSocket pour le chat
+	app.get('/chat-ws', { websocket: true }, (connection, req) => {
+		setupChatWebSocket(connection, req, db);
+	});
 });
 
 // Routes statiques
@@ -253,16 +253,16 @@ app.post('/logout', async (request, reply) => {
 
 // Route pour obtenir l'utilisateur actuel
 app.get('/api/current-user', (request: FastifyRequest, reply: FastifyReply) => {
-    if (request.session.username) {
-        reply.send({
-            username: request.session.username,
-            authenticated: true
-        });
-    } else {
-        reply.send({
-            authenticated: false
-        });
-    }
+	if (request.session.username) {
+		reply.send({
+			username: request.session.username,
+			authenticated: true
+		});
+	} else {
+		reply.send({
+			authenticated: false
+		});
+	}
 });
 
 // Route catch-all pour le SPA frontend
@@ -289,7 +289,7 @@ const start = async () => {
 	try {
 		// Créez les tables si elles n'existent pas
 		await CreateTableUser(db);
-        await CreateTableMessages(db);
+		await CreateTableMessages(db);
 
 		// Démarrez le serveur
 		await app.listen({ port, host });

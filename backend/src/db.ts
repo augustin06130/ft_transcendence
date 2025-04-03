@@ -120,16 +120,32 @@ export async function EditUserInfo(
   });
 }
 
-export async function getUserIdByUsername(username: string, db: Database): Promise<number | null> {
+// export async function getUserIdByUsername(username: string, db: Database): Promise<number | null> {
+//   return new Promise((resolve, reject) => {
+//       db.get(
+//           'SELECT id FROM users WHERE username = ?',
+//           [username],
+//           (err, row: { id: number } | undefined) => {
+//               if (err) reject(err);
+//               else resolve(row?.id ?? null);
+//           }
+//       );
+//   });
+// }
+
+async function getUserIdByUsername(username: string, db: Database): Promise<number | null> {
   return new Promise((resolve, reject) => {
-      db.get(
-          'SELECT id FROM users WHERE username = ?',
-          [username],
-          (err, row: { id: number } | undefined) => {
-              if (err) reject(err);
-              else resolve(row?.id ?? null);
-          }
-      );
+    db.get(
+      'SELECT id FROM users WHERE username = ?',
+      [username],
+      (err, row: { id: number } | undefined) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row?.id ?? null);
+        }
+      }
+    );
   });
 }
 
@@ -163,75 +179,108 @@ async function retrieveImage(userId: number, outputPath: string, db: Database) {
       );
   });
 }
+
 export async function saveMessage(
-    db: Database,
-    senderId: number,
-    receiverId: number,
-    content: string
+  db: Database,
+  senderId: number,
+  receiverId: number,
+  content: string
 ): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
-        const sql = `
-            INSERT INTO messages (sender_id, receiver_id, content)
-            VALUES (?, ?, ?)
-        `;
-        const params = [senderId, receiverId, content];
-
-        db.run(sql, params, function(err) {
-            if (err) {
-                console.error("Error saving message:", err.message);
-                reject(err);
-            } else {
-                resolve(this.lastID);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO messages (sender_id, receiver_id, content)
+      VALUES (?, ?, ?)
+    `;
+    db.run(sql, [senderId, receiverId, content], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        // 'this' refers to the statement object
+        resolve(this.lastID);
+      }
     });
+  });
 }
 
-export async function getConversationMessages(
-    db: Database,
-    userId1: number,
-    userId2: number,
-    limit: number = 100
-): Promise<any[]> {
-    return new Promise<any[]>((resolve, reject) => {
-        const sql = `
-            SELECT m.*,
-                   u_sender.username as sender_username,
-                   u_receiver.username as receiver_username
-            FROM messages m
-            JOIN users u_sender ON m.sender_id = u_sender.id
-            JOIN users u_receiver ON m.receiver_id = u_receiver.id
-            WHERE (m.sender_id = ? AND m.receiver_id = ?)
-               OR (m.sender_id = ? AND m.receiver_id = ?)
-            ORDER BY m.timestamp DESC
-            LIMIT ?
-        `;
-        const params = [userId1, userId2, userId2, userId1, limit];
+// export async function saveMessage(
+//     db: Database,
+//     senderId: number,
+//     receiverId: number,
+//     content: string
+// ): Promise<number> {
+//     return new Promise<number>((resolve, reject) => {
+//         const sql = `
+//             INSERT INTO messages (sender_id, receiver_id, content)
+//             VALUES (?, ?, ?)
+//         `;
+//         const params = [senderId, receiverId, content];
 
-        db.all(sql, params, (err, rows) => {
-            if (err) {
-                console.error("Error fetching conversation:", err.message);
-                reject(err);
-            } else {
-                resolve(rows.reverse()); // Inverser pour avoir l'ordre chronologique
-            }
-        });
-    });
-}
+//         db.run(sql, params, function(err) {
+//             if (err) {
+//                 console.error("Error saving message:", err.message);
+//                 reject(err);
+//             } else {
+//                 resolve(this.lastID);
+//             }
+//         });
+//     });
+// }
+
+// export async function getConversationMessages(
+//     db: Database,
+//     userId1: number,
+//     userId2: number,
+//     limit: number = 100
+// ): Promise<any[]> {
+//     return new Promise<any[]>((resolve, reject) => {
+//         const sql = `
+//             SELECT m.*,
+//                    u_sender.username as sender_username,
+//                    u_receiver.username as receiver_username
+//             FROM messages m
+//             JOIN users u_sender ON m.sender_id = u_sender.id
+//             JOIN users u_receiver ON m.receiver_id = u_receiver.id
+//             WHERE (m.sender_id = ? AND m.receiver_id = ?)
+//                OR (m.sender_id = ? AND m.receiver_id = ?)
+//             ORDER BY m.timestamp DESC
+//             LIMIT ?
+//         `;
+//         const params = [userId1, userId2, userId2, userId1, limit];
+
+//         db.all(sql, params, (err, rows) => {
+//             if (err) {
+//                 console.error("Error fetching conversation:", err.message);
+//                 reject(err);
+//             } else {
+//                 resolve(rows.reverse()); // Inverser pour avoir l'ordre chronologique
+//             }
+//         });
+//     });
+// }
 
 // N'oubliez pas d'ajouter la création de la table messages lors de l'initialisation de la base de données
 export async function CreateTableMessages(db: Database): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        const sql = `
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sender_id INTEGER NOT NULL,
-                receiver_id INTEGER NOT NULL,
-                content TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(sender_id) REFERENCES users(id),
-                FOREIGN KEY(receiver_id) REFERENCES users(id)
-            )`;
+  return new Promise<void>((resolve, reject) => {
+    const sql = `
+      CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        receiver_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(sender_id) REFERENCES users(id),
+        FOREIGN KEY(receiver_id) REFERENCES users(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(
+        MIN(sender_id, receiver_id),
+        MAX(sender_id, receiver_id),
+        timestamp
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+      CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id);
+    `;
 
         db.run(sql, (err) => {
             if (err) {
@@ -243,4 +292,65 @@ export async function CreateTableMessages(db: Database): Promise<void> {
             }
         });
     });
+}
+
+// export async function getConversationMessages(
+//   db: Database,
+//   userId1: number,
+//   userId2: number,
+//   limit: number = 100
+// ): Promise<any[]> {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT m.*,
+//              u_sender.username as sender_username,
+//              u_receiver.username as receiver_username
+//       FROM messages m
+//       JOIN users u_sender ON m.sender_id = u_sender.id
+//       JOIN users u_receiver ON m.receiver_id = u_receiver.id
+//       WHERE (m.sender_id = ? AND m.receiver_id = ?)
+//          OR (m.sender_id = ? AND m.receiver_id = ?)
+//       ORDER BY m.timestamp DESC
+//       LIMIT ?
+//     `;
+//     db.all(sql, [userId1, userId2, userId2, userId1, limit], (err, rows) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(rows?.reverse() || []);
+//       }
+//     });
+//   });
+// }
+
+export async function getConversationMessages(
+  db: Database,
+  userId1: number,
+  userId2: number,
+  limit: number = 100,
+): Promise<any[]> {
+    return new Promise<any[]>((resolve, reject) => {
+      const sql = `
+          SELECT m.*,
+                u_sender.username as sender_username,
+                u_receiver.username as receiver_username
+          FROM messages m
+          JOIN users u_sender ON m.sender_id = u_sender.id
+          JOIN users u_receiver ON m.receiver_id = u_receiver.id
+          WHERE (m.sender_id = ? AND m.receiver_id = ?)
+            OR (m.sender_id = ? AND m.receiver_id = ?)
+          ORDER BY m.timestamp DESC
+          LIMIT ?
+      `;
+      const params = [userId1, userId2, userId2, userId1, limit];
+
+      db.all(sql, params, (err, rows) => {
+          if (err) {
+              console.error("Error fetching conversation:", err.message);
+              reject(err);
+          } else {
+              resolve(rows.reverse()); // Inverser pour avoir l'ordre chronologique
+          }
+      });
+  });
 }
