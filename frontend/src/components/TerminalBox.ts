@@ -44,7 +44,7 @@ function LogoutButton() {
 
 	return button({
 		onclick: handleLogout,
-		className: "text-green-400/70 text-sm hover:text-green-400/100 transition-opacity absolute right-6 bottom-0",
+		className: "text-green-400/70 text-sm hover:text-green-400/100 transition-opacity",
 	}, "Logout");
 }
 

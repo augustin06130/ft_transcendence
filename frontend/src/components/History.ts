@@ -5,13 +5,10 @@ import { MatchDB } from "types";
 export function History(name: string | null = null) {
 	let page = 0;
 	let maxPage = 1;
-	const nameParam = name ? `&name=${name}` : ''
-	const nameParamf = name ? `?name=${name}` : ''
-	console.log(nameParam);
 	const tableContainer = div({}, Loader());
 
 	function getMaxPage() {
-		fetch(`./api/matches/count${nameParamf}`, {
+		fetch(`./api/matches/count${name ? `?username=${name}` : ''}`, {
 		}).then(resp => {
 			if (!resp.ok) {
 				throw ('Error fetching stats');
@@ -28,7 +25,7 @@ export function History(name: string | null = null) {
 			return;
 		page = newPage;
 		console.log('data');
-		fetch(`./api/matches?page=${newPage}${nameParam}`, {
+		fetch(`./api/matches?page=${newPage}${name ? `&username=${name}` : ''}`, {
 		}).then(resp => {
 			if (!resp.ok) {
 				throw ('Error fetching stats');

@@ -65,11 +65,11 @@ const pageSize = 25;
 
 export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
 	console.log('salut cest moi');
-	let { name } = request.query as { name: string };
-	console.log('username', name);
-	const params = [name, name];
+	let { username } = request.query as { username: string };
+	console.log('username', username);
+	const params = [username, username];
 	let sql;
-	if (name) {
+	if (username) {
 		sql = 'SELECT COUNT (id) FROM matches WHERE player1 = ? OR player2 = ?';
 	}
 	else {
@@ -80,6 +80,7 @@ export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
 			console.error('Error counting maches:', err.message);
 			reply.code(400);
 		} else {
+			console.log('mathc count', count['COUNT (id)']);
 			reply.code(200).send({ count: Math.ceil(count['COUNT (id)'] / pageSize) });
 		}
 	})
