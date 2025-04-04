@@ -23,12 +23,8 @@ function navBarRoutes(logged: boolean): Routes {
     } else {
         return {
             '/': baseLinks['/'],
-            '/profile': baseLinks['/profile'],
-            '/room': baseLinks['/room'],
-            '/chat': baseLinks['/chat'],
             '/login': baseLinks['/login'],
             '/register': baseLinks['/register'],
-            '/pong': baseLinks['/pong'],
         };
     }
 }

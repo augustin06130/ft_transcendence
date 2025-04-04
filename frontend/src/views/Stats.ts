@@ -1,6 +1,6 @@
 import { div, ul, li } from '@framework/tags';
 import { PieChart, LineChart } from '@components/Charts';
-import { Match } from 'types';
+import { MatchDB } from 'types';
 
 export class Graphs {
 	name: string;
@@ -27,13 +27,12 @@ export class Graphs {
 		this.durationScoreLine = new LineChart('Match duration vs. Score (point/s)', false);
 	}
 
-
-	private setGameModePie(matches: Match[]) {
+	private setGameModePie(matches: MatchDB[]) {
 		const result = [{ name: 'AI', value: 0 }, { name: 'Local', value: 0 }, { name: 'Remote', value: 0 }];
 		matches.forEach(match => {
-			if (match.player2?.username === 'computer') {
+			if (match.player2 === 'Computer') {
 				result[0].value++;
-			} else if (match.player2?.username === 'Guest') {
+			} else if (match.player2 === 'Guest') {
 				result[1].value++;
 			}
 			else {
@@ -43,7 +42,7 @@ export class Graphs {
 		this.gameModePie.setData(...result);
 	}
 
-	private setWinLosePie(matches: Match[]) {
+	private setWinLosePie(matches: MatchDB[]) {
 		const result = [{ name: 'Win', value: 0 }, { name: 'Lose', value: 0 }];
 		if (this.name === 'global') {
 			result[0].value = matches.length;
@@ -51,7 +50,7 @@ export class Graphs {
 		}
 		else {
 			matches.forEach(match => {
-				if (match.winner?.username === this.name) {
+				if (match.winner === this.name) {
 					result[0].value++;
 				} else {
 					result[1].value++;
@@ -61,35 +60,35 @@ export class Graphs {
 		this.winLosePie.setData(...result);
 	}
 
-	private setReturnRatePie(matches: Match[]) {
+	private setReturnRatePie(matches: MatchDB[]) {
 		const result = [{ name: 'Success', value: 0 }, { name: 'Fail', value: 0 }];
 		result[0].value = matches.reduce((acc, match) => acc + match.rally, 0);
 		if (this.name === 'global') {
 			result[1].value = matches.reduce((acc, match) => acc + match.score1 + match.score2, 0);
 		}
 		else {
-			result[1].value = matches.reduce((acc, match) => acc + (match.player1?.username === this.name ? match.score1 : match.score2), 0);
+			result[1].value = matches.reduce((acc, match) => acc + (match.player1 === this.name ? match.score1 : match.score2), 0);
 		}
 		this.returnRatePie.setData(...result);
 	}
 
-	private setTravelLine(matches: Match[]) {
+	private setTravelLine(matches: MatchDB[]) {
 		if (this.name === 'global') {
 			this.travelLine.setData(...matches.map((m, i) => { return { x: i, y: (m.travel1 + m.travel2) / 1000 } }))
 		}
 		else {
-			this.travelLine.setData(...matches.map((m, i) => { return { x: i, y: (m.player1?.username === this.name ? m.travel1 : m.travel2) / 1000 } }))
+			this.travelLine.setData(...matches.map((m, i) => { return { x: i, y: (m.player1 === this.name ? m.travel1 : m.travel2) / 1000 } }))
 		}
 	}
 
-	public updateData(data: Match[]) {
+	public updateData(data: MatchDB[]) {
 		this.setWinLosePie(data);
 		this.setGameModePie(data);
 		this.setReturnRatePie(data);
 		this.setTravelLine(data);
-		this.distanceDurationLine.setData(...data.map((m) => { return { x: (m.player2?.username === this.name ? m.travel2 : m.travel1) / 1000, y: m.duration / 1000 } }))
-		this.durationScoreLine.setData(...data.map((m) => { return { x: m.duration / 1000, y: (m.player2?.username === this.name ? m.score2 : m.score1) } }))
-		this.scoreLine.setData(...data.map((m, i) => { return { x: i, y: (m.player2?.username === this.name ? m.score2 : m.score1) } }));
+		this.distanceDurationLine.setData(...data.map((m) => { return { x: (m.player2 === this.name ? m.travel2 : m.travel1) / 1000, y: m.duration / 1000 } }))
+		this.durationScoreLine.setData(...data.map((m) => { return { x: m.duration / 1000, y: (m.player2 === this.name ? m.score2 : m.score1) } }))
+		this.scoreLine.setData(...data.map((m, i) => { return { x: i, y: (m.player2 === this.name ? m.score2 : m.score1) } }));
 		this.rallyLine.setData(...data.map((m, i) => { return { x: i, y: m.rally } }));
 		this.durationLine.setData(...data.map((m, i) => { return { x: i, y: m.duration / 1000 } }));
 	}
@@ -132,10 +131,10 @@ export class Stats {
 		this.name = name;
 	}
 
-	private getCurrentWinStreak(data: Match[]) {
+	private getCurrentWinStreak(data: MatchDB[]) {
 		let streak = 0;
 		for (let m of data.reverse()) {
-			if (m.winner?.username !== this.name) {
+			if (m.winner !== this.name) {
 				break;
 			}
 			streak++;
@@ -143,11 +142,11 @@ export class Stats {
 		return streak;
 	}
 
-	private getLongestWinStreak(data: Match[]) {
+	private getLongestWinStreak(data: MatchDB[]) {
 		let streak = 0;
 		let max = 0;
 		for (let m of data.reverse()) {
-			if (m.winner?.username !== this.name) {
+			if (m.winner !== this.name) {
 				max = Math.max(streak, max);
 				streak = 0;
 			}
@@ -156,17 +155,17 @@ export class Stats {
 		return Math.max(streak, max);
 	}
 
-	public updateData(data: Match[]) {
+	public updateData(data: MatchDB[]) {
 		this.liMatchPlayer.innerText = `Match played: ${data.length}`;
-		this.liWin.innerText = `Win: ${data.reduce((acc, m) => (m.winner?.username === this.name || this.name === 'global') ? acc + 1 : acc, 0)}`;
-		this.liLose.innerText = `Loose: ${data.reduce((acc, m) => (m.winner?.username !== this.name || this.name === 'global') ? acc + 1 : acc, 0)}`;
+		this.liWin.innerText = `Win: ${data.reduce((acc, m) => (m.winner === this.name || this.name === 'global') ? acc + 1 : acc, 0)}`;
+		this.liLose.innerText = `Loose: ${data.reduce((acc, m) => (m.winner !== this.name || this.name === 'global') ? acc + 1 : acc, 0)}`;
 		this.liCurrentStreak.innerText = `Current win streak: ${this.getCurrentWinStreak(data)}`;
 		this.liLongestStreak.innerText = `Longest win streak: ${this.getLongestWinStreak(data)}`;
-		this.liAverageSocre.innerText = `Average score: ${(data.reduce((acc, m) => (m.player2?.username === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
-		this.liAverageSocreWin.innerText = `Average winning score: ${(data.filter(m => m.winner?.username === this.name).reduce((acc, m) => (m.player2?.username === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
-		this.liAverageSocreLose.innerText = `Average loosing score: ${(data.filter(m => m.winner?.username !== this.name).reduce((acc, m) => (m.player2?.username === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
-		this.liAverageDistance.innerText = `Average paddle distance travel: ${(data.reduce((acc, m) => (m.player2?.username === this.name) ? acc + m.travel2 : acc + m.travel1, 0) / 1000 / data.length).toFixed(2)} field`
-		this.liTotalDistance.innerText = `Total paddle distance travel: ${Math.floor(data.reduce((acc, m) => ((m.player2?.username === this.name) ? acc + m.travel2 : acc + m.travel1), 0) / 1000)} field`;
+		this.liAverageSocre.innerText = `Average score: ${(data.reduce((acc, m) => (m.player2 === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		this.liAverageSocreWin.innerText = `Average winning score: ${(data.filter(m => m.winner === this.name).reduce((acc, m) => (m.player2 === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		this.liAverageSocreLose.innerText = `Average loosing score: ${(data.filter(m => m.winner !== this.name).reduce((acc, m) => (m.player2 === this.name) ? acc + m.score2 : acc + m.score1, 0) / data.length).toFixed(2)}`;
+		this.liAverageDistance.innerText = `Average paddle distance travel: ${(data.reduce((acc, m) => (m.player2 === this.name) ? acc + m.travel2 : acc + m.travel1, 0) / 1000 / data.length).toFixed(2)} field`
+		this.liTotalDistance.innerText = `Total paddle distance travel: ${Math.floor(data.reduce((acc, m) => ((m.player2 === this.name) ? acc + m.travel2 : acc + m.travel1), 0) / 1000)} field`;
 		this.liAverageDuration.innerText = `Average match duration: ${(data.reduce((acc, m) => acc + m.duration / 1000, 0) / data.length).toFixed(2)} s`
 		this.liTotalDuration.innerText = `Total play time: ${data.reduce((acc, m) => acc + m.duration / 1000 / 60, 0).toFixed(2)} min`;
 		this.liFirstMatch.innerText = `First match: ${(new Date(Math.min(...data.map(m => m.date))).toLocaleString())}`;

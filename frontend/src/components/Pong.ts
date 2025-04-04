@@ -120,7 +120,7 @@ export default class PongGame {
 			location.href = 'www.yoursite.com';
 		});
 		this.switchOverlay('register');
-		this.socket = new WebSocket(`ws://${window.location.host}/pong-ws`);
+		this.socket = new WebSocket(`ws://${window.location.host}/api/pong`);
 		this.socket.onopen = () => {
 			this.sendCmd('roomId', roomId.get());
 		};
@@ -274,7 +274,6 @@ export default class PongGame {
 	}
 
 	private updateGame(data: Cmd) {
-		// this.switchOverlay('');
 		this.state.game.ballX = (parseInt(data.arg0) / 1000) * this.state.canvasWidth;
 		this.state.game.ballY = (parseInt(data.arg1) / 1000) * this.state.canvasHeight;
 		this.state.game.playerY = (parseInt(data.arg2) / 1000) * this.state.canvasHeight;

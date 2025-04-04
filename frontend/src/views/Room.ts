@@ -66,7 +66,7 @@ export default function Room() {
 	handleMount();
 
 	function createHandler(_: Event) {
-		fetch('/create-room', {
+		fetch('/api/room', {
 			method: 'GET',
 		})
 			.then(response => {
@@ -87,7 +87,7 @@ export default function Room() {
 			return popOver.show('Invalid Room Id');
 		}
 
-		fetch('/validate-roomid', {
+		fetch('/api/room', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

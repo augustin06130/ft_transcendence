@@ -2,7 +2,7 @@ import { GameMode } from './pong';
 import { Client, Match, MatchTree } from './types';
 
 const aiClient: Client = {
-	username: 'computer',
+	username: 'Computer',
 	socket: null,
 };
 

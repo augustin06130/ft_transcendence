@@ -2,11 +2,8 @@ import { div, p, form, input, label, span } from '@framework/tags';
 import TerminalBox, { BoxFooter, footer } from '@components/TerminalBox';
 import UseState from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
-import { Router, switchPage } from '@framework/Router';
+import { switchPage } from '@framework/Router';
 import { LockIconSVG } from '@Icon/Lock';
-import Link from '@framework/Link';
-import Login from '@views/Login';
-import { Routes } from '@framework/types';
 
 function success(username: string) {
 	// prettier-ignore
@@ -74,7 +71,7 @@ export default function Register() {
 
 		loading.set(true);
 
-		fetch('/register', {
+		fetch('/api/register', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -42,7 +42,7 @@ export default function Home() {
 function LogoutButton() {
 	const handleLogout = async () => {
 		try {
-			const response = await fetch('/logout', {
+			const response = await fetch('/api/logout', {
 				method: 'POST',
 			});
 

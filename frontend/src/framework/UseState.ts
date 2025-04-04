@@ -43,7 +43,7 @@ export default function UseState<T>(initialValue: T, callback?: Callback<T>): Us
 	};
 }
 
-export function render(component: () => void) {
+export function render(component: () => any) {
 	currentComponent = component;
 	const result = component();
 	currentComponent = null;

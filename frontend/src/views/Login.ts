@@ -1,7 +1,6 @@
 import { div, p, form, input, label, span } from '@framework/tags';
 import TerminalBox, { BoxFooter, footer } from '@components/TerminalBox';
 import UseState from '@framework/UseState';
-import UseRouter from '@framework/UseRouter';
 import { State } from '@framework/types';
 import { UserIconSVG } from '@Icon/User';
 import { LockIconSVG } from '@Icon/Lock';
@@ -22,7 +21,6 @@ function success(username: string) {
 function LoginForm(
 	handleSubmit: (e: Event) => void,
 	error: () => string,
-	loading: () => boolean,
 	username: State<string>,
 	password: State<string>
 ) {
@@ -98,7 +96,6 @@ export default function Login() {
 	const username = UseState('', () => { });
 	const password = UseState('', () => { });
 	const error = UseState('', () => { });
-	const loading = UseState(false, () => { });
 	const loginSuccess = UseState(false, () => { });
 	const isMounted = UseState(false, () => { });
 
@@ -118,8 +115,7 @@ export default function Login() {
 			error.set('ERROR: All fields are required');
 			return;
 		}
-		loading.set(true);
-		fetch('/login-user', {
+		fetch('/api/login', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -137,7 +133,6 @@ export default function Login() {
 			})
 			.then(data => {
 				if (data.success) {
-					loading.set(false);
 					loginSuccess.set(true);
 					isLogged.set(true);
 					setTimeout(() => switchPage('/'), 1000);
@@ -148,13 +143,12 @@ export default function Login() {
 			.catch(err => {
 				popOver.show(err);
 				error.set(err.message);
-				loading.set(false);
 			});
 	}
 
 	const formContent = loginSuccess.get()
 		? success(username.get())
-		: LoginForm(handleSubmit, error.get, loading.get, username, password);
+		: LoginForm(handleSubmit, error.get, username, password);
 
 	return TerminalBox(
 		'/auth/login',
