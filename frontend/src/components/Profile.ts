@@ -6,6 +6,7 @@ import { isLogged } from '@framework/auth';
 import { switchPage } from '@framework/Router';
 import { getCookie } from 'cookies';
 import popOver from './PopOver';
+import Loader from './Loader';
 
 function ProfileForm(
 	handleSubmit: (e: Event) => void,
@@ -93,7 +94,6 @@ function ProfileForm(
 			method: 'POST',
 			body: image64,
 		}).then(resp => {
-			console.log('status', resp.status);
 			if (!resp.ok || resp.status !== 204) popOver.show('Error uploading profile picture');
 		});
 	}
@@ -146,7 +146,7 @@ function ProfileForm(
 	return div(
 		{},
 		p(
-			{ className: ' text-xl text-green-500 font-bold' },
+			{ className: ' text-xl4 text-green-500 font-bold' },
 			'USER PROFILE',
 			button(
 				{
@@ -184,7 +184,6 @@ export default function Profile() {
 
 	function checkAuth() {
 		if (!isLogged.get()) {
-			console.log('User not logged in, redirecting to login page');
 			switchPage('/login');
 			return false;
 		}
@@ -204,7 +203,6 @@ export default function Profile() {
 				return response.json();
 			})
 			.then(data => {
-				console.log(data);
 				setUserData(data);
 				mainDiv.replaceChildren(getProfile());
 			})
@@ -276,23 +274,7 @@ export default function Profile() {
 
 	const mainDiv = div(
 		{},
-		div(
-			{
-				className:
-					'mx-auto max-w-md border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',
-			},
-			div(
-				{ className: 'text-center py-8' },
-				p({ className: 'text-xl text-green-500' }, 'Loading profile data...'),
-				div(
-					{ className: 'mt-4 flex justify-center' },
-					div({ className: 'h-2 w-2 bg-green-500 rounded-full animate-pulse mr-1' }),
-					div({ className: 'h-2 w-2 bg-green-500 rounded-full animate-pulse mr-1' }),
-					div({ className: 'h-2 w-2 bg-green-500 rounded-full animate-pulse' })
-				)
-			)
-		)
-	);
+		Loader());
 
 	return mainDiv;
 }

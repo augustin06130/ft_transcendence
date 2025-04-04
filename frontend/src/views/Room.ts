@@ -1,5 +1,5 @@
 import { div, p, form, input } from '@framework/tags';
-import TerminalBox, { BoxFooter, footer } from '@components/TerminalBox';
+import TerminalBox, { BoxFooter} from '@components/TerminalBox';
 import UseState from '@framework/UseState';
 import { State } from '@framework/types';
 import { switchPage } from '@framework/Router';
@@ -126,6 +126,5 @@ export default function Room() {
 			formContent,
 			BoxFooter(),
 		),
-		footer()
 	);
 }

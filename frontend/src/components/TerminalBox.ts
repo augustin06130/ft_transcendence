@@ -1,15 +1,18 @@
-import { div, p } from "@framework/tags";
+import { button, div, p } from "@framework/tags";
 import { Args } from "@framework/types";
 import { getCookie } from "cookies";
+import { switchPage } from "@framework/Router";
+import { isLogged } from "@framework/auth";
 
 export function footer() {
 	return div({ className: "mt-8 text-green-400/70 text-sm text-center" },
-		p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`)
+		p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`),
+		isLogged.get() ? LogoutButton() : null
 	);
 }
 
 export function withTerminalHostname(cmdName: string = "") {
-	return `${getCookie('username') || 'guest'}@pong:~ ${cmdName}`;
+	return `${getCookie('username') || 'guest'}@pong:~${cmdName}`;
 }
 
 export function BoxFooter() {
@@ -18,6 +21,33 @@ export function BoxFooter() {
 		p({}, '$ System status: Online')
 	)
 }
+
+function LogoutButton() {
+	const handleLogout = async () => {
+		try {
+			const response = await fetch('/api/logout', {
+				method: 'POST',
+			});
+
+			if (response.ok) {
+				console.log('Connection succesful');
+				isLogged.set(false);
+				switchPage('/');
+			} else {
+				const errorMessage = await response.text();
+				console.error('Connection failed :', response.status, errorMessage);
+			}
+		} catch (error) {
+			console.error('Error during connection :', error);
+		}
+	};
+
+	return button({
+		onclick: handleLogout,
+		className: "text-green-400/70 text-sm hover:text-green-400/100 transition-opacity absolute right-6 bottom-0",
+	}, "Logout");
+}
+
 export default function TerminalBox(label: string, ...children: Args[]) {
 	return div({ className: "mx-auto" },
 		div({ className: "border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
@@ -26,6 +56,7 @@ export default function TerminalBox(label: string, ...children: Args[]) {
 				p({ className: "text-xs" }, withTerminalHostname(label))
 			),
 			...children,
+			footer(),
 		)
 	);
 }

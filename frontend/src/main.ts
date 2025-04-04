@@ -16,6 +16,7 @@ function navBarRoutes(logged: boolean): Routes {
         return {
             '/': baseLinks['/'],
             '/profile': baseLinks['/profile'],
+            '/history': baseLinks['/history'],
             '/room': baseLinks['/room'],
             '/chat': baseLinks['/chat'],
             '/pong': baseLinks['/pong'],

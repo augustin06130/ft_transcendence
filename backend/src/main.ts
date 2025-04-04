@@ -3,7 +3,7 @@ import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyJWT from '@fastify/jwt';
-import { getMatches } from './matches';
+import { getMatches, getMatchesCount } from './matches';
 import dotenv from 'dotenv';
 import { certifUser, logoutUser } from './login';
 import { newUser as newUser } from './register';
@@ -56,7 +56,8 @@ app.addHook('onRequest', async (request, reply) => {
 	}
 });
 
-app.get('/api/stats', getMatches);
+app.get('/api/matches', getMatches);
+app.get('/api/matches/count', getMatchesCount);
 app.get('/api/room', create_room);
 app.post('/api/tournament', get_tree);
 app.post('/api/room', validate_roomId);
@@ -72,7 +73,6 @@ app.post('/api/login', async (request, reply) => {
 app.get('/api/profile', getProfile);
 app.post('/api/profile', updateProfile);
 app.post('/api/profile/image', updateProfileImage);
-
 app.post('/api/register', async (request: FastifyRequest, reply: FastifyReply) => {
 	const { username, email, password } = request.body as {
 		username: string;

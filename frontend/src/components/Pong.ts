@@ -212,14 +212,12 @@ export default class PongGame {
 		this.name2Set(data.arg2);
 		this.overlays['start'].setTitle(data.arg3);
 
-		// set role depending on userName
 		if (this.userName === data.arg1) {
 			this.state.role = 'player1';
 		} else if (this.userName === data.arg2) {
 			this.state.role = 'player2';
 		} else this.state.role = 'spec';
 
-		// set texts depending on role and gamemode
 		this.overlays['start'].showButton();
 		if (this.state.role === 'spec') {
 			this.overlays['start'].hideButton();

@@ -146,33 +146,6 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
 	});
 }
 
-// async function insertImage(userId: number, imagePath: string, db: Database, params: any) {
-// 	const binaryData = fs.readFileSync(imagePath);
-// 	params.push(binaryData);
-// 	await db.run(`UPDATE users SET data = ? WHERE id = ?`, binaryData, userId);
-// 	console.log(`Image ajoutée pour l'utilisateur ID ${userId}`);
-// }
-
-// async function retrieveImage(userId: number, outputPath: string, db: Database) {
-// 	return new Promise<void>((resolve, reject) => {
-// 		db.get<{ data: Buffer }>(`SELECT imgae FROM users WHERE id = ?`, [userId], (err, row) => {
-// 			if (err) {
-// 				reject(err);
-// 				return;
-// 			}
-//
-// 			if (row && row.data) {
-// 				fs.writeFileSync(outputPath, row.data);
-// 				console.log(`Image récupérée et sauvegardée sous ${outputPath}`);
-// 				resolve();
-// 			} else {
-// 				console.log(`Aucune image trouvée pour l'utilisateur ID ${userId}`);
-// 				resolve();
-// 			}
-// 		});
-// 	});
-// }
-
 export function getProfile(request: FastifyRequest, reply: FastifyReply) {
 	const { username } = request.query as { username: string };
 	console.log('username', username);

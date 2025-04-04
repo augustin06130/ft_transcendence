@@ -1,5 +1,5 @@
 import { div, p, form, input, label, span } from '@framework/tags';
-import TerminalBox, { BoxFooter, footer } from '@components/TerminalBox';
+import TerminalBox, { BoxFooter } from '@components/TerminalBox';
 import UseState from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
 import { switchPage } from '@framework/Router';
@@ -177,6 +177,5 @@ export default function Register() {
 			formContent,
 			BoxFooter(),
 		),
-		footer()
 	);
 }

@@ -61,17 +61,43 @@ export async function addMatch(db: Database, match: Match) {
 	});
 }
 
+const pageSize = 25;
+
+export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
+	console.log('salut cest moi');
+	let { name } = request.query as { name: string };
+	console.log('username', name);
+	const params = [name, name];
+	let sql;
+	if (name) {
+		sql = 'SELECT COUNT (id) FROM matches WHERE player1 = ? OR player2 = ?';
+	}
+	else {
+		sql = 'SELECT COUNT (id) FROM matches';
+	}
+	db.get(sql, params, (err, count: any) => {
+		if (err) {
+			console.error('Error counting maches:', err.message);
+			reply.code(400);
+		} else {
+			reply.code(200).send({ count: Math.ceil(count['COUNT (id)'] / pageSize) });
+		}
+	})
+}
+
 export function getMatches(request: FastifyRequest, reply: FastifyReply) {
-	const { username } = request.query as { username: string };
-	let sql, params;
-	if (username === '') {
+	let { username, page } = request.query as { username: string, page: number };
+	let sql, params: (string | number)[] = [];
+	if (page === undefined)
+		page = 0;
+	if (username === undefined) {
 		sql = `SELECT * FROM matches LIMIT ?, ?;`;
-		params = [0, 100];
 	}
 	else {
 		sql = `SELECT * FROM matches WHERE player1 = ? OR player2 = ? LIMIT ?, ?;`;
-		params = [username, username, 0, 100];
+		params = [username, username];
 	}
+	params.push(page * pageSize, pageSize);
 	db.all<Match>(sql, params, (err, rows) => {
 		if (err) {
 			console.error('Error while retrieving matches', err.message);
