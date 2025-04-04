@@ -135,7 +135,8 @@ export default function Login() {
 				if (data.success) {
 					loginSuccess.set(true);
 					isLogged.set(true);
-					setTimeout(() => switchPage('/'), 1000);
+					document.location = '/profile';
+					switchPage('/profile');
 				} else {
 					throw new Error('Connexion failed');
 				}

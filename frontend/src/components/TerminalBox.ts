@@ -32,7 +32,8 @@ function LogoutButton() {
 			if (response.ok) {
 				console.log('Connection succesful');
 				isLogged.set(false);
-				switchPage('/');
+				document.location = '/login';
+				switchPage('/login');
 			} else {
 				const errorMessage = await response.text();
 				console.error('Connection failed :', response.status, errorMessage);

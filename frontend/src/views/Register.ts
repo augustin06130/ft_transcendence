@@ -93,7 +93,7 @@ export default function Register() {
 				if (data.success) {
 					loading.set(false);
 					registerSuccess.set(true);
-					setTimeout(() => switchPage('/login'), 1500);
+					switchPage('/login');
 				} else {
 					throw new Error(data.message || 'Échec de la connexion');
 				}
