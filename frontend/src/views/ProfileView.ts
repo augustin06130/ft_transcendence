@@ -28,7 +28,6 @@ export default function ProfileView() {
 	return TerminalBox("/profile",
 		div({ className: "grid grid-cols-2 gap-5" },
 			div({ className: "border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
-				p({ className: 'text-xl text-green-500 font-bold' }, 'USER PROFILE'),
 				Profile(),
 			),
 			div({ className: "border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },

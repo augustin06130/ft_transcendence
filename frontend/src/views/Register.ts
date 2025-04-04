@@ -99,7 +99,7 @@ export default function Register() {
 				}
 			})
 			.catch(err => {
-				console.error('Erreur lors de la connexion :', err);
+				console.error('Registration failed: ', err);
 				error.set(err.message);
 				loading.set(false);
 			});
