@@ -4,9 +4,9 @@ import UseState from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
 import { switchPage } from '@framework/Router';
 import { LockIconSVG } from '@Icon/Lock';
+import GoogleSignin from '@components/GooglesSignin';
 
 function success(username: string) {
-	// prettier-ignore
 	return div({ className: "space-y-4 py-4 text-center" },
 		p({ className: "text-xl text-green-400" }, "Registration successful"),
 		p({ className: "text-sm mt-2" }, `Account created for ${username}`),
@@ -86,7 +86,7 @@ export default function Register() {
 				if (!response.ok) {
 					throw new Error('Échec de la connexion');
 				}
-				return response.json(); // Toujours parser la réponse en JSON
+				return response.json();
 			})
 			.then(data => {
 				console.log('Réponse du serveur :', data);
@@ -155,17 +155,20 @@ export default function Register() {
 				LockIconSVG
 			),
 			error.get() ? p({ className: 'text-red-500 text-sm' }, error.get()) : null,
-			input({
-				id: 'submit',
-				type: 'submit',
-				value: loading.get() ? 'PROCESSING...' : 'REGISTER',
-				className:
-					'w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
-				disabled: loading.get(),
-			})
+			div({ className: 'flex' },
+				GoogleSignin(),
+				input({
+					id: 'submit',
+					type: 'submit',
+					value: loading.get() ? 'PROCESSING...' : 'REGISTER',
+					className:
+						'inline w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
+					disabled: loading.get(),
+				}),
+			)
 		);
 
-	// prettier-ignore
+
 	return TerminalBox("/auth/register",
 		div({ className: "mx-auto max-w-md border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
 			div({ className: "text-center mb-6" },

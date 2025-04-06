@@ -21,9 +21,9 @@ export function createTableMatches() {
 		`;
 	db.run(sql, err => {
 		if (err) {
-			console.error('Error creating stats table:', err.message); // Log the error
+			console.error('Error creating stats table:', err.message);
 		} else {
-			console.log("The table 'matches' has been created successfully."); // Log success
+			console.log("The table 'matches' has been created successfully.");
 		}
 	});
 }

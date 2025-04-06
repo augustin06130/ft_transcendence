@@ -1,4 +1,3 @@
-import { Database } from 'sqlite3';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { db } from './main';
 import { readFileSync } from 'node:fs';
@@ -12,6 +11,7 @@ type User = {
 	phone: string;
 	bio: string;
 	image: string;
+	googleId: string;
 };
 
 export function createTableUser() {
@@ -21,6 +21,7 @@ export function createTableUser() {
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
+		googleId TEXT UNIQUE,
         phone TEXT,
 		bio TEXT,
         image BLOB
@@ -46,6 +47,25 @@ export async function verifUser(username: string) {
 	});
 }
 
+export async function getDuplicatesUser(username: string, email: string, googleId: string | null): Promise<User[]> {
+	return new Promise<User[]>((resolve, reject) => {
+		let sql = 'SELECT id FROM users WHERE username = ? OR WHERE email = ?';
+		let params = [username, email];
+		if (googleId) {
+			sql += ' OR WHERE googleId = ?';
+			params.push(googleId);
+		}
+		sql += ';';
+		db.run(sql, params, (err: any, rows: User[]) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(rows);
+			}
+		});
+	});
+}
+
 export async function isUser(username: string): Promise<boolean> {
 	return new Promise<boolean>((resolve, reject) => {
 		db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
@@ -59,23 +79,36 @@ export async function isUser(username: string): Promise<boolean> {
 	});
 }
 
+export async function getUserBy(key:string, value: string): Promise<User> {
+	return new Promise<User>((resolve, reject) => {
+		db.get(`SELECT * FROM users WHERE ${key} = ?;`, [value], (err, user: User) => {
+			if (err) {
+				console.error('Error getting user:', err);
+				reject(err);
+			} else {
+				resolve(user);
+			}
+		});
+	});
+};
+
 export async function createNewUser(
 	username: string,
-	hashedPassword: string,
 	email: string,
-	db: Database
+	hashedPassword: string | null,
+	googleId: string | null = null,
 ): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		const sql = `
-          INSERT INTO users (username, password, email, image)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO users (username, email, password, googleId, image)
+          VALUES (?, ?, ?, ?, ?)
       `;
 
 		const image =
 			'data:image/png;base64,' +
 			readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
-		const params = [username, hashedPassword, email, image];
+		const params = [username, email, hashedPassword, googleId, image];
 
 		db.run(sql, params, function(err) {
 			if (err) {
@@ -100,7 +133,7 @@ export async function updateProfileImage(
 		db.run(sql, params, function(err) {
 			if (err) {
 				console.error('Error updating user image:', err.message);
-				reply.code(404).send({error: err.message});
+				reply.code(404).send({ error: err.message });
 			} else {
 				reply.code(204).send({});
 			}

@@ -1,30 +1,42 @@
 import { FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt';
-import { isUser, createNewUser } from './user';
-import { db } from './main';
+import { createNewUser, getDuplicatesUser } from './user';
 
 export async function newUser(
 	username: string,
 	email: string,
-	password: string,
+	googleId: string,
 	reply: FastifyReply,
 ) {
 	try {
-		if (!username || !password || !email) {
-			return reply.status(400).send({ error: 'Missing required field' });
+		let err = await checkDuplicates(username, email, googleId);
+		if (err) {
+			reply.status(409).send({ error: err });
+			return
 		}
-		const userExists = await isUser(username);
-		if (userExists) {
-			return reply.status(400).send({ error: 'User already exists in databse' });
-		}
-		const hashedPassword = await bcrypt.hash(password, 10);
 
-		const userId = await createNewUser(username, hashedPassword, email, db);
+		const userId = await createNewUser(username, email, googleId);
 		console.log(`User created with ID: ${userId}`);
 
-		return reply.status(201).send({ success: true, userId });
+		reply.status(201).send({ success: true, userId });
 	} catch (err) {
-		console.error('Erreur lors de l\'inscription :', err);
-		return reply.status(500).send({ error: 'Erreur interne du serveur' });
+		reply.status(400).send({ error: err });
 	}
+}
+
+async function checkDuplicates(username: string, email: string, googleId: string | null) {
+	const publicatesUser = await getDuplicatesUser(username, email, googleId);
+	if (publicatesUser.length === 0) {
+		return null;
+	}
+	if (publicatesUser.find(user => user.username === username)) {
+		return 'Username aldready taken';
+	}
+	else if (publicatesUser.find(user => user.email === email)) {
+		return 'Email aldready taken';
+	}
+	else if (googleId && publicatesUser.find(user => user.googleId === googleId)) {
+		return 'GoogleId aldready taken';
+	}
+	return null;
 }

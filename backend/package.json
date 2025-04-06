@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@fastify/formbody": "^8.0.2",
     "@fastify/jwt": "^9.1.0",
     "@fastify/websocket": "^11.0.2",
     "@types/ws": "^8.18.0",
@@ -71,6 +72,7 @@
     "github-from-package": "^0.0.0",
     "glob": "^7.2.3",
     "glob-parent": "^5.1.2",
+    "google-auth-library": "^9.15.1",
     "graceful-fs": "^4.2.11",
     "has-flag": "^3.0.0",
     "has-unicode": "^2.0.1",

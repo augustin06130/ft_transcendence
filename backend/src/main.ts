@@ -3,14 +3,17 @@ import { Database, OPEN_READWRITE, OPEN_CREATE } from 'sqlite3';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyJWT from '@fastify/jwt';
+import fastifyFormbody from '@fastify/formbody';
 import { getMatches, getMatchesCount } from './matches';
 import dotenv from 'dotenv';
-import { certifUser, logoutUser } from './login';
+import { loginPassword, logoutUser } from './login';
 import { newUser as newUser } from './register';
 import { createTableUser, getProfile, updateProfile, updateProfileImage } from './user';
 import { create_room, validate_roomId, join_room, get_tree } from './room';
 import { createTableMatches } from './matches';
 import setupStaticLocations from './static';
+import fs from 'fs'
+import { handleGoogle } from './googleAuth';
 
 dotenv.config();
 
@@ -22,12 +25,26 @@ if (!process.env.SESSION_SECRET) {
 	process.exit(1);
 }
 
-export const db = connectToDatabase();
-const app: FastifyInstance = Fastify({ logger: true });
+if (!process.env.GOOGLE_SECRET) {
+	console.error('env missing');
+	process.exit(1);
+}
 
-app.register(fastifyWebsocket);
-app.register(fastifyCookie);
-app.register(fastifyJWT, {
+
+export const db = connectToDatabase();
+export const fastify: FastifyInstance = Fastify({
+	logger: true,
+	https: {
+		key: fs.readFileSync('/etc/fastify/ssl/key.pem'),
+		cert: fs.readFileSync('/etc/fastify/ssl/cert.pem'),
+	}
+});
+
+fastify.register(fastifyWebsocket);
+fastify.register(fastifyFormbody);
+fastify.register(fastifyCookie);
+
+fastify.register(fastifyJWT, {
 	secret: process.env.SESSION_SECRET,
 	cookie: {
 		cookieName: 'jwt',
@@ -35,7 +52,7 @@ app.register(fastifyJWT, {
 	},
 });
 
-const routes = new Set([
+const authorizedRoutes = new Set([
 	'',
 	'/',
 	'/favicon.ico',
@@ -44,10 +61,12 @@ const routes = new Set([
 	'/bundle.js',
 	'/api/login',
 	'/api/register',
+	'/api/login/google',
 ]);
-app.addHook('onRequest', async (request, reply) => {
+
+fastify.addHook('onRequest', async (request, reply) => {
 	try {
-		if (!routes.has(request.url)) {
+		if (!authorizedRoutes.has(request.url)) {
 			await request.jwtVerify({ onlyCookie: true });
 		}
 	} catch (err) {
@@ -56,33 +75,44 @@ app.addHook('onRequest', async (request, reply) => {
 	}
 });
 
-app.get('/api/matches', getMatches);
-app.get('/api/matches/count', getMatchesCount);
-app.get('/api/room', create_room);
-app.post('/api/tournament', get_tree);
-app.post('/api/room', validate_roomId);
-app.post('/api/logout', logoutUser);
-app.register(async app => {
-	app.get('/api/pong', { websocket: true }, join_room);
+fastify.addHook('onRequest', (_, reply, done) => {
+	reply.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+	// reply.header('Referrer-Policy', 'no-referrer-when-downgrade');
+	reply.header('Content-Security-Policy', "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; frame-src 'self' https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/;");
+
+	done();
 });
 
-app.post('/api/login', async (request, reply) => {
-	await certifUser(request, reply, app);
+fastify.get('/api/matches', getMatches);
+fastify.get('/api/matches/count', getMatchesCount);
+fastify.get('/api/room', create_room);
+fastify.post('/api/tournament', get_tree);
+fastify.post('/api/room', validate_roomId);
+fastify.post('/api/logout', logoutUser);
+fastify.register(async fastify => {
+	fastify.get('/api/pong', { websocket: true }, join_room);
 });
 
-app.get('/api/profile', getProfile);
-app.post('/api/profile', updateProfile);
-app.post('/api/profile/image', updateProfileImage);
-app.post('/api/register', async (request: FastifyRequest, reply: FastifyReply) => {
+fastify.post('/api/login', async (request, reply) => {
+	await loginPassword(request, reply);
+});
+
+fastify.get('/api/profile', getProfile);
+fastify.post('/api/profile', updateProfile);
+fastify.post('/api/profile/image', updateProfileImage);
+fastify.post('/api/register', async (request: FastifyRequest, reply: FastifyReply) => {
 	const { username, email, password } = request.body as {
 		username: string;
 		email: string;
 		password: string;
 	};
-	await newUser(username, email, password, reply);
+	await newUser(username, email, password, null, reply);
 });
 
-setupStaticLocations(app, ['/style.css', '/output.css', '/bundle.js', '/favicon.ico', '/default-avatar.png']);
+fastify.post('/api/login/google', handleGoogle)
+
+
+setupStaticLocations(fastify, ['/style.css', '/output.css', '/bundle.js', '/favicon.ico', '/default-avatar.png']);
 
 function connectToDatabase() {
 	const dbPath = './database.db';
@@ -101,7 +131,7 @@ const start = async () => {
 		createTableUser();
 		createTableMatches();
 
-		await app.listen({ port, host });
+		await fastify.listen({ port, host });
 		console.log('Server is listening on http://localhost:8080');
 	} catch (err) {
 		console.error('Error starting server:', err);

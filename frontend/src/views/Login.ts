@@ -7,6 +7,7 @@ import { LockIconSVG } from '@Icon/Lock';
 import { isLogged } from '@framework/auth';
 import { switchPage } from '@framework/Router';
 import popOver from '@components/PopOver';
+import GoogleSignin from '@components/GooglesSignin';
 
 function success(username: string) {
 	return div(
@@ -84,11 +85,14 @@ function LoginForm(
 			LockIconSVG
 		),
 		err ? p({ className: 'text-red-500 text-sm' }, error()) : null,
-		input({
-			id: 'submit',
-			type: 'submit',
-			className: 'w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
-		})
+		div({className: 'flex'},
+			GoogleSignin(),
+			input({
+				id: 'submit',
+				type: 'submit',
+				className: 'inline w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
+			})
+		)
 	);
 }
 

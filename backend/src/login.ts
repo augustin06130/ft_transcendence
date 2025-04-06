@@ -1,31 +1,50 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt';
 import { verifUser } from './user';
+import { fastify } from './main';
 
-export async function certifUser(
-	request: FastifyRequest,
+// export async function loginPassword(
+// 	request: FastifyRequest,
+// 	reply: FastifyReply,
+// ) {
+// 	const { username, password } = request.body as { username: string; password: string };
+//
+// 	if (!username || !password) {
+// 		return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
+// 	}
+// 	try {
+// 		const user = await verifUser(username);
+// 		if (user && bcrypt.compareSync(password, user.password)) {
+// 			return login(username, reply)
+// 		} else {
+// 			return reply.status(403).send({ success: false });
+// 		}
+// 	} catch (err) {
+// 		return reply.status(400).send('Error during credential verification: ' + err);
+// 	}
+// }
+
+export async function loginGoogle(
+	username: string,
 	reply: FastifyReply,
-	app: FastifyInstance
 ) {
-	const { username, password } = request.body as { username: string; password: string };
-
-	if (!username || !password) {
-		return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
-	}
 	try {
 		const user = await verifUser(username);
-		if (user && bcrypt.compareSync(password, user.password)) {
-			const token = app.jwt.sign({ username });
-			reply.setCookie('username', username, { path: '/', sameSite: 'strict', maxAge: 3600 });
-			reply.setCookie('jwt', token, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: 3600 });
-			return reply.status(200).send({ success: true, user, token });
+		if (user) {
+			return login(username, reply)
 		} else {
 			return reply.status(403).send({ success: false });
 		}
 	} catch (err) {
-		console.error('Error during credential verification: ', err);
-		return reply.status(500).send({ error: 'Interal serveur error' });
+		return reply.status(400).send('Error during credential verification: ' + err);
 	}
+}
+
+function login(username: string, reply: FastifyReply) {
+	const token = fastify.jwt.sign({ username });
+	reply.setCookie('username', username, { path: '/', sameSite: 'strict', maxAge: 3600 });
+	reply.setCookie('jwt', token, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: 3600 });
+	reply.status(200).send({ success: true });
 }
 
 export async function logoutUser(
