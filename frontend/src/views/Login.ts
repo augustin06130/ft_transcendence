@@ -7,7 +7,6 @@ import { LockIconSVG } from '@Icon/Lock';
 import { isLogged } from '@framework/auth';
 import { switchPage } from '@framework/Router';
 import popOver from '@components/PopOver';
-import GoogleSignin from '@components/GooglesSignin';
 
 function success(username: string) {
 	return div(
@@ -86,7 +85,6 @@ function LoginForm(
 		),
 		err ? p({ className: 'text-red-500 text-sm' }, error()) : null,
 		div({className: 'flex'},
-			GoogleSignin(),
 			input({
 				id: 'submit',
 				type: 'submit',

@@ -4,7 +4,6 @@ import UseState from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
 import { switchPage } from '@framework/Router';
 import { LockIconSVG } from '@Icon/Lock';
-import GoogleSignin from '@components/GooglesSignin';
 
 function success(username: string) {
 	return div({ className: "space-y-4 py-4 text-center" },
@@ -156,7 +155,6 @@ export default function Register() {
 			),
 			error.get() ? p({ className: 'text-red-500 text-sm' }, error.get()) : null,
 			div({ className: 'flex' },
-				GoogleSignin(),
 				input({
 					id: 'submit',
 					type: 'submit',

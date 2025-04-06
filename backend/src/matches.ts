@@ -64,7 +64,6 @@ export async function addMatch(db: Database, match: Match) {
 const pageSize = 25;
 
 export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
-	console.log('salut cest moi');
 	let { username } = request.query as { username: string };
 	console.log('username', username);
 	const params = [username, username];

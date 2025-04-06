@@ -3,6 +3,7 @@ import { Args } from "@framework/types";
 import { getCookie } from "cookies";
 import { switchPage } from "@framework/Router";
 import { isLogged } from "@framework/auth";
+import GoogleSignin from "./GooglesSignin";
 
 export function footer() {
 	return div({ className: "mt-8 text-green-400/70 text-sm text-center" },
@@ -51,6 +52,7 @@ function LogoutButton() {
 
 export default function TerminalBox(label: string, ...children: Args[]) {
 	return div({ className: "mx-auto" },
+		!isLogged.get() ? GoogleSignin() : null,
 		div({ className: "border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10" },
 			div({ className: "flex items-center gap-2 border-b border-green-500/30 pb-2 mb-4" },
 				div({ className: "h-3 w-3 rounded-full bg-green-500" }),

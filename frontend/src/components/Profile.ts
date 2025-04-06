@@ -1,7 +1,7 @@
 import { div, p, form, input, label, button, span, img } from '@framework/tags';
 import UseState, { UseStateType } from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
-import { EmailIconSVG, PhoneIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
+import { EmailIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
 import { isLogged } from '@framework/auth';
 import { switchPage } from '@framework/Router';
 import { getCookie } from 'cookies';
@@ -14,7 +14,6 @@ function ProfileForm(
 	toggleEditMode: () => void,
 	username: UseStateType<string>,
 	email: UseStateType<string>,
-	phone: UseStateType<string>,
 	bio: UseStateType<string>,
 	profilePicture: UseStateType<string>
 ) {
@@ -94,7 +93,10 @@ function ProfileForm(
 			method: 'POST',
 			body: image64,
 		}).then(resp => {
-			if (!resp.ok || resp.status !== 204) popOver.show('Error uploading profile picture');
+			if (!resp.ok || resp.status !== 204)
+				popOver.show('Error uploading profile picture');
+			else
+				location.reload();
 		});
 	}
 
@@ -168,7 +170,6 @@ function ProfileForm(
 			},
 			inputL('username', 'text', username, 'username', UserIconSVG, true),
 			inputL('email', 'email', email, 'email@example.com', EmailIconSVG),
-			inputL('phone', 'tel', phone, '+1234567890', PhoneIconSVG),
 			textareaL('bio', bio, 'Tell us about yourself...', UserIconSVG)
 		)
 	);
@@ -177,7 +178,6 @@ function ProfileForm(
 export default function Profile() {
 	const username = UseState('', () => { });
 	const email = UseState('', () => { });
-	const phone = UseState('', () => { });
 	const bio = UseState('', () => { });
 	const profilePicture = UseState('', () => { });
 	const editMode = UseState(false, () => { });
@@ -228,7 +228,6 @@ export default function Profile() {
 		const body = {
 			username: getCookie('username'),
 			email: email.get(),
-			phone: phone.get(),
 			bio: bio.get(),
 		};
 		sendProfileData(body);
@@ -253,7 +252,6 @@ export default function Profile() {
 	function setUserData(data: any) {
 		username.set(data.username || '');
 		email.set(data.email || '');
-		phone.set(data.phone || '');
 		bio.set(data.bio || '');
 		profilePicture.set(data.image || '');
 	}
@@ -267,7 +265,6 @@ export default function Profile() {
 			toggleEditMode,
 			username,
 			email,
-			phone,
 			bio,
 			profilePicture
 		);

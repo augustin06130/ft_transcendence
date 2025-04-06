@@ -5,13 +5,13 @@ import { Routes } from '@framework/types';
 import { isLogged } from './framework/auth';
 import popOver from '@components/PopOver';
 
-function navBarRoutes(logged: boolean): Routes {
+function navBarRoutes(): Routes {
     const entry = document.getElementById('entry');
     if (entry) {
-        entry.innerHTML = ''; // Clear the container
+        entry.innerHTML = '';
     }
 
-    if (logged) {
+    if (isLogged.get()) {
 		baseLinks
         return {
             '/': baseLinks['/'],
@@ -24,14 +24,12 @@ function navBarRoutes(logged: boolean): Routes {
     } else {
         return {
             '/': baseLinks['/'],
-            '/login': baseLinks['/login'],
-            '/register': baseLinks['/register'],
         };
     }
 }
 
 const routers = Router({
-    ...navBarRoutes(isLogged.get()),
+    ...navBarRoutes(),
 });
 
 export function renderApp() {
@@ -45,7 +43,7 @@ export function renderApp() {
         'entry',
         // @ts-ignore
         { class: 'min-h-screen w-[100vw] bg-black text-green-500 font-mono p-4' },
-        NavBar(navBarRoutes(isLogged.get())), // Pass the updated routes to NavBar
+        NavBar(navBarRoutes()), // Pass the updated routes to NavBar
         routers, // Pass the updated routes to Router
         popOver,
     );

@@ -6,9 +6,7 @@ import path from 'path';
 type User = {
 	username: string;
 	email: string;
-	password: string;
 	name: string;
-	phone: string;
 	bio: string;
 	image: string;
 	googleId: string;
@@ -20,9 +18,7 @@ export function createTableUser() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-		googleId TEXT UNIQUE,
-        phone TEXT,
+		googleId TEXT NOT NULL UNIQUE,
 		bio TEXT,
         image BLOB
       )`;
@@ -37,7 +33,7 @@ export function createTableUser() {
 
 export async function verifUser(username: string) {
 	return new Promise<any>((resolve, reject) => {
-		db.get('SELECT id, password FROM users WHERE username = ?', [username], (err, row) => {
+		db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
 			if (err) {
 				reject(err);
 			} else {
@@ -47,7 +43,7 @@ export async function verifUser(username: string) {
 	});
 }
 
-export async function getDuplicatesUser(username: string, email: string, googleId: string | null): Promise<User[]> {
+export async function getDuplicatesUser(username: string, email: string, googleId: string): Promise<User[]> {
 	return new Promise<User[]>((resolve, reject) => {
 		let sql = 'SELECT id FROM users WHERE username = ? OR WHERE email = ?';
 		let params = [username, email];
@@ -79,7 +75,7 @@ export async function isUser(username: string): Promise<boolean> {
 	});
 }
 
-export async function getUserBy(key:string, value: string): Promise<User> {
+export async function getUserBy(key: string, value: string): Promise<User> {
 	return new Promise<User>((resolve, reject) => {
 		db.get(`SELECT * FROM users WHERE ${key} = ?;`, [value], (err, user: User) => {
 			if (err) {
@@ -95,20 +91,19 @@ export async function getUserBy(key:string, value: string): Promise<User> {
 export async function createNewUser(
 	username: string,
 	email: string,
-	hashedPassword: string | null,
-	googleId: string | null = null,
+	googleId: string,
 ): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		const sql = `
-          INSERT INTO users (username, email, password, googleId, image)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO users (username, email, googleId, image)
+          VALUES (?, ?, ?, ?)
       `;
 
 		const image =
 			'data:image/png;base64,' +
 			readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
-		const params = [username, email, hashedPassword, googleId, image];
+		const params = [username, email, googleId, image];
 
 		db.run(sql, params, function(err) {
 			if (err) {
@@ -145,7 +140,6 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
 	let body = JSON.parse(request.body as string) as {
 		username: string;
 		email: string;
-		phone: string;
 		bio: string;
 	};
 
@@ -183,7 +177,7 @@ export function getProfile(request: FastifyRequest, reply: FastifyReply) {
 	const { username } = request.query as { username: string };
 	console.log('username', username);
 	let sql, params;
-	sql = `SELECT username, email, phone, bio, image FROM users WHERE username = ?;`;
+	sql = `SELECT username, email, bio, image FROM users WHERE username = ?;`;
 	params = [username];
 	db.get<User>(sql, params, (err, row) => {
 		if (err) {
@@ -194,3 +188,24 @@ export function getProfile(request: FastifyRequest, reply: FastifyReply) {
 		}
 	});
 }
+
+// export function highest(username: string) {
+// 	return new Promise<User[]>((resolve, reject) => {
+// 		const sql = `SELECT *
+// 		FROM users
+// 		WHERE username LIKE '%\_%' ESCAPE '\' AND
+// 		SUBSTRING(username, LENGTH(username) - 3) REGEXP '^[0-9]{4}$' AND
+// 		SUBSTRING(username, LENGTH(username) - 4, 1) = '_' AND
+// 		SUBSTRING(username, LENGTH(username) - 4, 1) = '${username}';`
+//
+// 		// db.all(`SELECT * FROM users WHERE username REGEXP '^?\_....$';`, [username], (err: any, user: User[]) => {
+// 		db.all(sql, [], (err: any, user: User[]) => {
+// 			if (err) {
+// 				console.error('Error getting user:', err);
+// 				reject(err);
+// 			} else {
+// 				resolve(user);
+// 			}
+// 		});
+// 	});
+// }

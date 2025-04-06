@@ -117,10 +117,10 @@ export default class PongGame {
 			} else this.switchOverlay('register');
 		});
 		this.overlays['error'] = new Overlay('Error', 'An error occured', 'Home', () => {
-			location.href = 'www.yoursite.com';
+			location.href = '/';
 		});
 		this.switchOverlay('register');
-		this.socket = new WebSocket(`ws://${window.location.host}/api/pong`);
+		this.socket = new WebSocket(`wss://${window.location.host}/api/pong`);
 		this.socket.onopen = () => {
 			this.sendCmd('roomId', roomId.get());
 		};
