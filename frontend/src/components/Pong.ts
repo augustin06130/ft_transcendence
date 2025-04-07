@@ -6,7 +6,7 @@ import popOver from './PopOver';
 import popUp, { PopUpElement } from './PopUp';
 import { switchPage } from '@framework/Router';
 
-export const WINNING_SCORE = 1;
+export const WINNING_SCORE = 3;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 export const gameModes: GameMode[] = ['ai', 'local', 'remote'];
@@ -237,7 +237,7 @@ export default class PongGame {
         this.state.continue = parseInt(data.arg0) === -1;
         if (!this.state.ingame) return;
         if (this.gameMode.get() === 'ai')
-            this.computerIntervallId = setInterval(this.updateComputerView, 100);
+            this.computerIntervallId = setInterval(this.updateComputerView, 1000);
         this.handleResize();
         this.switchOverlay();
     }
@@ -332,6 +332,25 @@ export default class PongGame {
         this.drawGame();
     }
 
+    private drawLine(m: number, b: number) {
+        const ctx = this.canvasElement.getContext('2d');
+        if (!ctx) return;
+        ctx.strokeStyle = '#ff00ff';
+        ctx.beginPath();
+        ctx.moveTo(0, b);
+        ctx.lineTo(this.state.canvasWidth, m * this.state.canvasWidth + b);
+        ctx.stroke();
+    }
+
+    private drawPoint(x: number, y: number) {
+        const ctx = this.canvasElement.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = '#ff00ff';
+        ctx.beginPath();
+        ctx.arc(x, y, this.state.game.ballRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     private drawGame() {
         const ctx = this.canvasElement.getContext('2d');
         if (!ctx) return;
@@ -399,6 +418,11 @@ export default class PongGame {
         this.state.aiState.current = Object.assign({}, this.state.game);
     }
 
+    private linest(x1: number, y1: number, x2: number, y2: number) {
+        const m = (y2 - y1) / (x2 - x1);
+        return [m, y1 - m * x1];
+    }
+
     private updateComputer() {
         const [m, b] = this.linest(
             this.state.aiState.current.ballX,
@@ -409,25 +433,32 @@ export default class PongGame {
 
         const ballHitYcomputer = this.findIntersectComputer(m, b);
 
+        //debug
+        this.drawPoint(this.state.aiState.previous.ballX, this.state.aiState.previous.ballY);
+        this.drawPoint(this.state.aiState.current.ballX, this.state.aiState.current.ballY);
+        this.drawPoint(this.state.canvasWidth, ballHitYcomputer);
+
         if (
             ballHitYcomputer >
-            this.state.aiState.current.computerY + this.state.aiState.current.computerHeight
+            this.state.game.computerY +
+                this.state.game.computerHeight -
+                this.state.game.computerHeight * 0.45
         ) {
             window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k' }));
-        } else if (ballHitYcomputer < this.state.aiState.current.computerY) {
+        } else if (
+            ballHitYcomputer <
+            this.state.game.computerY + this.state.game.computerHeight * 0.45
+        ) {
             window.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }));
         } else {
             window.dispatchEvent(new KeyboardEvent('keyup', { key: 'i' }));
         }
     }
 
-    private linest(x1: number, y1: number, x2: number, y2: number) {
-        const m = (y2 - y1) / (x2 - x1);
-        return [m, y1 - m * x1];
-    }
-
     private findIntersectComputer(m: number, b: number): number {
         const hitY = m * this.state.canvasWidth + b;
+        //debug
+        this.drawLine(m, b);
         if (hitY < 0) {
             return this.findIntersectComputer(-m, -b);
         } else if (hitY > this.state.canvasHeight) {

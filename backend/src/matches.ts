@@ -9,7 +9,7 @@ export function createTableMatches() {
            id INTEGER PRIMARY KEY AUTOINCREMENT,
            player1 TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
            player2 TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
-           winner TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+           winner  TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
            score1 INTEGER NOT NULL,
            score2 INTEGER NOT NULL,
            travel1 INTEGER NOT NULL,

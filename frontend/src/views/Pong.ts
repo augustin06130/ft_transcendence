@@ -1,9 +1,9 @@
-import { div, button, p, h1 } from '@framework/tags';
 import PongGame, { WINNING_SCORE, GameMode as GameMode } from '@components/Pong';
-import UseState from '@framework/UseState';
-import { roomId } from './Room';
-import popOver from '@components/PopOver';
 import TournamentOverlay from '@components/TournamenOverlay';
+import { div, button, p, h1 } from '@framework/tags';
+import UseState from '@framework/UseState';
+import popOver from '@components/PopOver';
+import { roomId } from './Room';
 
 export let game: PongGame | null = null;
 

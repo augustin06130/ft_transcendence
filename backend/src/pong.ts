@@ -5,7 +5,7 @@ import { addMatch } from './matches';
 import { db } from './main';
 import { Match, Client, Cmd, PongState } from './types';
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 3;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
