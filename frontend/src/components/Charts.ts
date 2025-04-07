@@ -74,7 +74,7 @@ export class PieChart extends Chart {
 		ctx.fillStyle = '#00ff00';
 		ctx.strokeStyle = '#00ff00';
 		ctx.beginPath();
-		ctx.arc(this.side / 2, this.side / 2, this.radius, 0, 2 * Math.PI);
+		ctx.arc(this.side / 2, this.side / 2, Math.max(0, this.radius), 0, 2 * Math.PI);
 		ctx.stroke();
 
 		let acc = 0;
@@ -131,6 +131,7 @@ export class LineChart extends Chart {
 		this.minY = 0;
 		this.maxY = Math.max(...this.data.map(v => v.y));
 		this.handleResize();
+		this.drawChart();
 	}
 
 	handleResize() {

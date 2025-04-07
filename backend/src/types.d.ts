@@ -12,6 +12,7 @@ export type Match = {
 	date: number;
 	duration: number;
 };
+
 export type MatchDB = Omit<Match, 'player1' | 'player2' | 'winner'> & { player1: string, player2: string, winner: String }
 
 export type MatchTree = {

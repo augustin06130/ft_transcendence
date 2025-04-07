@@ -25,6 +25,7 @@ const tags = [
 	"tr",
 	"th",
 	"td",
+	"textarea",
 ] as const;
 
 export const elements = Object.fromEntries(
@@ -67,4 +68,5 @@ export const {
 	tr,
 	th,
 	td,
+	textarea,
 } = elements;

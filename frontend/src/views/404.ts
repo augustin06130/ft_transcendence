@@ -11,47 +11,39 @@ function fakeSystemInfo() {
 }
 
 function animatedCaret() {
-    // prettier-ignore
-    return div({ className: "mt-4 flex items-center" },
-    span({ className: "text-green-400 mr-2" }, "$"),
-    div({ className: "h-5 w-2 bg-green-500 animate-pulse" })
-  );
+    return div(
+        { className: 'mt-4 flex items-center' },
+        span({ className: 'text-green-400 mr-2' }, '$'),
+        div({ className: 'h-5 w-2 bg-green-500 animate-pulse' })
+    );
 }
 
 function footer() {
-    return div({ className: "mt-8 text-green-400/70 text-sm text-center relative" },
-    p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`),
-    isLogged.get() ? LogoutButton() : null // Afficher le bouton uniquement si l'utilisateur est connecté
-  );
+    return div(
+        { className: 'mt-8 text-green-400/70 text-sm text-center relative' },
+        p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`),
+        isLogged.get() ? LogoutButton() : null
+    );
 }
 
 export default function _404View() {
-    const el = [
-    div({ className: "space-y-4" },
-      fakeSystemInfo(),
-      animatedCaret()
-    ),
-    footer(),
-  ];
+    const el = [div({ className: 'space-y-4' }, fakeSystemInfo(), animatedCaret()), footer()];
     return TerminalBox('terminal@user:~', ...el);
 }
 
 function LogoutButton() {
     const handleLogout = async () => {
         try {
-            const response = await fetch('/api/logout', {
+            const url = new URL('/api/logout', window.location.href);
+            const response = await fetch(url, {
                 method: 'POST',
             });
 
             if (response.ok) {
                 console.log('Déconnexion réussie');
-                // Mettre à jour l'état de connexion
                 isLogged.set(false);
-                // Rediriger vers la page d'accueil
-                // window.dispatchEvent(new CustomEvent('url', { detail: { to: '/' } }));
-				switchPage('/');
+                switchPage('/');
             } else {
-                // Afficher les détails de l'erreur
                 const errorMessage = await response.text();
                 console.error('Échec de la déconnexion :', response.status, errorMessage);
             }
@@ -60,9 +52,12 @@ function LogoutButton() {
         }
     };
 
-    // prettier-ignore
-    return button({
-    onclick: handleLogout, // Appeler directement la fonction
-    className: "text-green-400/70 text-sm hover:text-green-400/100 transition-opacity absolute right-6 bottom-0",
-  }, "Logout");
+    return button(
+        {
+            onclick: handleLogout,
+            className:
+                'text-green-400/70 text-sm hover:text-green-400/100 transition-opacity absolute right-6 bottom-0',
+        },
+        'Logout'
+    );
 }

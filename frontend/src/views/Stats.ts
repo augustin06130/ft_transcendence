@@ -107,7 +107,6 @@ export class Graphs {
 			this.durationScoreLine.render(),
 		);
 	}
-
 }
 
 export class Stats {

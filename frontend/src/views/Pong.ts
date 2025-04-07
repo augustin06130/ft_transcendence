@@ -75,7 +75,8 @@ export default function PongGameView() {
     };
 
     const fectchTournamentTree = () => {
-        fetch('/api/tournament', {
+        const url = new URL('/api/tournament', window.location.href);
+        fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ roomId: roomId.get() }),

@@ -117,7 +117,8 @@ export default function Login() {
 			error.set('ERROR: All fields are required');
 			return;
 		}
-		fetch('/api/login', {
+        const url = new URL('/api/login',window.location.href);
+		fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

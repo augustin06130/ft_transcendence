@@ -70,7 +70,8 @@ export default function Register() {
 
 		loading.set(true);
 
-		fetch('/api/register', {
+        const url = new URL('/api/register',window.location.href);
+		fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

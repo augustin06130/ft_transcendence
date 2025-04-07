@@ -2,210 +2,166 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { db } from './main';
 import { readFileSync } from 'node:fs';
 import path from 'path';
+import { addUser, loginUser } from './googleAuth';
 
 type User = {
-	username: string;
-	email: string;
-	name: string;
-	bio: string;
-	image: string;
-	googleId: string;
+    username: string;
+    email: string;
+    name: string;
+    bio: string;
+    image: string;
+    googleId: string;
 };
 
 export function createTableUser() {
-	const sql = `
+    const sql = `
       CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        email TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL,
 		googleId TEXT NOT NULL UNIQUE,
 		bio TEXT,
         image BLOB
       )`;
-	db.run(sql, err => {
-		if (err) {
-			console.error('Error creating table:', err.message);
-		} else {
-			console.log("'users' table has been created successfully.");
-		}
-	});
-}
-
-export async function verifUser(username: string) {
-	return new Promise<any>((resolve, reject) => {
-		db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(row);
-			}
-		});
-	});
-}
-
-export async function getDuplicatesUser(username: string, email: string, googleId: string): Promise<User[]> {
-	return new Promise<User[]>((resolve, reject) => {
-		let sql = 'SELECT id FROM users WHERE username = ? OR WHERE email = ?';
-		let params = [username, email];
-		if (googleId) {
-			sql += ' OR WHERE googleId = ?';
-			params.push(googleId);
-		}
-		sql += ';';
-		db.run(sql, params, (err: any, rows: User[]) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(rows);
-			}
-		});
-	});
-}
-
-export async function isUser(username: string): Promise<boolean> {
-	return new Promise<boolean>((resolve, reject) => {
-		db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
-			if (err) {
-				console.error('Error getting user Id:', err);
-				reject(err);
-			} else {
-				resolve(!!row);
-			}
-		});
-	});
+    db.run(sql, async err => {
+        if (err) {
+            console.error('Error creating table:', err.message);
+        } else {
+            if (!(await getUserBy('username', 'Computer'))) addUser('Computer', '', '-2');
+            if (!(await getUserBy('username', 'AI'))) addUser('AI', '', '-1');
+            console.log("'users' table has been created successfully.");
+        }
+    });
 }
 
 export async function getUserBy(key: string, value: string): Promise<User> {
-	return new Promise<User>((resolve, reject) => {
-		db.get(`SELECT * FROM users WHERE ${key} = ?;`, [value], (err, user: User) => {
-			if (err) {
-				console.error('Error getting user:', err);
-				reject(err);
-			} else {
-				resolve(user);
-			}
-		});
-	});
-};
+    return new Promise<User>((resolve, reject) => {
+        db.get(`SELECT * FROM users WHERE ${key} = ?;`, [value], (err, user: User) => {
+            if (err) {
+                console.error('Error getting user:', err);
+                reject(err);
+            } else {
+                resolve(user);
+            }
+        });
+    });
+}
 
 export async function createNewUser(
-	username: string,
-	email: string,
-	googleId: string,
+    username: string,
+    email: string,
+    googleId: string
 ): Promise<number> {
-	return new Promise<number>((resolve, reject) => {
-		const sql = `
+    return new Promise<number>((resolve, reject) => {
+        const sql = `
           INSERT INTO users (username, email, googleId, image)
           VALUES (?, ?, ?, ?)
       `;
 
-		const image =
-			'data:image/png;base64,' +
-			readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
+        const image =
+            'data:image/png;base64,' +
+            readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
-		const params = [username, email, googleId, image];
+        const params = [username, email, googleId, image];
 
-		db.run(sql, params, function(err) {
-			if (err) {
-				console.error('Error creating user:', err.message);
-				reject(new Error(`Failed to create user: ${err.message}`));
-			} else {
-				console.log(`User '${username}' created successfully with ID: ${this.lastID}.`);
-				resolve(this.lastID);
-			}
-		});
-	});
+        db.run(sql, params, function (err) {
+            if (err) {
+                console.error('Error creating user:', err.message);
+                reject(new Error(`Failed to create user: ${err.message}`));
+            } else {
+                console.log(`User '${username}' created successfully with ID: ${this.lastID}.`);
+                resolve(this.lastID);
+            }
+        });
+    });
 }
 
 export async function updateProfileImage(
-	request: FastifyRequest,
-	reply: FastifyReply
+    request: FastifyRequest,
+    reply: FastifyReply
 ): Promise<void> {
-	return new Promise<void>(() => {
-		const { username } = request.query as { username: string };
-		const sql = 'UPDATE users SET image = ? WHERE username = ?;';
-		const params = [request.body, username];
-		db.run(sql, params, function(err) {
-			if (err) {
-				console.error('Error updating user image:', err.message);
-				reply.code(404).send({ error: err.message });
-			} else {
-				reply.code(204).send({});
-			}
-		});
-	});
+    return new Promise<void>(() => {
+        const { googleId } = request.query as { googleId: string };
+        const sql = 'UPDATE users SET image = ? WHERE googleId = ?;';
+        const params = [request.body, googleId];
+        db.run(sql, params, function (err) {
+            if (err) {
+                console.error('Error updating user image:', err.message);
+                reply.code(404).send({ error: err.message });
+            } else {
+                reply.code(204).send({});
+            }
+        });
+    });
 }
 
 export async function updateProfile(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-	let body = JSON.parse(request.body as string) as {
-		username: string;
-		email: string;
-		bio: string;
-	};
+    const { googleId } = request.query as { googleId: string };
+    let body = JSON.parse(request.body as string) as {
+        username: string;
+        email: string;
+        bio: string;
+    };
 
-	if (!body.username || !(await isUser(body.username))) reply.code(404);
+    if (!googleId || !(await getUserBy('googleId', googleId)))
+        throw { code: 404, message: 'Google id not found' };
 
-	let sql = 'UPDATE users\nSET ';
-	const params: string[] = [];
-	Object.entries(body).forEach(([key, value], i, array) => {
-		if (key === 'username') return;
-		sql += key + ' = ?';
-		params.push(value);
-		if (i != array.length - 1) sql += ', ';
-		else sql += '\n';
-	});
+    let sql = 'UPDATE users\nSET ';
+    const params: string[] = [];
+    Object.entries(body).forEach(([key, value], i, array) => {
+        if (key === 'googleId') return;
+        sql += key + ' = ?';
+        params.push(value);
+        if (i != array.length - 1) sql += ', ';
+        else sql += '\n';
+    });
 
-	if (!params.length) reply.code(404);
+    if (!params.length) throw { code: 404, message: 'Not params to update' };
 
-	sql += 'WHERE username = ?;';
-	params.push(body.username);
+    sql += 'WHERE googleId = ?;';
+    params.push(googleId);
 
-	console.log('body', body);
-	console.log('sql', sql);
-	console.log('params', params);
-	db.run(sql, params, function(err) {
-		if (err) {
-			console.error('Error updating user:', err.message);
-			reply.code(404);
-		} else {
-			reply.code(204);
-		}
-	});
+    db.run(sql, params, function (err) {
+        if (err) {
+            console.error('Error updating user:', err.message);
+            reply.code(404);
+        } else {
+            loginUser(googleId, reply);
+            // if (body.username)
+            //     reply.setCookie('username', body.username, {
+            //         path: '/',
+            //         sameSite: 'strict',
+            //         maxAge: 3600,
+            //     });
+            // reply.code(204);
+        }
+    });
 }
 
 export function getProfile(request: FastifyRequest, reply: FastifyReply) {
-	const { username } = request.query as { username: string };
-	console.log('username', username);
-	let sql, params;
-	sql = `SELECT username, email, bio, image FROM users WHERE username = ?;`;
-	params = [username];
-	db.get<User>(sql, params, (err, row) => {
-		if (err) {
-			console.error('Error while getting profile', err.message);
-			reply.send(404);
-		} else {
-			reply.send(row);
-		}
-	});
+    const { username } = request.query as { username: string };
+    let sql, params;
+    sql = `SELECT username, email, bio, image FROM users WHERE username = ?;`;
+    params = [username];
+    db.get<User>(sql, params, (err, row) => {
+        if (err) {
+            console.error('Error while getting profile', err.message);
+            reply.send(404);
+        } else {
+            reply.send(row);
+        }
+    });
 }
 
-// export function highest(username: string) {
-// 	return new Promise<User[]>((resolve, reject) => {
-// 		const sql = `SELECT *
-// 		FROM users
-// 		WHERE username LIKE '%\_%' ESCAPE '\' AND
-// 		SUBSTRING(username, LENGTH(username) - 3) REGEXP '^[0-9]{4}$' AND
-// 		SUBSTRING(username, LENGTH(username) - 4, 1) = '_' AND
-// 		SUBSTRING(username, LENGTH(username) - 4, 1) = '${username}';`
-//
-// 		// db.all(`SELECT * FROM users WHERE username REGEXP '^?\_....$';`, [username], (err: any, user: User[]) => {
-// 		db.all(sql, [], (err: any, user: User[]) => {
-// 			if (err) {
-// 				console.error('Error getting user:', err);
-// 				reject(err);
-// 			} else {
-// 				resolve(user);
-// 			}
-// 		});
-// 	});
-// }
+export async function getUsername(googleId: string) {
+    return new Promise<string>((resolve, reject) => {
+        db.get('SELECT username WHERE googleId = ?;', [googleId], (err, username: string) => {
+            if (err) {
+                reject();
+            } else {
+                console.log(username);
+                resolve(username);
+            }
+        });
+    });
+}
