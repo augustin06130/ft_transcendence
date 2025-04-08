@@ -12,7 +12,7 @@ function fakeSystemInfo() {
 	return CommandOutput(label, message);
 }
 
-function animatedCaret() {
+export function animatedCaret() {
 	return div({ className: "mt-4 flex items-center" },
 		span({ className: "text-green-400 mr-2" }, "$"),
 		div({ className: "h-5 w-2 bg-green-500 animate-pulse" })
