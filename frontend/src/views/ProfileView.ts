@@ -1,7 +1,6 @@
 import { div, p } from '@framework/tags';
 import TerminalBox from '@components/TerminalBox';
 import { Graphs, Stats } from './Stats';
-import { MatchDB } from 'types';
 import { getCookie } from 'cookies';
 import Profile from '@components/Profile';
 import { History } from '@components/History';
@@ -12,23 +11,6 @@ export default function ProfileView() {
 
     const stats = new Stats(username);
     const graphs = new Graphs(username);
-
-	const url = new URL('/api/matches', window.location.href)
-	url.searchParams.set('username', username);
-	url.searchParams.set('page', '0');
-
-    fetch(url, {})
-        .then(resp => {
-            if (!resp.ok) {
-                throw 'Error getching stats';
-            }
-            return resp.json();
-        })
-        .then((data: MatchDB[]) => {
-			console.log("matches", data)
-            graphs.updateData(data);
-            stats.updateData(data);
-        });
 
     return TerminalBox(
         '/profile',
@@ -62,7 +44,7 @@ export default function ProfileView() {
                     className:
                         'col-span-2  border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',
                 },
-                p({ className: 'text-xl text-green-500 font-bold' }, 'USER CHARTS'),
+                p({ className: 'text-xl text-green-500 font-bold' }, 'USER CHARTS  (over last 25 matches)'),
                 graphs.render()
             )
         )

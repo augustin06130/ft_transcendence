@@ -6,7 +6,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyJWT from '@fastify/jwt';
 import { createTableUser, getProfile, updateProfile, updateProfileImage } from './user';
 import { create_room, validate_roomId, get_tree, join_room } from './room';
-import { getMatches, getMatchesCount } from './matches';
+import { getMatches, getMatchesCount, getStats } from './matches';
 import { handleGoogle, logoutUser } from './googleAuth';
 import { createTableMatches } from './matches';
 import setupStaticLocations from './static';
@@ -111,6 +111,7 @@ function addGet(route: string, handler: (request: FastifyRequest, reply: Fastify
 }
 
 addGet('/api/matches', getMatches);
+addGet('/api/stats', getStats);
 addGet('/api/matches/count', getMatchesCount);
 addGet('/api/room', create_room);
 addGet('/api/profile', getProfile);

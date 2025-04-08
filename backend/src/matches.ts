@@ -42,19 +42,6 @@ function objectToQuestion(obj: Object) {
     );
 }
 
-// export type Match = {
-// 	player1: Client | null;
-// 	player2: Client | null;
-// 	winner: Client | null;
-// 	score1: number;
-// 	score2: number;
-// 	travel1: number;
-// 	travel2: number;
-// 	rally: number;
-// 	date: number;
-// 	duration: number;
-// };
-
 export async function addMatch(db: Database, match: Match) {
     const sql = `
 			INSERT INTO matches (${objectToStr(match)})
@@ -101,9 +88,9 @@ export function getMatches(request: FastifyRequest, reply: FastifyReply) {
         params: (string | number)[] = [];
     if (page === undefined) page = 0;
     if (username === undefined) {
-        sql = `SELECT * FROM matches LIMIT ?, ?;`;
+        sql = `SELECT * FROM matches ORDER BY date DESC LIMIT ?, ?;`;
     } else {
-        sql = `SELECT * FROM matches WHERE player1 = ? OR player2 = ? LIMIT ?, ?;`;
+        sql = `SELECT * FROM matches ORDER BY date DESC WHERE player1 = ? OR player2 = ? LIMIT ?, ?;`;
         params = [username, username];
     }
     params.push(page * pageSize, pageSize);
@@ -114,5 +101,80 @@ export function getMatches(request: FastifyRequest, reply: FastifyReply) {
         } else {
             reply.send(rows);
         }
+    });
+}
+
+export async function getStats(request: FastifyRequest, reply: FastifyReply) {
+    let { username: name } = request.query as { username: string };
+
+    let ret: Object = {};
+
+    try {
+        Object.assign(ret, await globalStat(name));
+        Object.assign(ret, await nameStat(name, 1));
+        Object.entries(await nameStat(name, 2)).forEach(([k, v]) => ((ret as any)[k] += v));
+        Object.assign(ret, await wiinerStat(name));
+    } catch (err) {
+        console.error('Error while retrieving stats', err);
+        reply.status(404);
+    }
+
+    reply.send(ret);
+}
+
+async function globalStat(player: string) {
+    const sql = `SELECT
+		COUNT(id)		as [countMatch],
+		AVG(duration)	as [avgDuration],
+		SUM(duration)	as [sumDuration],
+		MIN(date)		as [firstMatch],
+		MAX(date)		as [lastestMatch],
+		SUM(rally)		as [sumRally],
+		AVG(rally)		as [avgRally]
+		FROM matches WHERE player1 = ? OR player2 = ?;
+	`;
+
+    const params = [player, player];
+    return getPromise(sql, params);
+}
+async function nameStat(player: string, role: number) {
+    const sql = `SELECT
+		SUM(travel1)	as [sumTravel],
+		AVG(travel1)	as [avgTravel],
+		SUM(score1)		as [sumScore],
+		AVG(score1)		as [avgScore]
+		FROM matches WHERE player${role} = ?;
+	`;
+
+    const params = [player];
+    return getPromise(sql, params);
+}
+async function wiinerStat(player: string) {
+    const sql = `SELECT
+		COUNT(id)		as [countWin],
+		SUM(travel1)	as [sumTravelWin],
+		AVG(travel1)	as [avgTravelWin],
+		AVG(duration)	as [avgDurationWin],
+		SUM(duration)	as [sumDurationWin],
+		MIN(date)		as [firstMatchWin],
+		MAX(date)		as [lastestMatchWin],
+		SUM(rally)		as [sumRallyWin],
+		AVG(rally)		as [avgRallyWin]
+		FROM matches WHERE winner = ?;
+	`;
+
+    const params = [player];
+    return getPromise(sql, params);
+}
+
+async function getPromise(sql: string, params: any[]) {
+    return new Promise<any>((resolve, reject) => {
+        db.get(sql, params, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
     });
 }

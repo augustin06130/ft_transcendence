@@ -51,3 +51,26 @@ export type PongState = {
 	ballAngle: number;
 	ballSpeed: number;
 };
+
+export type MatchStatistics = {
+  avgDuration: number;
+  avgDurationWin: number;
+  avgRally: number;
+  avgRallyWin: number;
+  avgScore: number;
+  avgTravel: number;
+  avgTravelWin: number;
+  countMatch: number;
+  countWin: number;
+  firstMatch: number;
+  firstMatchWin: number;
+  lastestMatch: number;
+  lastestMatchWin: number;
+  sumDuration: number;
+  sumDurationWin: number;
+  sumRally: number;
+  sumRallyWin: number;
+  sumScore: number;
+  sumTravel: number;
+  sumTravelWin: number;
+}

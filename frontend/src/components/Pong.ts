@@ -379,14 +379,14 @@ export default class PongGame {
         this.drawGame();
     }
 
-    private drawPoint(x: number, y: number, color: string) {
-        const ctx = this.canvasElement.getContext('2d');
-        if (!ctx) return;
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, this.state.game.ballRadius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    // private drawPoint(x: number, y: number, color: string) {
+    //     const ctx = this.canvasElement.getContext('2d');
+    //     if (!ctx) return;
+    //     ctx.fillStyle = color;
+    //     ctx.beginPath();
+    //     ctx.arc(x, y, this.state.game.ballRadius, 0, Math.PI * 2);
+    //     ctx.fill();
+    // }
 
     private drawGame() {
         const ctx = this.canvasElement.getContext('2d');

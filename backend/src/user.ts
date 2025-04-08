@@ -28,7 +28,7 @@ export function createTableUser() {
             console.error('Error creating table:', err.message);
         } else {
             if (!(await getUserBy('username', 'Computer'))) addUser('Computer', '', '-2');
-            if (!(await getUserBy('username', 'AI'))) addUser('AI', '', '-1');
+            if (!(await getUserBy('username', 'Guest'))) addUser('Guest', '', '-3');
             console.log("'users' table has been created successfully.");
         }
     });

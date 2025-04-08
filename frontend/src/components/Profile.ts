@@ -31,7 +31,6 @@ function ProfileForm(
                 icon,
                 span({}, `${id.toUpperCase()}:`)
             ),
-            // editMode() ?
             input({
                 id: id,
                 type: type,
