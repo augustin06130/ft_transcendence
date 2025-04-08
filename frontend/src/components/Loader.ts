@@ -8,7 +8,7 @@ export default function Loader() {
 		},
 		div(
 			{ className: 'text-center py-8' },
-			p({ className: 'text-xl text-green-500' }, 'Loading profile data...'),
+			p({ className: 'text-xl text-green-500' }, 'Loading data...'),
 			div(
 				{ className: 'mt-4 flex justify-center' },
 				div({ className: 'h-2 w-2 bg-green-500 rounded-full animate-pulse mr-1' }),

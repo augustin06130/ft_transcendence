@@ -84,13 +84,14 @@ export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
 
 export function getMatches(request: FastifyRequest, reply: FastifyReply) {
     let { username, page } = request.query as { username: string; page: number };
-    let sql,
-        params: (string | number)[] = [];
+	let sql = 'SELECT * FROM matches ';
+    // let sql = 'SELECT * FROM matches ';
+    let params: (string | number)[] = [];
     if (page === undefined) page = 0;
     if (username === undefined) {
-        sql = `SELECT * FROM matches ORDER BY date DESC LIMIT ?, ?;`;
+        sql += 'ORDER BY date DESC LIMIT ?, ?;';
     } else {
-        sql = `SELECT * FROM matches ORDER BY date DESC WHERE player1 = ? OR player2 = ? LIMIT ?, ?;`;
+        sql += 'WHERE player1 = ? OR player2 = ? ORDER BY date DESC  LIMIT ?, ?;';
         params = [username, username];
     }
     params.push(page * pageSize, pageSize);

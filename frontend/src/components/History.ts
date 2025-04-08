@@ -18,7 +18,6 @@ export function History(name: string | null = null) {
                 return resp.json();
             })
             .then((data: { count: number }) => {
-                console.log('data', data);
                 updateFooter(data.count);
             });
     }
@@ -38,7 +37,6 @@ export function History(name: string | null = null) {
             })
             .then((data: MatchDB[]) => {
                 getMaxPage();
-                console.log('data', data);
                 updateTable(data);
             });
     }

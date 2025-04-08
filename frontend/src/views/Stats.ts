@@ -37,9 +37,9 @@ export class Graphs {
                 return resp.json();
             })
             .then((data: MatchDB[]) => {
-                console.log('matches', data);
                 this.updateData(data);
-            });
+            })
+            .catch(err => console.log(err));
     }
 
     private setGameModePie(matches: MatchDB[]) {
@@ -196,7 +196,6 @@ export class Stats {
                 return resp.json();
             })
             .then((data: MatchStatistics) => {
-                console.log('stats', data);
                 this.updateData(data);
             })
             .catch(err => console.log(err));
