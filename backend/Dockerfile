@@ -11,6 +11,7 @@ COPY ./* /backend/
 
 RUN npm install
 RUN npm install -g nodemon
+RUN npm install @types/jsonwebtoken
 RUN npm install fastify@5.0.0 \
 	@fastify/cookie@11.0.0 \
 	ws \

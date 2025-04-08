@@ -1,16 +1,17 @@
 import { FastifyRequest } from 'fastify';
 import { WebSocket } from '@fastify/websocket';
 import { Database } from 'sqlite3';
-import { saveMessage, getConversationMessages } from './db'; // Assurez-vous d'ajouter ces fonctions à db.ts
+import { saveMessage, getConversationMessages } from './db';
+import { verifyToken } from './auth';
 
 // Stockage des connexions WebSocket actives
 const activeConnections: Map<string, Set<WebSocket>> = new Map();
 
-// Add these interfaces
 interface ChatMessage {
-    type: string;
-    [key: string]: any;
-  }
+  type: string;
+  token?: string;
+  [key: string]: unknown;
+}
 
   interface SendMessageData extends ChatMessage {
     type: 'send_message';
@@ -32,67 +33,81 @@ interface ChatMessage {
     return username;
   }
 
-export function setupChatWebSocket(socket: WebSocket, request: FastifyRequest, db: Database) {
-    const username = request.session.username;
-    if (!username) {
-        socket.send(JSON.stringify({
-            type: 'error',
-            message: 'Vous devez être connecté'
-        }));
-        socket.close();
-        return;
-    }
 
-    // Ajouter la connexion aux connexions actives
+export function setupChatWebSocket(socket: WebSocket, request: FastifyRequest, db: Database): void {
+  // 1. Authentification initiale
+  const protocols = request.headers['sec-websocket-protocol'];
+  const token = Array.isArray(protocols) ? protocols[0] : protocols || '';
+
+  try {
+    const { username, userId } = verifyToken(token);
+
+    // 2. Gestion des connexions actives
     if (!activeConnections.has(username)) {
-        activeConnections.set(username, new Set());
+      activeConnections.set(username, new Set());
     }
-    activeConnections.get(username)?.add(socket);
+    const userConnections = activeConnections.get(username)!;
+    userConnections.add(socket);
 
+    // 3. Gestion des messages
     socket.on('message', async (message: string) => {
-        try {
-            const data = JSON.parse(message);
+      try {
+        const data = JSON.parse(message);
 
-            switch (data.type) {
-                case 'send_message':
-                    await handleSendMessage(username, data, db);
-                    break;
+        // Vérification du token à chaque message
+        if (!data.token) throw new Error('Token manquant');
+        const { username: sender } = verifyToken(data.token);
 
-                case 'load_conversation':
-                    await handleLoadConversation(username, data, socket, db);
-                    break;
-            }
-        } catch (error) {
-            console.error('Erreur de traitement du message:', error);
-            socket.send(JSON.stringify({
-                type: 'error',
-                message: 'Erreur de traitement du message'
-            }));
+        if (sender !== username) {
+          throw new Error('Authentification invalide');
         }
+
+        switch (data.type) {
+            case 'send_message':
+                await handleSendMessage(username, data, db);
+                break;
+
+            case 'load_conversation':
+                await handleLoadConversation(username, data, socket, db);
+                break;
+        }
+    }  catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      console.error('Erreur de message:', errorMessage);
+
+      socket.send(JSON.stringify({
+        type: 'error',
+        message: errorMessage
+      }));
+    }
     });
 
     socket.on('close', () => {
-        // Supprimer la connexion des connexions actives
-        const userConnections = activeConnections.get(username);
-        if (userConnections) {
-            userConnections.delete(socket);
-            if (userConnections.size === 0) {
-                activeConnections.delete(username);
-            }
-        }
+      userConnections?.delete(socket);
+      if (userConnections?.size === 0) {
+        activeConnections.delete(username);
+      }
     });
+
+  } catch (error) {
+    socket.send(JSON.stringify({
+      type: 'error',
+      message: 'Authentification échouée'
+    }));
+    socket.close();
+  }
 }
 
   // Improved message handling
-    async function handleSendMessage(
-        senderUsername: string,
-        data: SendMessageData,
-        db: Database
+async function handleSendMessage(
+    senderUsername: string,
+    data: SendMessageData,
+    db: Database
     ) {
-        // Validate message content
-        if (!data.message || data.message.length > 1000) {
-        throw new Error('Invalid message content');
-        }
+    // Validate message content
+    if (!data.message || data.message.length > 1000) {
+    throw new Error('Invalid message content');
+    }
     const { receiver, message } = data;
 
     // Récupérer les ID des utilisateurs

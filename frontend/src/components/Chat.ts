@@ -449,6 +449,7 @@ export default class ChatPage {
   messages: Message[];
   newMessage: string;
   private socket: WebSocket | null = null;
+  private authToken: string;
 
   constructor() {
     this.friends = [];
@@ -461,7 +462,10 @@ export default class ChatPage {
     // Récupérer l'utilisateur actuel depuis le session storage ou le contexte
     this.getCurrentUser();
 
-    // Initialiser la connexion WebSocket
+    this.authToken = localStorage.getItem('authToken') || '';
+    if (!this.authToken) {
+      throw new Error('Utilisateur non authentifié');
+    }
     this.initWebSocket();
   }
 
@@ -482,13 +486,24 @@ export default class ChatPage {
 
 
   private initWebSocket() {
-    // Utilisez le host actuel pour la connexion WebSocket
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const connect = (attempt = 0) => {
-      const maxDelay = 30000; // 30s max delay
-      const delay = Math.min(1000 * Math.pow(2, attempt), maxDelay);
+      // Récupérer le token JWT depuis le stockage local
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+          console.error('No authentication token found');
+          return;
+      }
 
-      this.socket = new WebSocket(`${wsProtocol}//${window.location.host}/chat-ws`);
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      // Utilisez le host actuel pour la connexion WebSocket
+      // const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const connect = (attempt = 0) => {
+        const maxDelay = 30000; // 30s max delay
+        const delay = Math.min(1000 * Math.pow(2, attempt), maxDelay);
+
+      this.socket = new WebSocket(
+        `${wsProtocol}//${window.location.host}/chat-ws`,
+        [this.authToken]
+      );
 
       this.socket.onopen = () => {
         console.log('WebSocket connected');
@@ -539,6 +554,7 @@ export default class ChatPage {
 
     connect();
   }
+
   private handleNewMessage(messageData: any) {
     // Vérifier si le message provient de l'ami sélectionné ou est destiné à l'utilisateur actuel
     const senderFriend = this.findFriendByName(messageData.sender);
@@ -610,33 +626,24 @@ export default class ChatPage {
     return this.friends.find(f => f.name === name);
   }
 
-  // selectFriend(friend: Friend) {
-  //   this.selectedFriend = friend;
-
-  //   // Charger l'historique de la conversation via WebSocket
-  //   if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-  //     this.socket.send(JSON.stringify({
-  //       type: 'load_conversation',
-  //       target: friend.name
-  //     }));
-  //   } else {
-  //     console.error('WebSocket non connecté. Impossible de charger la conversation.');
-  //   }
-
-  //   const el = document.getElementById("renderChatArea");
-  //   el?.replaceChildren(this.renderChatArea());
-  // }
-
-  selectFriend(friend: Friend) {
-    this.selectedFriend = friend;
-    this.loadConversation(friend);
-    this.scrollToBottom(); // Scroll after loading new conversation
-    this.updateUI();
-  }
+selectFriend(friend: Friend) {
+  this.selectedFriend = friend;
+  this.loadConversation(friend);
+  this.scrollToBottom(); // Scroll after loading new conversation
+  this.updateUI();
+}
 
 // Improved message sending
 private async sendMessage(e: Event) {
   e.preventDefault();
+
+  if (this.socket?.readyState === WebSocket.OPEN) {
+    this.socket.send(JSON.stringify({
+      ...e,
+      token: this.authToken
+    }));
+  }
+
 
   if (!this.newMessage.trim() || !this.selectedFriend || !this.socket) return;
 
@@ -835,7 +842,7 @@ private handleWebSocketError(error: any) {
         p("Encryption: Enabled • Channel: Secure")
       ),
       ...msgElements,
-      div({ id: "messagesEnd" }) // Auto-scroll anchor
+      div({ id: "messagesEnd" })
     );
   }
 

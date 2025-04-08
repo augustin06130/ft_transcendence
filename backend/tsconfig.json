@@ -111,6 +111,8 @@
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
     "rootDir": "src",
     "outDir": "./dist",
+
+    "types": ["node"],
     // "typeRoots": ["./node_modules/@types", "./types"]
   }
 }
