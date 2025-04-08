@@ -35,6 +35,10 @@ export default class PongGame {
         computerSpeed: 6,
         paddleWidth: 10,
         intervalId: null,
+        lastTime: 0,
+        dt: 5,
+        speedX: 0,
+        speedY: 0,
     };
 
     constructor(kill: () => void) {
@@ -198,7 +202,10 @@ export default class PongGame {
             this.gameState.playerHeight, // 6
             this.gameState.computerHeight, // 7
             this.gameState.ballRadius, // 8
-            this.gameState.paddleWidth // 9
+            this.gameState.paddleWidth, // 9
+            this.gameState.speedX, //10
+            this.gameState.speedY, //11
+            this.gameState.dt //12
         );
     }
 
@@ -217,17 +224,27 @@ export default class PongGame {
         if (this.dir++ % 2) {
             this.gameState.ballAngle = (this.gameState.ballAngle + Math.PI) % (2 * Math.PI);
         }
-        this.gameState.ballSpeed = 1;
+        this.gameState.ballSpeed = 0.4;
 
         this.broadcastGame();
+        this.gameState.lastTime = 0;
         setTimeout(() => {
             this.gameState.intervalId = setInterval(this.updateGame, 5) as any;
         }, 1000);
     }
 
     private updateGame() {
-        this.gameState.ballX += this.gameState.ballSpeed * Math.cos(this.gameState.ballAngle);
-        this.gameState.ballY += -this.gameState.ballSpeed * Math.sin(this.gameState.ballAngle);
+        let last = this.gameState.lastTime;
+        let now = Date.now();
+        this.gameState.dt = now - last;
+        this.gameState.lastTime = now;
+
+        if (!last) return;
+
+        this.gameState.speedX = this.gameState.ballSpeed * Math.cos(this.gameState.ballAngle);
+        this.gameState.speedY = -this.gameState.ballSpeed * Math.sin(this.gameState.ballAngle);
+        this.gameState.ballX += this.gameState.speedX * this.gameState.dt;
+        this.gameState.ballY += this.gameState.speedY * this.gameState.dt;
 
         if (
             this.gameState.ballY < this.gameState.ballRadius ||
@@ -243,8 +260,8 @@ export default class PongGame {
         }
         if (this.gameState.ballX > 1000 - this.gameState.ballRadius / 2) {
             this.gameState.playerScore++;
-            this.startTurn();
-        }
+			this.startTurn();
+		}
         this.broadcastGame();
     }
 
@@ -257,7 +274,7 @@ export default class PongGame {
             const pos =
                 (this.gameState.ballY - this.gameState.playerY) / this.gameState.playerHeight;
             this.gameState.ballAngle = ((Math.PI * (1 - 2 * pos)) / 4) % (2 * Math.PI);
-            this.gameState.ballSpeed += 0.2;
+            this.gameState.ballSpeed += 0.04;
         }
     }
 
@@ -270,7 +287,7 @@ export default class PongGame {
             const pos =
                 (this.gameState.ballY - this.gameState.computerY) / this.gameState.computerHeight;
             this.gameState.ballAngle = ((Math.PI * (2 * pos + 3)) / 4) % (2 * Math.PI);
-            this.gameState.ballSpeed += 0.2;
+            this.gameState.ballSpeed += 0.04;
             this.match!.rally++;
         }
     }
