@@ -42,7 +42,7 @@ function objectToQuestion(obj: Object) {
     );
 }
 
-export async function addMatch(db: Database, match: Match) {
+export function addMatch(db: Database, match: Match) {
     const sql = `
 			INSERT INTO matches (${objectToStr(match)})
 			VALUES (${objectToQuestion(match)})
@@ -68,24 +68,23 @@ export function getMatchesCount(request: FastifyRequest, reply: FastifyReply) {
     const params = [username, username];
     let sql;
     if (username) {
-        sql = 'SELECT COUNT (id) FROM matches WHERE player1 = ? OR player2 = ?';
+        sql = 'SELECT CEIL(COUNT() / 25.0) as [count] FROM matches WHERE player1 = ? OR player2 = ?';
     } else {
-        sql = 'SELECT COUNT (id) FROM matches';
+        sql = 'SELECT CEIL(COUNT() / 25.0) as [count] FROM matches';
     }
     db.get(sql, params, (err, count: any) => {
         if (err) {
             console.error('Error counting maches:', err.message);
             reply.code(400);
         } else {
-            reply.code(200).send({ count: Math.ceil(count['COUNT (id)'] / pageSize) });
+            reply.code(200).send(count);
         }
     });
 }
 
 export function getMatches(request: FastifyRequest, reply: FastifyReply) {
     let { username, page } = request.query as { username: string; page: number };
-	let sql = 'SELECT * FROM matches ';
-    // let sql = 'SELECT * FROM matches ';
+    let sql = 'SELECT * FROM matches ';
     let params: (string | number)[] = [];
     if (page === undefined) page = 0;
     if (username === undefined) {
@@ -125,7 +124,7 @@ export async function getStats(request: FastifyRequest, reply: FastifyReply) {
 
 async function globalStat(player: string) {
     const sql = `SELECT
-		COUNT(id)		as [countMatch],
+		COUNT()		as [countMatch],
 		AVG(duration)	as [avgDuration],
 		SUM(duration)	as [sumDuration],
 		MIN(date)		as [firstMatch],
@@ -152,7 +151,7 @@ async function nameStat(player: string, role: number) {
 }
 async function wiinerStat(player: string) {
     const sql = `SELECT
-		COUNT(id)		as [countWin],
+		COUNT()		as [countWin],
 		SUM(travel1)	as [sumTravelWin],
 		AVG(travel1)	as [avgTravelWin],
 		AVG(duration)	as [avgDurationWin],
