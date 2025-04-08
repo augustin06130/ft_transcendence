@@ -24,3 +24,5 @@ fclean: clean
 	docker system prune -af --volumes
 	docker network prune -f
 	docker volume prune -f
+
+cli: 
