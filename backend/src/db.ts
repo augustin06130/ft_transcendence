@@ -62,7 +62,7 @@ export async function CreateNewUser(
   username: string,
   hashedPassword: string,
   email: string,
-  db: Database
+  db: Database,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
       const sql = `
@@ -87,8 +87,6 @@ export async function CreateNewUser(
 export async function EditUserInfo(
   userId: number,
   username: string,
-  hashedPassword: string,
-  email: string,
   imagePath: string | null,
   db: Database
 ): Promise<void> {
@@ -97,12 +95,12 @@ export async function EditUserInfo(
       UPDATE users
       SET username = ?, password = ?, email = ?
     `;
-    const params: (string | number | Buffer)[] = [username, hashedPassword, email];
+    const params: (string | number | Buffer)[] = [username];
 
     // Ajout de la mise à jour de l'image si un chemin est fourni
     if (imagePath) {
       sql += `, data = ?`;
-      insertImage(userId, imagePath, db, params);
+      insertImage(userId, imagePath, db);
     }
 
     sql += ` WHERE id = ?`;
@@ -121,11 +119,25 @@ export async function EditUserInfo(
 }
 
 
-async function insertImage(userId: number, imagePath: string, db: Database, params: any) {
-  const binaryData = fs.readFileSync(imagePath);
-  params.push(binaryData);
-  await db.run(`UPDATE users SET data = ? WHERE id = ?`, binaryData, userId);
-  console.log(`Image ajoutée pour l'utilisateur ID ${userId}`);
+export async function insertImage(userId: number, imagePath: string, db: Database): Promise<void> {
+  try {
+    const binaryData = await fs.promises.readFile(imagePath);
+    await new Promise<void>((resolve, reject) => {
+      db.run(
+        `UPDATE users SET data = ?, name = ? WHERE id = ?`,  // modifier ca pour qu'il soit compatible avec la table sql
+        [binaryData, imagePath,userId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+    
+    console.log(`Image par défaut ajoutée pour l'utilisateur ID ${userId}`);
+  } catch (err) {
+    console.error(`Erreur lors de l'insertion de l'image :`, err);
+    throw err; // Propage l'erreur pour la gestion dans NewUser
+  }
 }
 
 async function retrieveImage(userId: number, outputPath: string, db: Database) {
@@ -138,7 +150,6 @@ async function retrieveImage(userId: number, outputPath: string, db: Database) {
                   reject(err);
                   return;
               }
-
               if (row && row.data) {
                   fs.writeFileSync(outputPath, row.data);
                   console.log(`Image récupérée et sauvegardée sous ${outputPath}`);

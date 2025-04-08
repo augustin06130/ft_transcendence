@@ -1,7 +1,8 @@
 import { FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt';
-import {CheckUserExists, CreateNewUser} from './db';
+import {CheckUserExists, CreateNewUser, insertImage} from './db';
 import { Database } from 'sqlite3';
+import path from 'path';
 
 declare module '@fastify/session' {
     interface FastifySessionObject {
@@ -28,7 +29,9 @@ export async function NewUser(
       const hashedPassword = await bcrypt.hash(password, 10);
       console.log(`Hashed password: ${hashedPassword}`);
 
-      const userId = await CreateNewUser(username, hashedPassword, email, db);
+      let userId = await CreateNewUser(username, hashedPassword, email, db);
+      const imagePath = path.resolve(__dirname, "/backend/dist/default-avatar.png");
+      await insertImage(userId, imagePath, db);
       console.log(`User created with ID: ${userId}`);
 
       return reply.status(201).send({ success: true, message: 'Utilisateur créé avec succès', userId });
@@ -37,3 +40,5 @@ export async function NewUser(
       return reply.status(500).send({ error: 'Erreur interne du serveur' });
   }
 }
+
+

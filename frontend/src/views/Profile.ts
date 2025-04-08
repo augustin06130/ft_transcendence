@@ -184,16 +184,14 @@ export default function Profile() {
     if (!checkAuth()) return;
     
     loading.set(true);
-    fetch('/getUser', {
-      method: 'POST', 
+    fetch(`/getUser?userId=${encodeURIComponent(userId.get())}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: userId.get(),
-      }),
+      }
     })
-      .then((response) => {
+    .then((response) => {
+        console.log("Fetching user profile for userId:", userId.get());
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
         }
@@ -203,8 +201,6 @@ export default function Profile() {
         console.log("Full response data:", data);
         if (data.success && data.userData) {
           username.set(data.userData.username || "");
-          email.set(data.userData.email || "");
-          phone.set(data.userData.phone || "");
           bio.set(data.userData.bio || "");
           profilePicture.set(data.userData.profilePicture || "");
           dataLoaded.set(true);
@@ -311,9 +307,9 @@ export default function Profile() {
   }
 
   // Initialize component - fetch user data
-  // if (!dataLoaded.get() && !loading.get()) {
+  if (dataLoaded.get() && loading.get()) {
     fetchUserProfile();
-  // }
+  }
 
   // Show loading state while fetching data
   if (loading.get() && !dataLoaded.get()) {

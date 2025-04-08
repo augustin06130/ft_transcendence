@@ -1,6 +1,7 @@
 import { div, p, button, span } from "@framework/tags";
 import TerminalBox from "@components/TerminalBox";
 import CommandOutput from "@components/CommandOutput";
+import UseState from "@framework/UseState";
 import { isLogged } from "@framework/auth";
 
 function fakeSystemInfo() {
@@ -31,6 +32,7 @@ function footer() {
 
 export default function Home() {
   // prettier-ignore
+  const username = UseState("", () => {});
   const el = [
     div({ className: "space-y-4" },
       fakeSystemInfo(),
@@ -38,7 +40,8 @@ export default function Home() {
     ),
     footer(),
   ];
-  return TerminalBox("terminal@user:~", ...el);
+  // username: username.get(),
+  return TerminalBox(`terminal@${isLogged.get() ? username.get() : "user"}:~ `, ...el);
 }
 
 function LogoutButton() {

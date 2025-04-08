@@ -62,8 +62,8 @@ app.post('/logout', async (request, reply) => {
 });
 
 app.post('/profile', async (request, reply) => {
-  const {username, userpassword, email, phone, bio, profilePicture} = request.body as { username: string, userpassword: string, email?: string, phone?: string, bio?: string, profilePicture?: string}
-  return UserProfile( username, userpassword, request, reply, db, email, phone, bio, profilePicture);
+  const {username, bio, profilePicture} = request.body as { username: string, bio?: string, profilePicture?: string}
+  return UserProfile( username, request, reply, db, bio, profilePicture);
 });
 
 app.post('/getUser', async (request, reply) => {

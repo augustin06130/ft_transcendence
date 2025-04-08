@@ -228,10 +228,10 @@ function LoginForm(handleSubmit: (e: Event) => void, error: () => string, loadin
   );
 }
 
+export const username = UseState("", () => {});
 export default function Login() {
   const router = UseRouter();
 
-  const username = UseState("", () => {});
   const password = UseState("", () => {});
   const error = UseState("", () => {});
   const loading = UseState(false, () => {});

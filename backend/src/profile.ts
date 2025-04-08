@@ -8,9 +8,6 @@ declare module '@fastify/session' {
         username?: string;
         userId?: number;
         id: number;
-        // username: string;
-        email: string;
-        phone: string;
         bio: string;
 
     }
@@ -18,49 +15,31 @@ declare module '@fastify/session' {
 
 export async function UserProfile(
     username: string,
-    userpassword: string,
     request: FastifyRequest,
     reply: FastifyReply,
     db: Database,
-    email?: string,
-    phone?: string,
     bio?: string,
     profilePicture?: string
 ) {
-    // Vérification de l'authentification de l'utilisateur
-    if (!username || !userpassword) {
-        return reply.status(400).send({ error: 'Nom d\'utilisateur et mot de passe requis' });
+    if (!username) {
+        return reply.status(400).send({ error: 'Nom d\'utilisateur requis' });
     }
 
     try {
         const user = await VerifUser(username, db);
-        if (user && bcrypt.compareSync(userpassword, user.password)) {
-            // Vérifier si l'utilisateur est autorisé à modifier ce profil
+        if (user) {
             if (request.session.username !== username) {
                 return reply.status(403).send({ success: false, message: 'Non autorisé à modifier ce profil' });
             }
-
-            // Hacher le mot de passe si nécessaire
-            const hashedPassword = userpassword ? bcrypt.hashSync(userpassword, 10) : user.password;
-
-            // Mettre à jour les informations de l'utilisateur
             await EditUserInfo(
-                user.id, // ID de l'utilisateur
-                username, // Nom d'utilisateur
-                hashedPassword, // Mot de passe haché
-                email || user.email, // Email
-                profilePicture || null, // Chemin de l'image
-                db // Base de données
+                user.id,
+                username,
+                profilePicture || null,
+                db
             );
-
-            // Mettre à jour les autres champs (phone, bio) si nécessaire
-            if (phone || bio) {
+            if (bio) {
                 const updateFields = [];
                 const updateValues = [];
-                if (phone) {
-                    updateFields.push('phone = ?');
-                    updateValues.push(phone);
-                }
                 if (bio) {
                     updateFields.push('bio = ?');
                     updateValues.push(bio);
