@@ -13,6 +13,9 @@ export type Match = {
 	duration: number;
 };
 export type MatchDB = Omit<Match, 'player1' | 'player2' | 'winner'> & { player1: string, player2: string, winner: String }
+export type GameMode = 'ai' | 'local' | 'remote';
+
+type Role = 'player1' | 'player2' | 'local' | 'spec';
 
 export type MatchTree = {
 	match: Match;

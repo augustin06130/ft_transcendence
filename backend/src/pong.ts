@@ -217,7 +217,7 @@ export default class PongGame {
         if (this.dir++ % 2) {
             this.gameState.ballAngle = (this.gameState.ballAngle + Math.PI) % (2 * Math.PI);
         }
-        this.gameState.ballSpeed = 2;
+        this.gameState.ballSpeed = 1;
 
         this.broadcastGame();
         setTimeout(() => {
