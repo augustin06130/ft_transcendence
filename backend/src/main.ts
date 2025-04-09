@@ -12,7 +12,6 @@ import { createTableMatches } from './matches';
 import setupStaticLocations from './static';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import { req } from 'pino-std-serializers';
 
 dotenv.config();
 
@@ -66,7 +65,6 @@ const authorizedRoutes = new Set([
 fastify.addHook('onRequest', async (request, reply) => {
     try {
         if (!authorizedRoutes.has(request.routeOptions.url as string)) {
-			console.log('coucou');
             await request.jwtVerify({ onlyCookie: true });
         }
     } catch (err) {
