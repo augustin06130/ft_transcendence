@@ -74,3 +74,10 @@ export type MatchStatistics = {
   sumTravel: number;
   sumTravelWin: number;
 }
+
+export type FriendShip = {
+    username: string;
+    friend: string;
+    date: number;
+    room: string;
+};

@@ -6,8 +6,8 @@ import Project from '@views/Project';
 import Contact from '@views/Contact';
 import PongGameView from '@views/Pong';
 import ChatView from '@views/Chat';
-import Room from '@views/Room';
 import HistoryView from '@views/HistoryView';
+import RoomView from '@views/RoomView';
 
 export const baseLinks = {
 	'/': {
@@ -39,7 +39,7 @@ export const baseLinks = {
 		label: '',
 	},
 	'/room': {
-		view: Room,
+		view: RoomView,
 		label: 'Pong',
 	},
 	'/chat': {

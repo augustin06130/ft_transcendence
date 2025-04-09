@@ -23,7 +23,7 @@ export function createTableMatches() {
         if (err) {
             console.error('Error creating stats table:', err.message);
         } else {
-            console.log("The table 'matches' has been created successfully.");
+            console.log("'matches' table has been created successfully.");
         }
     });
 }

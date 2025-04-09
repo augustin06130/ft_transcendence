@@ -4,7 +4,14 @@ import fastifyWebsocket from '@fastify/websocket';
 import fastifyFormbody from '@fastify/formbody';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJWT from '@fastify/jwt';
-import { createTableUser, getProfile, getUsernameList, isUser, updateProfile, updateProfileImage } from './user';
+import {
+    createTableUser,
+    getProfile,
+    getUsernameList,
+    isUser,
+    updateProfile,
+    updateProfileImage,
+} from './user';
 import { create_room, validate_roomId, get_tree, join_room } from './room';
 import { getMatches, getMatchesCount, getStats } from './matches';
 import { handleGoogle, logoutUser } from './googleAuth';
@@ -12,6 +19,7 @@ import { createTableMatches } from './matches';
 import setupStaticLocations from './static';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { addFriend, createTableFriends, getFriends, removeFriend } from './friends';
 
 dotenv.config();
 
@@ -118,7 +126,12 @@ addGet('/api/matches/count', getMatchesCount);
 addGet('/api/room', create_room);
 addGet('/api/profile', getProfile);
 addGet('/api/user', isUser);
-addGet('/api/profile/list', getUsernameList)
+addGet('/api/profile/list', getUsernameList);
+
+addGet('/api/friend/all', getFriends);
+addPost('/api/friend/add', addFriend);
+addPost('/api/friend/remove', removeFriend);
+
 addPost('/api/tournament', get_tree);
 addPost('/api/room', validate_roomId);
 addPost('/api/profile', updateProfile);
@@ -150,11 +163,17 @@ function connectToDatabase() {
     return db;
 }
 
+function createDatabase() {
+    createTableUser();
+    createTableMatches();
+    createTableFriends();
+    db.run('PRAGMA foreign_keys = ON;');
+}
+
 const start = async () => {
     try {
-        createTableUser();
-        createTableMatches();
-        db.run('PRAGMA foreign_keys = ON;');
+		createDatabase();
+
         await fastify.listen({ port, host });
         console.log('Server is listening on https://localhost:8080');
     } catch (err) {

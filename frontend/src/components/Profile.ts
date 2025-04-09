@@ -7,15 +7,19 @@ import { switchPage } from '@framework/Router';
 import { getCookie } from 'cookies';
 import popOver from './PopOver';
 import Loader from './Loader';
+import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
 
 function ProfileForm(
     handleSubmit: (e: Event) => void,
     editMode: () => boolean,
     toggleEditMode: () => void,
+    toggleFriend: () => void,
     username: UseStateType<string>,
     email: UseStateType<string>,
     bio: UseStateType<string>,
-    profilePicture: UseStateType<string>
+    profilePicture: UseStateType<string>,
+    isFriend: UseStateType<boolean>
 ) {
     function inputL(
         id: string,
@@ -133,18 +137,26 @@ function ProfileForm(
 
     return div(
         {},
-        p(
-            { className: ' text-xl4 text-green-500 font-bold' },
-            'USER PROFILE',
+        div(
+            { className: 'flex' },
+            p({ className: 'text-xl text-green-500 font-bold' }, 'USER PROFILE'),
             username.get() === getCookie('username')
                 ? button(
                       {
-                          className: 'hover:bg-green-500/20 gap-2 ml-2',
-                          event: {
-                              click: toggleEditMode,
-                          },
+                          className: 'hover:bg-green-500/20 ml-2 h-8',
+                          onclick: toggleEditMode,
                       },
                       editMode() ? SaveIconSVG : EditIconSVG
+                  )
+                : null,
+            div({ className: 'flex-auto' }),
+            username.get() !== getCookie('username') && !editMode()
+                ? button(
+                      {
+                          className: 'hover:bg-green-500/20',
+                          onclick: toggleFriend,
+                      },
+                      isFriend.get() ? RemoveFriendIconSVG : AddFriendIconSVG
                   )
                 : null
         ),
@@ -168,6 +180,7 @@ export default function Profile(name: string) {
     const email = UseState('', () => {});
     const bio = UseState('', () => {});
     const profilePicture = UseState('', () => {});
+    const isFriend = UseState(false, () => {});
     const editMode = UseState(false, () => {});
 
     function checkAuth() {
@@ -196,9 +209,7 @@ export default function Profile(name: string) {
                 setUserData(data);
                 mainDiv.replaceChildren(getProfile());
             })
-            .catch(err => {
-                popOver.show(err);
-            });
+            .catch(err => popOver.show(err));
     }
 
     function toggleEditMode() {
@@ -246,6 +257,32 @@ export default function Profile(name: string) {
         email.set(data.email || '');
         bio.set(data.bio || '');
         profilePicture.set(data.image || '');
+        isFriend.set(data.isfriend || false);
+    }
+
+    function toggleFriend() {
+        if (isFriend.get()) {
+            friend('remove');
+        } else {
+            friend('add');
+        }
+		switchPage('/profile', username.get());
+    }
+
+    function friend(action: 'add' | 'remove') {
+        const url = new URL(`/api/friend/${action}`, window.location.href);
+        if (getCookie('username') === username.get()) return;
+        fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                username: getCookie('username'),
+                friend: username.get(),
+            }),
+        })
+            .then(resp => {
+                if (!resp.ok) throw `Error ${action} friendship`;
+            })
+            .catch(err => popOver.show(err));
     }
 
     fetchUserProfile();
@@ -255,10 +292,12 @@ export default function Profile(name: string) {
             handleSubmit,
             editMode.get,
             toggleEditMode,
+            toggleFriend,
             username,
             email,
             bio,
-            profilePicture
+            profilePicture,
+            isFriend
         );
 
     const mainDiv = div({}, Loader());

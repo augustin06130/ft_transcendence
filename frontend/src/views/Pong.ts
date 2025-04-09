@@ -4,7 +4,7 @@ import TournamentOverlay from '@components/TournamenOverlay';
 import { div, button, p, h1 } from '@framework/tags';
 import UseState from '@framework/UseState';
 import popOver from '@components/PopOver';
-import { roomId } from './Room';
+import { roomId } from '@components/Room';
 
 export let game: PongGame | null = null;
 

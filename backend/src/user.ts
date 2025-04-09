@@ -3,6 +3,7 @@ import { db } from './main';
 import { readFileSync } from 'node:fs';
 import path from 'path';
 import { addUser, loginUser } from './googleAuth';
+import { isFriend } from './friends';
 
 type User = {
     username: string;
@@ -21,7 +22,8 @@ export function createTableUser() {
         email TEXT NOT NULL,
 		googleId TEXT NOT NULL UNIQUE,
 		bio TEXT,
-        image BLOB
+        image BLOB,
+		roomId TEXT
       )`;
     db.run(sql, async err => {
         if (err) {
@@ -67,7 +69,7 @@ export async function createNewUser(
         db.run(sql, params, function (err) {
             if (err) {
                 console.error('Error creating user:', err.message);
-                reject(new Error(`Failed to create user: ${err.message}`));
+                reject(`Failed to create user: ${err.message}`);
             } else {
                 console.log(`User '${username}' created successfully with ID: ${this.lastID}.`);
                 resolve(this.lastID);
@@ -76,26 +78,21 @@ export async function createNewUser(
     });
 }
 
-export async function updateProfileImage(
-    request: FastifyRequest,
-    reply: FastifyReply
-): Promise<void> {
-    return new Promise<void>(() => {
-        const { googleId } = request.query as { googleId: string };
-        const sql = 'UPDATE users SET image = ? WHERE googleId = ?;';
-        const params = [request.body, googleId];
-        db.run(sql, params, function (err) {
-            if (err) {
-                console.error('Error updating user image:', err.message);
-                reply.code(404).send({ error: err.message });
-            } else {
-                reply.code(204).send({});
-            }
-        });
+export async function updateProfileImage(request: FastifyRequest, reply: FastifyReply) {
+    const { googleId } = request.query as { googleId: string };
+    const sql = 'UPDATE users SET image = ? WHERE googleId = ?;';
+    const params = [request.body, googleId];
+    db.run(sql, params, function (err) {
+        if (err) {
+            console.error('Error updating user image:', err.message);
+            reply.code(404).send({ error: err.message });
+        } else {
+            reply.code(204).send({});
+        }
     });
 }
 
-export async function updateProfile(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+export async function updateProfile(request: FastifyRequest, reply: FastifyReply) {
     const { googleId } = request.query as { googleId: string };
     let body = JSON.parse(request.body as string) as {
         username: string;
@@ -140,16 +137,18 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
     });
 }
 
-export function getProfile(request: FastifyRequest, reply: FastifyReply) {
+export async function getProfile(request: FastifyRequest, reply: FastifyReply) {
     const { username } = request.query as { username: string };
     let sql, params;
     sql = `SELECT username, email, bio, image FROM users WHERE username = ?;`;
     params = [username];
+    let isF = await isFriend((request.user as any).username, username);
     db.get<User>(sql, params, (err, row) => {
         if (err) {
             console.error('Error while getting profile', err.message);
             reply.send(404);
         } else {
+            (row as any)['isfriend'] = isF;
             reply.send(row);
         }
     });
@@ -170,7 +169,7 @@ export async function getUsername(googleId: string) {
 
 export async function getUsernameList(request: FastifyRequest, reply: FastifyReply) {
     const { username } = request.query as { username: string };
-    const sql = `SELECT username FROM users WHERE username LIKE '${username}%'`;
+    const sql = `SELECT username FROM users WHERE username LIKE '${username}%';`;
     db.all(sql, (err, rows) => {
         if (err) {
             throw { code: 404, message: 'Error getting user list' };
@@ -193,4 +192,31 @@ export async function isUser(request: FastifyRequest, reply: FastifyReply) {
         .catch(err => {
             reply.code(404).send({ err });
         });
+}
+
+export function setUserBy(key: string, value: string, by: string, byvalue: string) {
+    const sql = `UPDATE users SET ${key} = ? WHERE ${by} = ?;`;
+    const params = [value, byvalue];
+    db.run(sql, params, err => {
+        if (err) {
+            throw 'Error setting user';
+        }
+    });
+}
+
+export async function getStatus(username: string) {
+    return new Promise<any>((resolve, reject) => {
+        const sql = `SELECT u.username, u.roomId
+			FROM users u
+			JOIN friends f ON u.username = f.friend
+			WHERE f.username = ?`;
+        const params = [username];
+        db.all(sql, params, (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
 }
