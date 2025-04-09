@@ -1,7 +1,7 @@
 import { Routes } from '@framework/types';
 import { div } from '@framework/tags';
-import _404View from '@views/404';
 import { game } from '@views/Pong';
+import _404View from '@views/404';
 
 export function Router(routes: Routes) {
     let result = div({});

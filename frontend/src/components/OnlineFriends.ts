@@ -1,9 +1,8 @@
-import { div, table, td, tr, a } from '@framework/tags';
+import { div, table, td, tr } from '@framework/tags';
+import { switchPage } from '@framework/Router';
 import { getCookie } from 'cookies';
 import { FriendShip } from 'types';
 import popOver from './PopOver';
-import { switchPage } from '@framework/Router';
-import { roomId } from './Room';
 
 export default class OnlineFriends {
 	private friendsCount = 7;
@@ -44,15 +43,15 @@ export default class OnlineFriends {
 		return ret;
 	}
 
-	private makeRow(friendShip: FriendShip) {
+	private makeRow(friendship: FriendShip) {
 		const className = 'px-[6px] py-[1px] ';
-		const date = new Date(friendShip.date);
-		console.log(friendShip);
+		const date = new Date(friendship.date);
+		console.log(friendship);
 		return tr(
 			{ className: 'h-1' },
 			td({ className }, this.randomChmod()),
 			td({ className }, Math.floor(Math.random() * 500).toString()),
-			td({ className }, friendShip.username),
+			td({ className }, friendship.username),
 			td({ className }, 'pong'),
 			td({ className }, Math.floor(Math.random() * 1023).toString()),
 			td({ className }, this.months[date.getMonth()]),
@@ -60,15 +59,12 @@ export default class OnlineFriends {
 			td({ className }, `${date.getHours()}:${date.getMinutes()}`),
 			td({
 				className: className + 'hover:underline',
-				onclick: () => switchPage('/profile', friendShip.friend)
-			}, friendShip.friend),
+				onclick: () => switchPage('/profile', friendship.friend)
+			}, friendship.friend),
 			td({
 				className: className + 'hover:underline',
-				onclick: () => {
-					roomId.set(friendShip.room);
-					switchPage('/pong');
-				}
-			}, friendShip.room),
+				onclick: () => switchPage('/pong', friendship.room),
+			}, friendship.room),
 		);
 	}
 

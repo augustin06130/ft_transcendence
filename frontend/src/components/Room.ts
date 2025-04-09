@@ -1,11 +1,8 @@
 import { div, p, form, input } from '@framework/tags';
-import TerminalBox, { BoxFooter } from '@components/TerminalBox';
-import UseState from '@framework/UseState';
-import { State } from '@framework/types';
 import { switchPage } from '@framework/Router';
+import UseState from '@framework/UseState';
 import popOver from '@components/PopOver';
-
-export const roomId = UseState<string>('');
+import { State } from '@framework/types';
 
 function RoomForm(
 	joinHandler: (e: Event) => void,
@@ -77,8 +74,7 @@ export default function Room() {
 				return response.json();
 			})
 			.then(data => {
-				roomId.set(data.roomId);
-				switchPage('/pong');
+				switchPage('/pong', data.roomId);
 			})
 			.catch(err => popOver.show(err));
 	}
@@ -102,8 +98,7 @@ export default function Room() {
 			} else if (response.status == 204) {
 				popOver.show('Game not found');
 			} else {
-				roomId.set(roomCode.get());
-				switchPage('/pong');
+				switchPage('/pong', roomCode.get());
 			}
 		});
 	}

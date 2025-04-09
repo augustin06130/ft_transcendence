@@ -1,13 +1,13 @@
-import Home from '@views/Home';
-import Login from '@views/Login';
-import Register from '@views/Register';
+import HistoryView from '@views/HistoryView';
 import ProfileView from '@views/ProfileView';
+import RoomView from '@views/RoomView';
+import Register from '@views/Register';
+import PongGameView from '@views/Pong';
 import Project from '@views/Project';
 import Contact from '@views/Contact';
-import PongGameView from '@views/Pong';
 import ChatView from '@views/Chat';
-import HistoryView from '@views/HistoryView';
-import RoomView from '@views/RoomView';
+import Login from '@views/Login';
+import Home from '@views/Home';
 
 export const baseLinks = {
 	'/': {
