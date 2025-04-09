@@ -140,6 +140,7 @@ function addGet(route: string, handler: (request: FastifyRequest, reply: Fastify
 	});
 }
 
+fastify.get('/pong', (_, rep) => rep.redirect('/room'));
 addGet('/cli/close', (_, rep) => rep.send('You can close the window'));
 addGet('/api/matches', getMatches);
 addGet('/api/stats', getStats);
