@@ -4,7 +4,7 @@ import fastifyWebsocket from '@fastify/websocket';
 import fastifyFormbody from '@fastify/formbody';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJWT from '@fastify/jwt';
-import { createTableUser, getProfile, updateProfile, updateProfileImage } from './user';
+import { createTableUser, getProfile, getUsernameList, isUser, updateProfile, updateProfileImage } from './user';
 import { create_room, validate_roomId, get_tree, join_room } from './room';
 import { getMatches, getMatchesCount, getStats } from './matches';
 import { handleGoogle, logoutUser } from './googleAuth';
@@ -117,6 +117,8 @@ addGet('/api/stats', getStats);
 addGet('/api/matches/count', getMatchesCount);
 addGet('/api/room', create_room);
 addGet('/api/profile', getProfile);
+addGet('/api/user', isUser);
+addGet('/api/profile/list', getUsernameList)
 addPost('/api/tournament', get_tree);
 addPost('/api/room', validate_roomId);
 addPost('/api/profile', updateProfile);

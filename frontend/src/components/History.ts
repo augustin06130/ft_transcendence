@@ -22,12 +22,12 @@ export function History(name: string | null = null) {
             });
     }
 
-    function getPage(newPage: number) {
+    function getPage(newPage: number, username: string | null = name) {
         if (newPage < 0 || newPage > maxPage - 1) return;
         page = newPage;
         const url = new URL('/api/matches', window.location.href);
         url.searchParams.set('page', newPage.toString());
-        if (name) url.searchParams.set('username', name);
+        if (username) url.searchParams.set('username', username);
         fetch(url, {})
             .then(resp => {
                 if (!resp.ok) {
@@ -107,8 +107,10 @@ export function History(name: string | null = null) {
             ' ► '
         )
     );
-    getMaxPage();
+    // getMaxPage();
     getPage(page);
 
-    return div({}, tableContainer, tableFooter);
+	let ret:any = div({}, tableContainer, tableFooter);
+	ret.getPage = getPage;
+    return  ret;
 }

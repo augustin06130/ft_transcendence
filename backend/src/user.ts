@@ -102,6 +102,7 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
         email: string;
         bio: string;
     };
+    console.warn(request.body);
 
     if (!googleId || !(await getUserBy('googleId', googleId)))
         throw { code: 404, message: 'Google id not found' };
@@ -120,6 +121,7 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
 
     sql += 'WHERE googleId = ?;';
     params.push(googleId);
+    console.log('sql', sql);
 
     db.run(sql, params, function (err) {
         if (err) {
@@ -164,4 +166,31 @@ export async function getUsername(googleId: string) {
             }
         });
     });
+}
+
+export async function getUsernameList(request: FastifyRequest, reply: FastifyReply) {
+    const { username } = request.query as { username: string };
+    const sql = `SELECT username FROM users WHERE username LIKE '${username}%'`;
+    db.all(sql, (err, rows) => {
+        if (err) {
+            throw { code: 404, message: 'Error getting user list' };
+        } else {
+            reply.send(rows);
+        }
+    });
+}
+
+export async function isUser(request: FastifyRequest, reply: FastifyReply) {
+    const { username } = request.query as { username: string };
+    getUserBy('username', username)
+        .then(row => {
+            if (row) {
+                reply.send(true);
+            } else {
+                reply.send(false);
+            }
+        })
+        .catch(err => {
+            reply.code(404).send({ err });
+        });
 }

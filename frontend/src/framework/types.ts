@@ -14,7 +14,7 @@ export type Args = HTMLElement |SVGSVGElement| string | null | undefined;
 
 export type Routes = {
   [key: string]: {
-    view: () => HTMLElement;
+    view: (arg? : string) => HTMLElement;
     label: string;
     [key: string]: any;
   };

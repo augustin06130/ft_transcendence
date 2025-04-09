@@ -1,4 +1,5 @@
-import PongGame, { WINNING_SCORE, GameMode as GameMode } from '@components/Pong';
+import PongGame, { WINNING_SCORE  } from '@components/Pong';
+import { GameMode } from 'types';
 import TournamentOverlay from '@components/TournamenOverlay';
 import { div, button, p, h1 } from '@framework/tags';
 import UseState from '@framework/UseState';

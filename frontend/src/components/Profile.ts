@@ -136,15 +136,17 @@ function ProfileForm(
         p(
             { className: ' text-xl4 text-green-500 font-bold' },
             'USER PROFILE',
-            button(
-                {
-                    className: 'hover:bg-green-500/20 gap-2 ml-2',
-                    event: {
-                        click: toggleEditMode,
-                    },
-                },
-                editMode() ? SaveIconSVG : EditIconSVG
-            )
+            username.get() === getCookie('username')
+                ? button(
+                      {
+                          className: 'hover:bg-green-500/20 gap-2 ml-2',
+                          event: {
+                              click: toggleEditMode,
+                          },
+                      },
+                      editMode() ? SaveIconSVG : EditIconSVG
+                  )
+                : null
         ),
         profilePictureUpload(),
         form(
@@ -161,8 +163,8 @@ function ProfileForm(
     );
 }
 
-export default function Profile() {
-    const username = UseState('', () => {});
+export default function Profile(name: string) {
+    const username = UseState(name, () => {});
     const email = UseState('', () => {});
     const bio = UseState('', () => {});
     const profilePicture = UseState('', () => {});
@@ -180,7 +182,7 @@ export default function Profile() {
         if (!checkAuth()) return;
 
         const url = new URL('/api/profile', window.location.href);
-        url.searchParams.set('username', getCookie('username') as string);
+        url.searchParams.set('username', username.get() as string);
         fetch(url, {
             method: 'GET',
         })

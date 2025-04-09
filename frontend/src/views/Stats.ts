@@ -26,6 +26,10 @@ export class Graphs {
         this.distanceDurationLine = new LineChart('Travel distance vs. Duration (field/s)', false);
         this.durationScoreLine = new LineChart('Match duration vs. Score (point/s)', false);
 
+        this.fetchData(name);
+    }
+
+    public fetchData(name: string) {
         const url = new URL('/api/matches', window.location.href);
         url.searchParams.set('username', name);
         url.searchParams.set('page', '0');
@@ -184,8 +188,34 @@ export class Stats {
     private liTotalDurationWin: HTMLLIElement = li({});
     private liAverageRallyWin: HTMLLIElement = li({});
     private liTotalRallyWin: HTMLLIElement = li({});
+    private lis: HTMLElement[] = [];
 
     constructor(name: string) {
+        this.fetchData(name);
+        this.lis = [
+            this.liMatchPlayer,
+            this.liWin,
+            this.liLose,
+            this.liAverageScore,
+            this.liTotalScore,
+            this.liAverageDistance,
+            this.liTotalDistance,
+            this.liAverageRally,
+            this.liTotalRally,
+            this.liAverageRallyWin,
+            this.liTotalRallyWin,
+            this.liTotalDuration,
+            this.liAverageDuration,
+            this.liAverageDurationWin,
+            this.liTotalDurationWin,
+            this.liFirstMatch,
+            this.liLastMath,
+            this.liFirstMatchWin,
+            this.liLastMathWin,
+        ];
+    }
+
+    public fetchData(name: string) {
         const url = new URL('/api/stats', window.location.href);
         url.searchParams.set('username', name);
         fetch(url, {})
@@ -203,6 +233,12 @@ export class Stats {
 
     public updateData(data: MatchStatistics) {
         const len = 31;
+        Object.entries(data).forEach(([key, val]) => {
+            if (val === null) {
+                (data as any)[key] = 0;
+            }
+        });
+
         this.liMatchPlayer.innerText =
             `Match played:`.padEnd(len, ' ') + `${data.countMatch} match`;
         this.liWin.innerText = `Win:`.padEnd(len, ' ') + `${data.countWin} match`;
@@ -247,30 +283,6 @@ export class Stats {
     }
 
     render() {
-        return div(
-            { className: 'p-4 ' },
-            ul(
-                { className: 'list-disc' },
-                this.liMatchPlayer,
-                this.liWin,
-                this.liLose,
-                this.liAverageScore,
-                this.liTotalScore,
-                this.liAverageDistance,
-                this.liTotalDistance,
-                this.liAverageRally,
-                this.liTotalRally,
-                this.liAverageRallyWin,
-                this.liTotalRallyWin,
-                this.liAverageDuration,
-                this.liTotalDuration,
-                this.liAverageDurationWin,
-                this.liTotalDurationWin,
-                this.liFirstMatch,
-                this.liLastMath,
-                this.liFirstMatchWin,
-                this.liLastMathWin
-            )
-        );
+        return div({ className: 'p-4 ' }, ul({ className: 'list-disc' }, ...this.lis));
     }
 }

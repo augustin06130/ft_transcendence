@@ -5,12 +5,13 @@ import { getCookie } from 'cookies';
 import Profile from '@components/Profile';
 import { History } from '@components/History';
 
-export default function ProfileView() {
-    const username = getCookie('username');
+export default function ProfileView(username: string | undefined = undefined) {
+    if (!username) username = getCookie('username');
     if (!username) return div({});
 
-    const stats = new Stats(username);
-    const graphs = new Graphs(username);
+    let stats = new Stats(username);
+    let graphs = new Graphs(username);
+    let history = History(username);
 
     return TerminalBox(
         '/profile',
@@ -21,7 +22,7 @@ export default function ProfileView() {
                     className:
                         'border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',
                 },
-                Profile()
+                Profile(username)
             ),
             div(
                 {
@@ -37,14 +38,17 @@ export default function ProfileView() {
                         'col-span-2  border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',
                 },
                 p({ className: 'text-xl text-green-500 font-bold' }, 'USER HISTORY'),
-                History(getCookie('username'))
+                history
             ),
             div(
                 {
                     className:
                         'col-span-2  border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',
                 },
-                p({ className: 'text-xl text-green-500 font-bold' }, 'USER CHARTS  (over last 25 matches)'),
+                p(
+                    { className: 'text-xl text-green-500 font-bold' },
+                    'USER CHARTS  (over last 25 matches)'
+                ),
                 graphs.render()
             )
         )
