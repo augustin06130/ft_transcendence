@@ -22,8 +22,7 @@ export function createTableUser() {
         email TEXT NOT NULL,
 		googleId TEXT NOT NULL UNIQUE,
 		bio TEXT,
-        image BLOB,
-		roomId TEXT
+        image BLOB
       )`;
 	db.run(sql, async err => {
 		if (err) {
@@ -203,19 +202,19 @@ export function setUserBy(key: string, value: string, by: string, byvalue: strin
 	});
 }
 
-export async function getStatus(username: string) {
-	return new Promise<any>((resolve, reject) => {
-		const sql = `SELECT u.username, u.roomId
-			FROM users u
-			JOIN friends f ON u.username = f.friend
-			WHERE f.username = ?`;
-		const params = [username];
-		db.all(sql, params, (err, rows) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(rows);
-			}
-		});
-	});
-}
+// export async function getStatus(username: string) {
+// 	return new Promise<any>((resolve, reject) => {
+// 		const sql = `SELECT u.username, u.roomId
+// 			FROM users u
+// 			JOIN friends f ON u.username = f.friend
+// 			WHERE f.username = ?`;
+// 		const params = [username];
+// 		db.all(sql, params, (err, rows) => {
+// 			if (err) {
+// 				reject(err);
+// 			} else {
+// 				resolve(rows);
+// 			}
+// 		});
+// 	});
+// }

@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { db } from './main';
-import { getStatus } from './user';
+import { db, onlineUserStatus } from './main';
 
 export function createTableFriends() {
 	const sql = `
@@ -52,18 +51,19 @@ export async function getFriends(request: FastifyRequest, reply: FastifyReply) {
 	const { username } = request.query as { username: string };
 	const sql = 'SELECT * FROM friends WHERE username = ?';
 	const params = [username];
-	const rooms = await getStatus(username);
 	db.all(sql, params, (err, rows: any) => {
 		if (err) throw { code: 400, messsage: 'Could not retrieve friendship' };
-		rooms.sort((a: any, b: any) => a.username > b.username);
-		rows.sort((a: any, b: any) => a.username > b.username);
-		rows.forEach((_: any, i: number) => {
-			if (rows[i].username !== rooms[i].username) {
-				rows[i]['room'] = rooms[i].roomId;
+
+		console.log(onlineUserStatus);
+		rows.forEach((val: any, i: number) => {
+			if (val.friend in onlineUserStatus) {
+				val['room'] = onlineUserStatus[val.friend].status;
 			} else {
-				console.error('oupsi', rows[i], rooms[i]);
+				val['room'] = 'offline'
+				console.error('oupsi', rows[i]);
 			}
 		});
+		console.log(rows);
 		reply.send(rows);
 	});
 }

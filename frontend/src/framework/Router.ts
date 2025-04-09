@@ -15,7 +15,7 @@ export function Router(routes: Routes) {
             detail.to = route404;
         }
 
-        if (detail.arg) {
+        if (detail.arg && routes[detail.to]) {
             result.replaceChildren(routes[detail.to].view(detail.arg));
         } else {
             result.replaceChildren(routes[detail.to].view());
