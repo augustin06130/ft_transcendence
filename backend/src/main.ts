@@ -98,6 +98,7 @@ function addPost(route: string, handler: (request: FastifyRequest, reply: Fastif
         } catch (err: any) {
             if (typeof err === 'object' && err.has('code')) {
                 reply.code(err.code).send(err.message);
+				console.error(err)
             } else {
                 reply.code(400).send(err);
             }
@@ -112,6 +113,7 @@ function addGet(route: string, handler: (request: FastifyRequest, reply: Fastify
         } catch (err: any) {
             if (typeof err === 'object' && err.has('code')) {
                 reply.code(err.code).send(err.message);
+				console.error(err)
             } else {
                 reply.code(400).send(err);
             }
