@@ -1,5 +1,5 @@
-import { GameMode } from './pong';
 import { Client, Match, MatchTree } from './types';
+import { GameMode } from './pong';
 
 const aiClient: Client = {
 	username: 'Computer',

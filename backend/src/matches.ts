@@ -1,6 +1,6 @@
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite3';
 import { Match } from './types';
-import { FastifyReply, FastifyRequest } from 'fastify';
 import { db } from './main';
 
 export function createTableMatches() {

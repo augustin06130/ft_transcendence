@@ -12,7 +12,7 @@ function navBarRoutes(): Routes {
     }
 
     if (isLogged.get()) {
-		baseLinks
+        baseLinks;
         return {
             '/': baseLinks['/'],
             '/profile': baseLinks['/profile'],
@@ -45,7 +45,7 @@ export function renderApp() {
         { class: 'min-h-screen w-[100vw] bg-black text-green-500 font-mono p-4' },
         NavBar(navBarRoutes()), // Pass the updated routes to NavBar
         routers, // Pass the updated routes to Router
-        popOver,
+        popOver
     );
 }
 

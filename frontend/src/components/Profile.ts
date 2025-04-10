@@ -260,13 +260,26 @@ export default function Profile(name: string) {
         isFriend.set(data.isfriend || false);
     }
 
+    function addTfa() {
+        const url = new URL(`/tfa/add`, window.location.href);
+        fetch(url)
+            .then(resp => {
+                if (!resp.ok) throw `Error adding 2fa`;
+                return resp.json();
+            })
+            .then(data => {
+
+			})
+            .catch(err => popOver.show(err));
+    }
+
     function toggleFriend() {
         if (isFriend.get()) {
             friend('remove');
         } else {
             friend('add');
         }
-		switchPage('/profile', username.get());
+        switchPage('/profile', username.get());
     }
 
     function friend(action: 'add' | 'remove') {

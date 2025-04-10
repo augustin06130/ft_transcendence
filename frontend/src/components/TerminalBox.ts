@@ -76,6 +76,6 @@ export default function TerminalBox(label: string, ...children: Args[]) {
 			),
 			...children,
 			footer()
-		) : null
+		) : null,
 	);
 }

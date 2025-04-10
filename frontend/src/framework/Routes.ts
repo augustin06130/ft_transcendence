@@ -8,6 +8,7 @@ import Contact from '@views/Contact';
 import ChatView from '@views/Chat';
 import Login from '@views/Login';
 import Home from '@views/Home';
+import TfaView from 'TfaView';
 
 export const baseLinks = {
 	'/': {
@@ -49,5 +50,9 @@ export const baseLinks = {
 	'/history': {
 		view: HistoryView,
 		label: 'History',
+	},
+	'/tfa': {
+		view: TfaView,
+		label: '',
 	},
 };

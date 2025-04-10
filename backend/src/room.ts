@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { onlineUserStatus } from './onlineUsers';
 import { WebSocket } from '@fastify/websocket';
 import PongGame from './pong';
-import { onlineUserStatus } from './main';
 
 const pongRooms = new Map<string, PongGame>();
 
