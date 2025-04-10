@@ -3,7 +3,6 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { addUser, loginUser } from './googleAuth';
 import { readFileSync } from 'node:fs';
 import { isFriend } from './friends';
-import { db } from './main';
 import path from 'path';
 
 export type User = {
@@ -29,51 +28,30 @@ export async function createTableUser() {
 		tfaSecret BLOB,
 		tfaOn INTEGER NOT NULL
       )`;
-	await runPromise(sql, [])
+	await runPromise(sql)
 	if (!(await getUserBy('username', 'Computer'))) addUser('Computer', '', '-2');
 	if (!(await getUserBy('username', 'Guest'))) addUser('Guest', '', '-3');
 }
 
 export async function getUserBy(key: string, value: string): Promise<User> {
-	return new Promise<User>((resolve, reject) => {
-		db.get(`SELECT * FROM users WHERE ${key} = ?;`, [value], (err, user: User) => {
-			if (err) {
-				console.error('Error getting user:', err);
-				reject(err);
-			} else {
-				resolve(user);
-			}
-		});
-	});
+	return getPromise(`SELECT * FROM users WHERE ${key} = ?;`, [value]);
 }
 
 export async function createNewUser(
 	username: string,
 	email: string,
 	googleId: string
-): Promise<number> {
-	return new Promise<number>((resolve, reject) => {
-		const sql = `
+) {
+	const sql = `
           INSERT INTO users (username, email, googleId, image, tfaON)
           VALUES (?, ?, ?, ?, ?)
       `;
+	const image =
+		'data:image/png;base64,' +
+		readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
-		const image =
-			'data:image/png;base64,' +
-			readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
-
-		const params = [username, email, googleId, image, 0];
-
-		db.run(sql, params, function(err) {
-			if (err) {
-				console.error('Error creating user:', err.message);
-				reject(`Failed to create user: ${err.message}`);
-			} else {
-				console.log(`User '${username}' created successfully with ID: ${this.lastID}.`);
-				resolve(this.lastID);
-			}
-		});
-	});
+	const params = [username, email, googleId, image, 0];
+	return runPromise(sql, params);
 }
 
 export async function updateProfileImage(request: FastifyRequest, reply: FastifyReply) {
@@ -110,29 +88,16 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
 
 	sql += 'WHERE googleId = ?;';
 	params.push(googleId);
-	console.log('sql', sql);
 
-	db.run(sql, params, function(err) {
-		if (err) {
-			console.error('Error updating user:', err.message);
-			reply.code(404);
-		} else {
-			loginUser(googleId, reply);
-			// if (body.username)
-			//     reply.setCookie('username', body.username, {
-			//         path: '/',
-			//         sameSite: 'strict',
-			//         maxAge: 3600,
-			//     });
-			// reply.code(204);
-		}
-	});
+	await runPromise(sql, params)
+	loginUser(googleId, reply);
+	reply.code(204);
 }
 
 export async function getProfile(request: FastifyRequest, reply: FastifyReply) {
 	const { username } = request.query as { username: string };
 	let sql, params;
-	sql = `SELECT username, email, bio, image FROM users WHERE username = ?;`;
+	sql = `SELECT username, email, bio, image, tfaOn FROM users WHERE username = ?;`;
 	params = [username];
 	let isF = await isFriend((request.user as any).username, username);
 	const row: any = await getPromise(sql, params);
@@ -147,7 +112,7 @@ export async function getUsername(googleId: string) {
 export async function getUsernameList(request: FastifyRequest, reply: FastifyReply) {
 	const { username } = request.query as { username: string };
 	const sql = `SELECT username FROM users WHERE username LIKE '${username}%';`;
-	reply.send(await allPromise(sql, []));
+	reply.send(await allPromise(sql));
 }
 
 export async function isUser(request: FastifyRequest, reply: FastifyReply) {

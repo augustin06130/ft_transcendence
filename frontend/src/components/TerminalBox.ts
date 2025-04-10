@@ -1,9 +1,9 @@
 import { button, div, p } from '@framework/tags';
 import { switchPage } from '@framework/Router';
+import { getCookie } from '@framework/cookies';
 import { isLogged } from '@framework/auth';
 import GoogleSignin from './GooglesSignin';
 import { Args } from '@framework/types';
-import { getCookie } from 'cookies';
 
 export function footer() {
 	return div(

@@ -18,7 +18,7 @@ export async function createTableMatches() {
            duration INTEGER NOT NULL
        )`;
 
-	await runPromise(sql, []);
+	await runPromise(sql);
 }
 
 function objectToStr(obj: Object) {

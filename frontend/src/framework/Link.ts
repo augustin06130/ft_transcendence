@@ -1,6 +1,6 @@
-import { a } from '@framework/tags';
 import { Args, HTMLElementProperties } from '@framework/types';
 import { switchPage } from './Router';
+import { a } from '@framework/tags';
 
 export default function Link(
     attributes: HTMLElementProperties<'a'>,

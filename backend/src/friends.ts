@@ -10,7 +10,7 @@ export async function createTableFriends() {
         friend TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
 		date INTEGER
       )`;
-	await runPromise(sql, [])
+	await runPromise(sql)
 }
 
 export async function addFriend(request: FastifyRequest, reply: FastifyReply) {
@@ -40,12 +40,11 @@ export async function getFriends(request: FastifyRequest, reply: FastifyReply) {
 	const sql = 'SELECT * FROM friends WHERE username = ?';
 	const params = [username];
 	const rows: any = await allPromise(sql, params);
-	rows.forEach((val: any, i: number) => {
+	rows.forEach((val: any) => {
 		if (val.friend in onlineUserStatus) {
 			val['room'] = onlineUserStatus[val.friend].status;
 		} else {
 			val['room'] = 'offline';
-			console.error('oupsi', rows[i]);
 		}
 	});
 	reply.send(rows);

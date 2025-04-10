@@ -74,7 +74,6 @@ export async function loginUser(googleId: string, reply: FastifyReply) {
 	reply.setCookie('googleId', user.googleId, {
 		path: '/',
 		sameSite: 'strict',
-		maxAge: 3600,
 	});
 
 	if (!user.tfaOn) {
@@ -95,14 +94,13 @@ export function setJwt(user: User, reply: FastifyReply, tfaOn: boolean) {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'strict',
-		maxAge: 3600,
+		secure: true,
 	});
 
 	if (!tfaOn) {
 		reply.setCookie('username', user.username, {
 			path: '/',
 			sameSite: 'strict',
-			maxAge: 3600,
 		});
 	}
 }
@@ -115,15 +113,16 @@ export async function logoutUser(request: FastifyRequest, reply: FastifyReply) {
 		}
 	}
 
+	const prev = new Date(Date.now() - 1000)
 
 	reply.setCookie('jwt', '', {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'strict',
-		expires: new Date(Date.now() - 1000),
+		secure: true,
+		expires: prev,
 	});
-	reply.setCookie('username', '', { path: '/', expires: new Date(Date.now() - 1000) });
-	reply.setCookie('googleId', '', { path: '/', expires: new Date(Date.now() - 1000) });
-
+	reply.setCookie('username', '', { path: '/', expires: prev });
+	reply.setCookie('googleId', '', { path: '/', expires: prev });
 	return reply.status(200).send({ success: true });
 }

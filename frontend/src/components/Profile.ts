@@ -1,16 +1,17 @@
 import { div, p, form, input, label, button, span, img, textarea } from '@framework/tags';
-import UseState, { UseStateType } from '@framework/UseState';
-import { UserIconSVG } from '@Icon/User';
 import { EmailIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
-import { isLogged } from '@framework/auth';
+import UseState, { UseStateType } from '@framework/UseState';
+import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
+import { TwoFactorAuthSVG } from '@Icon/addTfa';
+import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { getCookie } from '@framework/cookies';
 import { switchPage } from '@framework/Router';
-import { getCookie } from 'cookies';
+import { isLogged } from '@framework/auth';
+import { UserIconSVG } from '@Icon/User';
+import TfaOverlay from './TfaOverlay';
 import popOver from './PopOver';
 import Loader from './Loader';
-import { AddFriendIconSVG } from '@Icon/AddFriend';
-import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
-import { TwoFactorAuthIconSVG } from '@Icon/addTfa';
-import TfaOverlay from './TfaOverlay';
+import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 
 function ProfileForm(
 	handleSubmit: (e: Event) => void,
@@ -22,7 +23,8 @@ function ProfileForm(
 	email: UseStateType<string>,
 	bio: UseStateType<string>,
 	profilePicture: UseStateType<string>,
-	isFriend: UseStateType<boolean>
+	isFriend: UseStateType<boolean>,
+	isTfa: UseStateType<boolean>
 ) {
 	function inputL(
 		id: string,
@@ -166,7 +168,7 @@ function ProfileForm(
 						className: 'hover:bg-green-500/20',
 						onclick: toggleTfa,
 					},
-					TwoFactorAuthIconSVG
+					!isTfa.get() ? TwoFactorAuthSVG : RemoveTwoFactorAuthSVG
 				)
 
 		),
@@ -192,6 +194,7 @@ export default function Profile(name: string) {
 	const profilePicture = UseState('', () => { });
 	const isFriend = UseState(false, () => { });
 	const editMode = UseState(false, () => { });
+	const isTfa = UseState(false, () => { });
 	const tfaOverlay = new TfaOverlay();
 
 	function checkAuth() {
@@ -212,7 +215,7 @@ export default function Profile(name: string) {
 		})
 			.then(response => {
 				if (!response.ok) {
-					throw new Error('Failed to fetch profile data');
+					throw 'Error fetching profile';
 				}
 				return response.json();
 			})
@@ -254,7 +257,7 @@ export default function Profile(name: string) {
 		})
 			.then(response => {
 				if (!response.ok) {
-					throw new Error('Failed to update profile');
+					throw 'Error updating profile';
 				}
 			})
 			.catch(err => {
@@ -269,6 +272,7 @@ export default function Profile(name: string) {
 		bio.set(data.bio || '');
 		profilePicture.set(data.image || '');
 		isFriend.set(data.isfriend || false);
+		isTfa.set(data.tfaOn || false);
 	}
 
 	function toggleFriend() {
@@ -297,7 +301,18 @@ export default function Profile(name: string) {
 	}
 
 	function toggleTfa() {
-		tfaOverlay.show();
+		if (!isTfa.get()) {
+			tfaOverlay.show();
+		}
+		else {
+			const url = new URL(`/api/tfa/remove`, window.location.href);
+			fetch(url, {
+			})
+				.then(resp => {
+					if (!resp.ok) throw `Error remvoing tfa`;
+				})
+				.catch(err => popOver.show(err));
+		}
 	}
 
 	fetchUserProfile();
@@ -313,7 +328,8 @@ export default function Profile(name: string) {
 			email,
 			bio,
 			profilePicture,
-			isFriend
+			isFriend,
+			isTfa
 		);
 
 	const mainDiv = div({}, Loader());

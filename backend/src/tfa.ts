@@ -11,18 +11,20 @@ export async function enableTfa(request: FastifyRequest, reply: FastifyReply) {
 	const secret = speakeasy.generateSecret({
 		name: 'ft_transcendence',
 	});
-	QRCode.toDataURL(secret.otpauth_url as string, (err, dataURL) => {
-		if (err) {
-			throw { code: 500, message: 'Could not generate QR code' };
-		} else {
-			setUserBy('tfaSecret', secret.base32, 'googleId', googleId);
-			setUserBy('tfaOn', '0', 'googleId', googleId);
-			reply.send({
-				secret: secret.base32,
-				qrcode: dataURL,
-			});
+
+	const qrcode = await QRCode.toDataURL(secret.otpauth_url as string, {
+		color: {
+			light: "#000000",
+			dark: "#00ff00"
 		}
 	});
+	await setUserBy('tfaSecret', secret.base32, 'googleId', googleId);
+	await setUserBy('tfaOn', '0', 'googleId', googleId);
+	reply.send({
+		secret: secret.base32,
+		qrcode,
+	});
+
 }
 
 export async function verifyTfaToken(googleId: string, request: FastifyRequest) {
@@ -34,8 +36,6 @@ export async function verifyTfaToken(googleId: string, request: FastifyRequest) 
 	if (!secret)
 		throw { code: 403, message: '2fa secret not found' }
 
-	console.log(token);
-	console.log(secret);
 
 	const verified = (speakeasy.totp as any).verify({
 		encoding: 'base32', secret, token, window: 2

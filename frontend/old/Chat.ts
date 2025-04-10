@@ -1,9 +1,9 @@
-import { div, h2, p, button, input, ul, li, span, form, h3 } from "@framework/tags"; // Adjust this according to your custom framework imports
-import { UserIconSVG } from "@Icon/User";
-import { CircleIconSVG } from "@Icon/Circle";
-import { SendIconSVG } from "@Icon/Send";
+import { div, h2, p, button, input, ul, li, span, form, h3 } from "@framework/tags";
 import { TerminalIconSVG } from "@Icon/Terminal";
+import { CircleIconSVG } from "@Icon/Circle";
 import { ClockIconSVG } from "@Icon/Clock";
+import { UserIconSVG } from "@Icon/User";
+import { SendIconSVG } from "@Icon/Send";
 
 // Types
 type Friend = {

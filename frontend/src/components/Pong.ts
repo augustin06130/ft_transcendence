@@ -1,10 +1,10 @@
-import { canvas, div } from '@framework/tags';
-import Overlay from './Overlay';
 import { Setter, UseStateType } from '@framework/UseState';
-import popOver from './PopOver';
-import popUp, { PopUpElement } from './PopUp';
 import { switchPage } from '@framework/Router';
+import { canvas, div } from '@framework/tags';
+import popUp, { PopUpElement } from './PopUp';
 import { GameMode, Role } from 'types';
+import Overlay from './Overlay';
+import popOver from './PopOver';
 
 export const WINNING_SCORE = 3;
 

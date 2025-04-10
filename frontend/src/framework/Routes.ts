@@ -2,12 +2,9 @@ import TfaLoginView from '@views/TfaLoginView';
 import HistoryView from '@views/HistoryView';
 import ProfileView from '@views/ProfileView';
 import RoomView from '@views/RoomView';
-import Register from '@views/Register';
 import PongGameView from '@views/Pong';
 import Project from '@views/Project';
 import Contact from '@views/Contact';
-import ChatView from '@views/Chat';
-import Login from '@views/Login';
 import Home from '@views/Home';
 
 export const baseLinks = {
@@ -27,14 +24,6 @@ export const baseLinks = {
 		view: Contact,
 		label: 'Contact',
 	},
-	'/login': {
-		view: Login,
-		label: 'Login',
-	},
-	'/register': {
-		view: Register,
-		label: 'Register',
-	},
 	'/pong': {
 		view: PongGameView,
 		label: '',
@@ -42,10 +31,6 @@ export const baseLinks = {
 	'/room': {
 		view: RoomView,
 		label: 'Pong',
-	},
-	'/chat': {
-		view: ChatView,
-		label: 'Chat',
 	},
 	'/history': {
 		view: HistoryView,

@@ -1,5 +1,5 @@
-import Loader from '@components/Loader';
 import { div, table, th, tr, td, button } from '@framework/tags';
+import Loader from '@components/Loader';
 import { MatchDB } from 'types';
 
 export function History(name: string | null = null) {

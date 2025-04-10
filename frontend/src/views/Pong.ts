@@ -90,7 +90,6 @@ export default function PongGameView(roomId: string | null = null) {
             })
             .then(html => {
                 tournamentOverlay.show();
-                console.log(html);
                 tournamentOverlay.setHtml(html);
             })
             .catch(r => popOver.show(r));

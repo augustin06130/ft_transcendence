@@ -23,6 +23,7 @@ export function Router(routes: Routes) {
 		}
 
 		window.history.pushState('page2', '', detail.to);
+		console.log(history);
 		return result;
 	}
 
@@ -38,7 +39,6 @@ export function Router(routes: Routes) {
 		const path = window.location.pathname;
 		result.replaceChildren(routes[path].view());
 	});
-	// (result as any).refresh = syncHash;
 	return result;
 }
 

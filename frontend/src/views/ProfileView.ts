@@ -1,9 +1,9 @@
-import { div, p } from '@framework/tags';
 import TerminalBox from '@components/TerminalBox';
-import { Graphs, Stats } from './Stats';
-import { getCookie } from 'cookies';
-import Profile from '@components/Profile';
+import { getCookie } from '@framework/cookies';
 import { History } from '@components/History';
+import Profile from '@components/Profile';
+import { div, p } from '@framework/tags';
+import { Graphs, Stats } from './Stats';
 
 export default function ProfileView(username: string | undefined = undefined) {
     if (!username) username = getCookie('username');

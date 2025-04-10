@@ -1,6 +1,6 @@
-import { div, ul, li } from '@framework/tags';
 import { PieChart, LineChart } from '@components/Charts';
 import { MatchDB, MatchStatistics } from 'types';
+import { div, ul, li } from '@framework/tags';
 
 export class Graphs {
 	name: string;
@@ -43,7 +43,7 @@ export class Graphs {
 			.then((data: MatchDB[]) => {
 				this.updateData(data);
 			})
-			.catch(err => console.log(err));
+			.catch(err => console.warn(err));
 	}
 
 	private setGameModePie(matches: MatchDB[]) {
@@ -228,7 +228,7 @@ export class Stats {
 			.then((data: MatchStatistics) => {
 				this.updateData(data);
 			})
-			.catch(err => console.log(err));
+			.catch(err => console.warn(err));
 	}
 
 	public updateData(data: MatchStatistics) {

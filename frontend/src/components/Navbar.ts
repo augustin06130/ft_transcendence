@@ -1,7 +1,7 @@
 import { nav, div, span, ul, li, switchPage } from '@framework/framework';
-import Link from '@framework/Link';
-import UserSearch from './UserSearch';
 import { isLogged } from '@framework/auth';
+import UserSearch from './UserSearch';
+import Link from '@framework/Link';
 
 function navBarLink(link: string, label: string) {
 	const linkClass = 'hover:text-green-400 hover:underline';
@@ -29,7 +29,6 @@ function terminalTypewriter(text: string, containerId: string) {
 				container.appendChild(cursor);
 			}
 		};
-
 		typeNextChar();
 	};
 

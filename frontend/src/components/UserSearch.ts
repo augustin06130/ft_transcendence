@@ -1,5 +1,6 @@
-import { switchPage } from '@framework/Router';
 import { datalist, div, input, option } from '@framework/tags';
+import { switchPage } from '@framework/Router';
+
 export default class UserSearch {
     private list: HTMLDataListElement = datalist({
         id: 'user_search',
@@ -50,7 +51,7 @@ export default class UserSearch {
                         )
                     )
                 );
-                for (let option of this.list.options) {
+                for (let option of this.list.options as any) {
                     option.onclick = () => this.onclickHandle(option);
                 }
             })
@@ -78,7 +79,7 @@ export default class UserSearch {
 
     private inputHandle(_: Event) {
         this.getList(this.input.value);
-        for (let option of this.list.options) {
+        for (let option of this.list.options as any) {
             if (option.value.indexOf(this.input.value) > -1) {
                 option.style.display = 'block';
             } else {

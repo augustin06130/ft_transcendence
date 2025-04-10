@@ -29,6 +29,7 @@ const tags = [
     'datalist',
 	'option',
 	'fieldset',
+	'title',
 ] as const;
 
 export const elements = Object.fromEntries(
@@ -74,4 +75,5 @@ export const {
 	datalist,
 	option,
 	fieldset,
+	title,
 } = elements;

@@ -1,6 +1,6 @@
-import { div, span } from '@framework/tags';
-import TerminalBox from '@components/TerminalBox';
 import CommandOutput from '@components/CommandOutput';
+import TerminalBox from '@components/TerminalBox';
+import { div, span } from '@framework/tags';
 
 function fakeSystemInfo() {
 	const label = '$ system.info';

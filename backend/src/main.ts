@@ -67,23 +67,20 @@ const authorizedRoutes = new Set([
 ]);
 
 fastify.addHook('onRequest', async (request, reply) => {
+	const route = request.routeOptions.url as string;
+
 	try {
-		if (authorizedRoutes.has(request.routeOptions.url as string)) {
-			return;
+		const jwt: any = await request.jwtVerify({ onlyCookie: true });
+		console.log(jwt)
+		if (jwt.username) {
+			onlineUserStatus[jwt.username] = { time: Date.now(), status: 'online' };
 		}
-		await request.jwtVerify({ onlyCookie: true });
-		const username = (request.user as any).username;
-		if (username) {
-			onlineUserStatus[username] = { time: Date.now(), status: 'online' };
-		}
-		const tfaOn = (request.user as any).tfaOn;
-		console.log('tfa:', typeof tfaOn);
-		if (request.routeOptions.url as string !== '/api/tfa/login' && tfaOn) {
+		if (request.routeOptions.url as string !== '/api/tfa/login' && jwt.tfaOn) {
+			if (authorizedRoutes.has(route)) return;
 			reply.redirect('/tfa');
 		}
-
 	} catch (err) {
-		console.log(err);
+		if (authorizedRoutes.has(route)) return;
 		reply.redirect('/');
 	}
 });
@@ -94,7 +91,6 @@ fastify.addHook('onRequest', (_, reply, done) => {
 		'Content-Security-Policy',
 		"script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; frame-src 'self' https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/;"
 	);
-
 	done();
 });
 
@@ -114,7 +110,7 @@ function addPost(route: string, handler: (request: FastifyRequest, reply: Fastif
 }
 
 function addGet(route: string, handler: (request: FastifyRequest, reply: FastifyReply) => any) {
-	fastify.get(route,async (request, reply) => {
+	fastify.get(route, async (request, reply) => {
 		try {
 			await handler(request, reply);
 		} catch (err: any) {
@@ -183,7 +179,7 @@ async function createDatabase() {
 	await createTableUser();
 	await createTableMatches();
 	await createTableFriends();
-	await runPromise('PRAGMA foreign_keys = ON;', [])
+	await runPromise('PRAGMA foreign_keys = ON;')
 }
 
 const start = async () => {

@@ -1,7 +1,6 @@
 import { form, p, input, div } from '@framework/tags';
 import TerminalBox from '@components/TerminalBox';
 import popOver from '@components/PopOver';
-import { switchPage } from '@framework/Router';
 
 export default function TfaLoginView() {
 	const codeInput = input({
@@ -26,11 +25,9 @@ export default function TfaLoginView() {
 
 	function onsubmit(e: Event) {
 		e.preventDefault();
-		console.log('salut');
 		const body = {
 			token: codeInput.value
 		}
-		console.log(body);
 
 		const url = new URL(`/api/tfa/login`, window.location.href);
 		fetch(url, {

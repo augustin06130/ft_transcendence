@@ -1,8 +1,8 @@
 import { div, p, form, input, label, span } from '@framework/tags';
 import TerminalBox, { BoxFooter } from '@components/TerminalBox';
+import { switchPage } from '@framework/Router';
 import UseState from '@framework/UseState';
 import { UserIconSVG } from '@Icon/User';
-import { switchPage } from '@framework/Router';
 import { LockIconSVG } from '@Icon/Lock';
 
 function success(username: string) {
@@ -84,12 +84,11 @@ export default function Register() {
 		})
 			.then(response => {
 				if (!response.ok) {
-					throw new Error('Échec de la connexion');
+					throw 'Registration failed'
 				}
 				return response.json();
 			})
 			.then(data => {
-				console.log('Réponse du serveur :', data);
 				if (data.success) {
 					loading.set(false);
 					registerSuccess.set(true);
@@ -99,9 +98,7 @@ export default function Register() {
 				}
 			})
 			.catch(err => {
-				console.error('Registration failed: ', err);
-				error.set(err.message);
-				loading.set(false);
+				console.warn(err);
 			});
 	}
 

@@ -1,12 +1,12 @@
 import { div, p, form, input, label, span } from '@framework/tags';
 import TerminalBox, { BoxFooter } from '@components/TerminalBox';
+import { switchPage } from '@framework/Router';
 import UseState from '@framework/UseState';
+import { isLogged } from '@framework/auth';
+import popOver from '@components/PopOver';
 import { State } from '@framework/types';
 import { UserIconSVG } from '@Icon/User';
 import { LockIconSVG } from '@Icon/Lock';
-import { isLogged } from '@framework/auth';
-import { switchPage } from '@framework/Router';
-import popOver from '@components/PopOver';
 
 function success(username: string) {
 	return div(

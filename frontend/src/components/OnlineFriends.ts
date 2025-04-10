@@ -1,6 +1,6 @@
 import { div, table, td, tr } from '@framework/tags';
 import { switchPage } from '@framework/Router';
-import { getCookie } from 'cookies';
+import { getCookie } from '@framework/cookies';
 import { FriendShip } from 'types';
 import popOver from './PopOver';
 
@@ -46,7 +46,6 @@ export default class OnlineFriends {
 	private makeRow(friendship: FriendShip) {
 		const className = 'px-[6px] py-[1px] ';
 		const date = new Date(friendship.date);
-		console.log(friendship);
 		return tr(
 			{ className: 'h-1' },
 			td({ className }, this.randomChmod()),
@@ -77,7 +76,6 @@ export default class OnlineFriends {
 				return resp.json();
 			})
 			.then(data => {
-				console.log(data);
 				this.friendsTable.replaceChildren(...data.map(this.makeRow));
 			})
 			.catch(err => popOver.show(err));
