@@ -27,7 +27,7 @@ function RoomForm(
 			id: 'roomCode',
 			type: 'text',
 			name: 'roomCode',
-			className: 'w-full bg-black border border-green-500/30 p-2 text-green-500',
+			className: 'w-full bg-black border border-green-500/30 p-2 text-green-500 focus:outline-none',
 			placeholder: 'CODE',
 			value: roomCode.get(),
 			event: {

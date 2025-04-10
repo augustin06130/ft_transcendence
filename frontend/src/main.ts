@@ -24,6 +24,7 @@ function navBarRoutes(): Routes {
     } else {
         return {
             '/': baseLinks['/'],
+            '/tfa': baseLinks['/tfa'],
         };
     }
 }

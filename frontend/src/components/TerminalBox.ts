@@ -62,9 +62,9 @@ export default function TerminalBox(label: string, ...children: Args[]) {
 		div({
 			className: 'flex justify-center content-center pb-4'
 		},
-			!isLogged.get() ? GoogleSignin() : null,
+			!getCookie('googleId') ? GoogleSignin() : null,
 		),
-		isLogged.get() ? div(
+		!!getCookie('googleId') ? div(
 			{
 				className:
 					'border border-green-500/30 rounded p-4 bg-black/80 shadow-lg shadow-green-500/10',

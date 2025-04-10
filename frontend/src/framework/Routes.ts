@@ -1,3 +1,4 @@
+import TfaLoginView from '@views/TfaLoginView';
 import HistoryView from '@views/HistoryView';
 import ProfileView from '@views/ProfileView';
 import RoomView from '@views/RoomView';
@@ -8,7 +9,6 @@ import Contact from '@views/Contact';
 import ChatView from '@views/Chat';
 import Login from '@views/Login';
 import Home from '@views/Home';
-import TfaView from 'TfaView';
 
 export const baseLinks = {
 	'/': {
@@ -52,7 +52,7 @@ export const baseLinks = {
 		label: 'History',
 	},
 	'/tfa': {
-		view: TfaView,
+		view: TfaLoginView,
 		label: '',
 	},
 };

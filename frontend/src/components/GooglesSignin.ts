@@ -1,8 +1,6 @@
 import { div } from '@framework/tags';
-import TfaOverlay from './Tfa';
 
 export default function GoogleSignin() {
-	const tfa =  new TfaOverlay();
     const onload = div({ id: 'g_id_onload' });
     onload.setAttribute(
         'data-client_id',
@@ -12,7 +10,7 @@ export default function GoogleSignin() {
     onload.setAttribute('data-auto_prompt', 'false');
     onload.setAttribute('data-context', 'signin');
     onload.setAttribute('data-ux-mode', 'popup');
-    return div({ className: 'inline pr-4' }, onload, signin_button(), tfa.render());
+    return div({ className: 'inline pr-4' }, onload, signin_button());
 }
 
 function signin_button() {

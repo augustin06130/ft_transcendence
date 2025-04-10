@@ -79,7 +79,7 @@ export default class UserSearch {
     private inputHandle(_: Event) {
         this.getList(this.input.value);
         for (let option of this.list.options) {
-            if (option.value.toUpperCase().indexOf(this.input.value) > -1) {
+            if (option.value.indexOf(this.input.value) > -1) {
                 option.style.display = 'block';
             } else {
                 option.style.display = 'none';
