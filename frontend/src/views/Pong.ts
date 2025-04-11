@@ -8,8 +8,35 @@ import { GameMode } from 'types';
 
 export let game: PongGame | null = null;
 
+function checkRoom(roomId: string) {
+    const url = new URL('/api/room', window.location.href);
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            roomId,
+        }),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw 'Connexion failed';
+            } else if (response.status == 204) {
+                throw 'Invalid roomId';
+            }
+        })
+        .catch(err => {
+            popOver.show(err);
+            switchPage('/room');
+        });
+}
+
 export default function PongGameView(roomId: string | null = null) {
     if (!roomId) switchPage('/room');
+	roomId = roomId as string;
+	checkRoom(roomId);
+	
     let modeSwitchButton: HTMLElement | null = null;
     let player2NameLabel: HTMLElement | null = null;
     let player1NameLabel: HTMLElement | null = null;
@@ -21,16 +48,16 @@ export default function PongGameView(roomId: string | null = null) {
     });
 
     const p1Name = UseState<string>('Player 1', (newValue, _) => {
-        if (player1NameLabel) player1NameLabel.innerHTML = newValue;
+        if (player1NameLabel) player1NameLabel.innerText = newValue;
     });
 
     const p2Name = UseState<string>('Player 2', (newValue, _) => {
-        if (player2NameLabel) player2NameLabel.innerHTML = newValue;
+        if (player2NameLabel) player2NameLabel.innerText = newValue;
     });
 
     const topText = UseState<string>('Welcome', (newValue, _) => {
         if (topLabel) {
-            topLabel.innerHTML = newValue;
+            topLabel.innerText = newValue;
         }
     });
 
@@ -90,7 +117,7 @@ export default function PongGameView(roomId: string | null = null) {
             })
             .then(html => {
                 tournamentOverlay.show();
-                tournamentOverlay.setHtml(html);
+                tournamentOverlay.setTournament(html);
             })
             .catch(r => popOver.show(r));
     };

@@ -32,11 +32,11 @@ export default class Overlay {
 	};
 
 	setTitle = (title: string) => {
-		this.titleLabel.innerHTML = title;
+		this.titleLabel.innerText = title;
 	};
 
 	setMessage = (message: string) => {
-		this.messageLabel.innerHTML = message;
+		this.messageLabel.innerText = message;
 	};
 
 	showButton = () => {

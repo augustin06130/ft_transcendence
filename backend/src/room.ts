@@ -19,7 +19,6 @@ export function create_room(_: FastifyRequest, reply: FastifyReply) {
 
 export function validate_roomId(request: FastifyRequest, reply: FastifyReply) {
 	const { roomId } = request.body as { roomId: string };
-	console.log('validating', roomId, pongRooms.has(roomId));
 	reply.code(pongRooms.has(roomId) ? 200 : 204).send();
 }
 
@@ -35,7 +34,6 @@ export async function join_room(socket: WebSocket, request: FastifyRequest) {
 			onlineUserStatus[(request.user as any).username].status = data.arg0;
 		}
 	});
-	socket.on('close', () => console.log('game counts:', pongRooms.size));
 }
 
 export function get_tree(request: FastifyRequest, reply: FastifyReply) {

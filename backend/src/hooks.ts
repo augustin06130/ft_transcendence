@@ -17,7 +17,6 @@ export default function attachHooks(fastify: FastifyInstance) {
 
     fastify.addHook('onRequest', async (request, reply) => {
         const route = request.routeOptions.url as string;
-
         try {
             const jwt: any = await request.jwtVerify({ onlyCookie: true });
             if (jwt.username) {

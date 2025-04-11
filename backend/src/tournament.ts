@@ -147,7 +147,7 @@ export default class Tournament {
 		}
 
 		let cur = this.nextMatch();
-		if (cur === node.match) line += '<em class="current_match">';
+		if (cur === node.match) line += '<em class="current_match text-[10em] text-green-200">';
 		line += Tournament.getMatchString(node.match);
 		if (cur === node.match) line += '</em>';
 
@@ -172,4 +172,3 @@ export default class Tournament {
 // 	tour.addPlayer({ username: i.toString(), socket: null, registered: false });
 // }
 //
-// console.log(tour.stringify().join('\n'));

@@ -85,7 +85,6 @@ function ProfileForm(
 
     function sendProfilePicture(image64: string) {
         const url = new URL('/api/profile/image', window.location.href);
-        url.searchParams.set('googleId', getCookie('googleId') as string);
         fetch(url, {
             method: 'POST',
             body: image64,
@@ -249,7 +248,6 @@ export default function Profile(name: string) {
 
     function sendProfileData(data: any) {
         const url = new URL('/api/profile', window.location.href);
-        url.searchParams.set('googleId', getCookie('googleId') as string);
         fetch(url, {
             method: 'POST',
             body: JSON.stringify(data),

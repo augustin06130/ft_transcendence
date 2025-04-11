@@ -36,7 +36,6 @@ function LogoutButton() {
             });
 
             if (response.ok) {
-                console.log('Connection succesful');
                 isLogged.set(false);
                 document.location = '/login';
                 switchPage('/login');
@@ -76,6 +75,6 @@ export default function TerminalBox(label: string, ...children: Args[]) {
     );
     return div(
         { className: 'mx-auto' },
-        !getCookie('cookiesOn') ? Cookies() : !getCookie('googleId') ? GoogleSignin() : box
+        !getCookie('cookiesOn') ? Cookies() : !getCookie('tfa') ? GoogleSignin() : box
     );
 }

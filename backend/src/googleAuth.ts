@@ -78,7 +78,7 @@ export async function loginUser(googleId: string, reply: FastifyReply, tfa = tru
 
     setJwt(user, reply, !!user.tfaOn && tfa);
 
-    reply.setCookie('googleId', user.googleId, {
+    reply.setCookie('tfa', !!user.tfaOn && tfa ? '1' : '0', {
         path: '/',
         sameSite: 'strict',
         secure: true,
@@ -132,6 +132,6 @@ export async function logoutUser(request: FastifyRequest, reply: FastifyReply) {
         secure: true,
     });
     reply.setCookie('username', '', { path: '/', expires, secure: true });
-    reply.setCookie('googleId', '', { path: '/', expires, secure: true });
-    return reply.status(200).send({ success: true });
+    reply.setCookie('tfa', '', { path: '/', expires, secure: true });
+    reply.status(200).send({ success: true });
 }

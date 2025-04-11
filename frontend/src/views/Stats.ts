@@ -20,7 +20,7 @@ export class Graphs {
 		this.gameModePie = new PieChart('Game modes');
 		this.returnRatePie = new PieChart('Return rate');
 		this.scoreLine = new LineChart('Score evolution');
-		this.rallyLine = new LineChart('Rally per match');
+		this.rallyLine = new LineChart('Rallies per match');
 		this.durationLine = new LineChart('Match duration (s)');
 		this.travelLine = new LineChart('Travel distance per match (field)');
 		this.distanceDurationLine = new LineChart('Travel distance vs. Duration (field/s)', false);
@@ -240,26 +240,26 @@ export class Stats {
 		});
 
 		this.liMatchPlayer.innerText =
-			`Match played:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countMatch)} match`;
-		this.liWin.innerText = `Win:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countWin)} match`;
+			`Match played:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countMatch)} matches`;
+		this.liWin.innerText = `Win:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countWin)} matches`;
 		this.liLose.innerText =
-			`Loose:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countMatch - data.countWin)} match`;
+			`Loose:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.countMatch - data.countWin)} matches`;
 		this.liAverageScore.innerText =
-			`Average score:`.padEnd(len, ' ') + `${data.avgScore.toFixed(2)} point`;
+			`Average score:`.padEnd(len, ' ') + `${data.avgScore.toFixed(2)} points`;
 		this.liTotalScore.innerText =
-			`Total marked point:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumScore)} point`;
+			`Total marked point:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumScore)} points`;
 		this.liAverageDistance.innerText =
-			`Average paddle travel:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(Math.floor(data.avgTravel))} field/match`;
+			`Average paddle travel:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(Math.floor(data.avgTravel))} fields/match`;
 		this.liTotalDistance.innerText =
-			`Total paddle distance travel:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumTravel)} field`;
+			`Total paddle distance travel:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumTravel)} fields`;
 		this.liAverageRally.innerText =
-			`Average rally:`.padEnd(len, ' ') + `${data.avgRally.toFixed(2)} rally/match`;
-		this.liTotalRally.innerText = `Total rally:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumRally)} rally`;
+			`Average rallies:`.padEnd(len, ' ') + `${data.avgRally.toFixed(2)} rallies/match`;
+		this.liTotalRally.innerText = `Total rallies:`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumRally)} rallies`;
 		this.liAverageRallyWin.innerText =
-			`Average rally per match (win):`.padEnd(len, ' ') +
-			`${data.avgRallyWin.toFixed(2)} rally/match`;
+			`Average rallies per match (win):`.padEnd(len, ' ') +
+			`${data.avgRallyWin.toFixed(2)} rallies/match`;
 		this.liTotalRallyWin.innerText =
-			`Total rally (win):`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumRallyWin)} rally`;
+			`Total rallies (win):`.padEnd(len, ' ') + `${Intl.NumberFormat().format(data.sumRallyWin)} rallies`;
 		this.liAverageDuration.innerText =
 			`Average match duration:`.padEnd(len, ' ') +
 			`${(data.avgDuration / 1000).toFixed(1)} s`;

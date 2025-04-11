@@ -10,9 +10,7 @@ export function openDatabase() {
     const db = new Database(dbPath, OPEN_READWRITE | OPEN_CREATE, err => {
         if (err) {
             console.error('Error connection to database: ' + err.message);
-        } else {
-            console.log('Database connection succesfull');
-        }
+        } 
     });
     return db;
 }

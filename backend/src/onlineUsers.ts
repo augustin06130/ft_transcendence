@@ -9,7 +9,7 @@ export function startOnlineUserTracking() {
     setInterval(() => {
         const now = Date.now();
         Object.entries(onlineUserStatus).forEach(([key, value]) => {
-            if (value.time + 60000 > now && value.status === 'online') delete onlineUserStatus[key];
+            if (value.time + 60000 * 5 > now && value.status === 'online') delete onlineUserStatus[key];
         });
     }, 60000);
 }

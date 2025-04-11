@@ -48,7 +48,7 @@ export default function PrivacyPolicy() {
             {},
             li({}, 'To remember cookie consent'),
             li({}, 'To store your username'),
-            li({}, 'To keep you logged in via your Google ID')
+            li({}, 'To keep you logged in via 2fa')
         ),
         p({}, 'We do not use cookies for advertising or analytics.'),
 

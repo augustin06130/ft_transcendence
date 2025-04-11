@@ -1,6 +1,6 @@
 import { allPromise, getPromise, runPromise } from './promise';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { loginUser } from './googleAuth';
+import { loginUser, logoutUser } from './googleAuth';
 import { readFileSync } from 'node:fs';
 import { JWTPayload } from './types';
 import { isFriend } from './friends';
@@ -50,7 +50,6 @@ export async function createNewUser(
     googleId: string,
     deletionDate: number = 0
 ) {
-    console.log('createNewUser', username);
     const sql = `
           INSERT INTO users (username, email, googleId, image, tfaON, date, deletionDate)
           VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -72,7 +71,7 @@ export async function createNewUser(
 }
 
 export async function updateProfileImage(request: FastifyRequest, reply: FastifyReply) {
-    const { googleId } = request.query as { googleId: string };
+    const { googleId } = request.user as { googleId: string };
     const sql = 'UPDATE users SET image = ? WHERE googleId = ?;';
     const params = [request.body, googleId];
     await runPromise(sql, params);
@@ -80,7 +79,7 @@ export async function updateProfileImage(request: FastifyRequest, reply: Fastify
 }
 
 export async function updateProfile(request: FastifyRequest, reply: FastifyReply) {
-    const { googleId } = request.query as { googleId: string };
+    const { googleId } = request.user as { googleId: string };
     let body = JSON.parse(request.body as string) as {
         username: string;
         email: string;
@@ -128,13 +127,14 @@ export async function getUsername(googleId: string) {
 
 export async function getUsernameList(request: FastifyRequest, reply: FastifyReply) {
     const { username } = request.query as { username: string };
-    const sql = `SELECT username FROM users WHERE username LIKE '${username}%';`;
-    reply.send(await allPromise(sql));
+    const sql = `SELECT username FROM users WHERE username LIKE ?;`;
+    const params = [`${username}%`];
+    reply.send(await allPromise(sql, params));
 }
 
 export async function isUser(request: FastifyRequest, reply: FastifyReply) {
     const { username } = request.query as { username: string };
-    reply.send(await getUserBy('useraname', username));
+    reply.send(await getUserBy('username', username));
 }
 
 export async function setUserBy(key: string, value: string, by: string, byvalue: string) {
@@ -148,7 +148,7 @@ export async function deleteUser(request: FastifyRequest, reply: FastifyReply) {
     const sql = 'DELETE FROM users WHERE googleId = ?';
     const params = [googleId];
     await runPromise(sql, params);
-    reply.code(204).send();
+    await logoutUser(request, reply);
 }
 
 export function updateUserDeletionDate(googleId: string) {
@@ -168,7 +168,6 @@ export function startUsersCleaning() {
 }
 
 export function setCookie(_: FastifyRequest, reply: FastifyReply) {
-	console.log('salut');
     reply
         .setCookie('cookiesOn', '1', {
             path: '/',

@@ -3,10 +3,8 @@ import HistoryView from '@views/HistoryView';
 import ProfileView from '@views/ProfileView';
 import RoomView from '@views/RoomView';
 import PongGameView from '@views/Pong';
-import Project from '@views/Project';
-import Contact from '@views/Contact';
-import Home from '@views/Home';
 import PrivacyPolicy from 'privacy';
+import Home from '@views/Home';
 
 export const baseLinks = {
 	'/': {
@@ -16,14 +14,6 @@ export const baseLinks = {
 	'/profile': {
 		view: ProfileView,
 		label: 'Profile',
-	},
-	'/project': {
-		view: Project,
-		label: 'Project',
-	},
-	'/contact': {
-		view: Contact,
-		label: 'Contact',
 	},
 	'/pong': {
 		view: PongGameView,

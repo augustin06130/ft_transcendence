@@ -58,7 +58,8 @@ export default class UserSearch {
             .catch(err => console.error(err));
     }
     private onclickHandle(option: any) {
-        this.input.value = option.value;
+        // this.input.value = option.value;
+		this.input.value = '';
         switchPage('/profile', option.value);
         this.list.style.display = 'none';
     }
@@ -88,7 +89,7 @@ export default class UserSearch {
         }
     }
     private onkeydownHandle(e: any) {
-        if (e.keyCode == 13) {
+        if (e.key == 'Enter') {
             e.preventDefault();
             const url = new URL('/api/user', window.location.href);
             url.searchParams.set('username', this.input.value);
@@ -100,6 +101,7 @@ export default class UserSearch {
                 .then(data => {
                     if (data) {
                         switchPage('/profile', this.input.value);
+						this.input.value = '';
                     }
                 })
                 .catch(err => console.warn(err));

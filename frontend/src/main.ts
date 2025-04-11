@@ -34,7 +34,7 @@ const routers = Router({
     ...navBarRoutes(),
 });
 
-export function renderApp() {
+document.addEventListener('DOMContentLoaded', _ => {
     $(
         'entry',
         // @ts-ignore
@@ -43,14 +43,4 @@ export function renderApp() {
         routers,
         popOver
     );
-}
-
-document.addEventListener('DOMContentLoaded', _ => {
-    renderApp();
-
-    isLogged.subscribe(() => {
-        setTimeout(() => {
-            renderApp(); // Re-render the entire app
-        }, 1);
-    });
 });

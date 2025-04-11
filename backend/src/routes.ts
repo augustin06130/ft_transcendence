@@ -1,4 +1,4 @@
-import { getProfile, getUsernameList, isUser, setCookie, updateProfile, updateProfileImage } from './user';
+import { deleteUser, getProfile, getUsernameList, isUser, setCookie, updateProfile, updateProfileImage } from './user';
 import { create_room, validate_roomId, get_tree, join_room } from './room';
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { confirmTfa, enableTfa, loginTfa, removeTfa } from './tfa';
@@ -60,6 +60,7 @@ export default function addFastifyRoutes(fastify: FastifyInstance) {
     addPost('/api/profile', updateProfile);
     addPost('/api/profile/image', updateProfileImage);
     addGet('/api/profile/list', getUsernameList);
+    addGet('/api/profile/delete', deleteUser);
 
     addPost('/api/login/google', handleGoogle);
     addPost('/api/logout', logoutUser);
