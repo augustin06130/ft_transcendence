@@ -6,6 +6,7 @@ import PongGameView from '@views/Pong';
 import Project from '@views/Project';
 import Contact from '@views/Contact';
 import Home from '@views/Home';
+import PrivacyPolicy from 'privacy';
 
 export const baseLinks = {
 	'/': {
@@ -40,4 +41,8 @@ export const baseLinks = {
 		view: TfaLoginView,
 		label: '',
 	},
-};
+	'/Privacy': {
+		view: PrivacyPolicy,
+		label: 'Privacy',
+	},
+}

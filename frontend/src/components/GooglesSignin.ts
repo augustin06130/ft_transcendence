@@ -10,7 +10,10 @@ export default function GoogleSignin() {
     onload.setAttribute('data-auto_prompt', 'false');
     onload.setAttribute('data-context', 'signin');
     onload.setAttribute('data-ux-mode', 'popup');
-    return div({ className: 'inline pr-4' }, onload, signin_button());
+    return div(
+        { className: 'flex justify-center content-center pb-4' },
+        div({ className: 'inline pr-4' }, onload, signin_button())
+    );
 }
 
 function signin_button() {

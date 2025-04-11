@@ -23,7 +23,6 @@ export function Router(routes: Routes) {
 		}
 
 		window.history.pushState('page2', '', detail.to);
-		console.log(history);
 		return result;
 	}
 

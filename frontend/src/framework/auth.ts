@@ -9,7 +9,7 @@ export function UseStateIsLogged<T>(initialValue: T, onUpdate?: (value: T) => vo
 	let value = initialValue;
 	const subscribers: Subscriber<T>[] = [];
 
-	const get = () => !!getCookie('username') && !! getCookie('googleId');
+	const get = () => !!getCookie('username') && !!getCookie('googleId');
 
 	const set = (newValue: T) => {
 		if (value !== newValue) {

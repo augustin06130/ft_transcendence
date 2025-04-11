@@ -19,11 +19,13 @@ function navBarRoutes(): Routes {
             '/history': baseLinks['/history'],
             '/room': baseLinks['/room'],
             '/pong': baseLinks['/pong'],
+            '/Privacy': baseLinks['/Privacy'],
         };
     } else {
         return {
             '/': baseLinks['/'],
             '/tfa': baseLinks['/tfa'],
+            '/Privacy': baseLinks['/Privacy'],
         };
     }
 }

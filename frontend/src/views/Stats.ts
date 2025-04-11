@@ -232,7 +232,7 @@ export class Stats {
 	}
 
 	public updateData(data: MatchStatistics) {
-		const len = 31;
+		const len = 35;
 		Object.entries(data).forEach(([key, val]) => {
 			if (val === null) {
 				(data as any)[key] = 0;
