@@ -1,4 +1,4 @@
-import { button, div, p } from '@framework/tags';
+import { button, div, p, a } from '@framework/tags';
 import { switchPage } from '@framework/Router';
 import { getCookie } from '@framework/cookies';
 import { isLogged } from '@framework/auth';
@@ -10,7 +10,8 @@ export function footer() {
     return div(
         { className: 'mt-4 text-green-400/70 text-sm text-center' },
         p({}, `© ${new Date().getFullYear()} TERM_OS • All systems nominal`),
-        isLogged.get() ? LogoutButton() : null
+        isLogged.get() ? LogoutButton() : null,
+        a({ href: '/privacy', className:'text-green-400/70 text-sm hover:text-green-400/100 transition-opacity' }, ' Privacy')
     );
 }
 

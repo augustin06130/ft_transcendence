@@ -65,7 +65,7 @@ export async function addUser(
     await createNewUser(generatedName, email, googleId, deleteDate);
 }
 
-export async function loginUser(googleId: string, reply: FastifyReply) {
+export async function loginUser(googleId: string, reply: FastifyReply, tfa = true) {
     const user = await getUserBy('googleId', googleId);
     if (!user) {
         throw { code: 403, message: 'User not found' };
@@ -76,7 +76,7 @@ export async function loginUser(googleId: string, reply: FastifyReply) {
     }
     updateUserDeletionDate(user.googleId);
 
-    setJwt(user, reply, !!user.tfaOn);
+    setJwt(user, reply, !!user.tfaOn && tfa);
 
     reply.setCookie('googleId', user.googleId, {
         path: '/',

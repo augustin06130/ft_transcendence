@@ -41,8 +41,8 @@ export const baseLinks = {
 		view: TfaLoginView,
 		label: '',
 	},
-	'/Privacy': {
+	'/privacy': {
 		view: PrivacyPolicy,
-		label: 'Privacy',
+		label: '',
 	},
 }

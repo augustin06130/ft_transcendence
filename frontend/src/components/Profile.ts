@@ -261,6 +261,7 @@ export default function Profile(name: string) {
             })
             .catch(err => {
                 console.error('Error updating profile:', err);
+				switchPage('/profile', getCookie('username'))
                 popOver.show(err);
             });
     }

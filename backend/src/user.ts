@@ -107,8 +107,8 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
     params.push(googleId);
 
     await runPromise(sql, params);
-    loginUser(googleId, reply);
-    reply.code(204);
+    await loginUser(googleId, reply, false);
+    // reply.code(204);
 }
 
 export async function getProfile(request: FastifyRequest, reply: FastifyReply) {
