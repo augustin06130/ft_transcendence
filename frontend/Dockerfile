@@ -1,12 +1,7 @@
 FROM node:alpine3.21
 
+RUN npm install -g nodemon
+
 WORKDIR /frontend
 
-COPY package.json ./
-
-RUN npm install && \
-	npm install -g nodemon
-
-COPY tsconfig.json .
-
-CMD ["npm", "run", "hot-reload"]
+CMD ["sh", "-c", "npm i && npm run hot-reload"]
