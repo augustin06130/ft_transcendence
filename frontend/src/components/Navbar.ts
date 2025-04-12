@@ -1,5 +1,5 @@
 import { nav, div, span, ul, li, switchPage } from '@framework/framework';
-import { isLogged } from '@framework/auth';
+import { isLogged } from '@framework/cookies';
 import UserSearch from './UserSearch';
 import Link from '@framework/Link';
 
@@ -62,7 +62,7 @@ export function NavBar(routes: { [key: string]: { label: string } }) {
             ),
             ul(
                 { className: 'flex gap-6' },
-                isLogged.get() ? userSearch.render() : null,
+                isLogged() ? userSearch.render() : null,
                 ...buttons.map(b => li({ className: 'm-auto' }, b))
             )
         )

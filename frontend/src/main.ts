@@ -1,6 +1,6 @@
 import { $, Router } from '@framework/framework';
 import { baseLinks } from '@framework/Routes';
-import { isLogged } from './framework/auth';
+import { isLogged } from './framework/cookies';
 import { NavBar } from '@components/Navbar';
 import { Routes } from '@framework/types';
 import popOver from '@components/PopOver';
@@ -11,7 +11,7 @@ function navBarRoutes(): Routes {
         entry.innerHTML = '';
     }
 
-    if (isLogged.get()) {
+    if (isLogged()) {
         baseLinks;
         return {
             '/': baseLinks['/'],
