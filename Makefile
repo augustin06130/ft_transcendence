@@ -6,7 +6,7 @@ run:
 	docker compose -f $(COMPOSE_FILE) up
 
 prod:
-	docker compose -f docker-compose.prod.yml up
+	docker compose -f docker-compose.prod.yml up --build
 
 build:
 	docker compose -f $(COMPOSE_FILE) build

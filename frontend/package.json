@@ -5,8 +5,9 @@
 	"dependencies": {},
 	"scripts": {
 		"build": "npx esbuild src/main.ts --bundle --outfile=./public/bundle.js",
+		"prod": "npx esbuild src/main.ts --minify --bundle --outfile=./public/bundle.js",
 		"tailwind": "npx @tailwindcss/cli -i ./src/input.css -o ./public/output.css",
-		"start": "npm run build && npm run tailwind",
+		"start": "npm run prod && npm run tailwind",
 		"dev": "nodemon --watch ./src -e ts --exec 'npm run build && npm run tailwind'"
 	},
 	"devDependencies": {
