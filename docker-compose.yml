@@ -3,7 +3,7 @@ services:
     container_name: fastify
     restart: always
     build: ./backend
-    ports: ["8080:80"]
+    ports: ["8080:8080"]
     volumes:
       - ./backend:/backend
       - ./frontend/public:/backend/public

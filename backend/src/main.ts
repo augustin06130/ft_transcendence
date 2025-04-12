@@ -9,7 +9,7 @@ import fs from 'fs';
 
 dotenv.config();
 
-const port: number = 80;
+const port: number = 8080
 const host: string = '0.0.0.0';
 
 if (!process.env.SESSION_SECRET) {

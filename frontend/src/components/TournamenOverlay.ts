@@ -1,5 +1,4 @@
 import { div, h2 } from '@framework/tags';
-import DOMPurify from 'dompurify';
 
 
 export default class TournamentOverlay {
@@ -23,7 +22,7 @@ export default class TournamentOverlay {
     };
 
     setTournament = (line: string) => {
-		this.div.replaceChildren(this.getCore(DOMPurify.sanitize(line)));
+		this.div.replaceChildren(line);
     };
 
     show = () => {
