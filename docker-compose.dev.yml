@@ -1,0 +1,21 @@
+services:
+  fastify:
+    container_name: fastify
+    build: ./backend
+    ports: ["8080:8080"]
+    command: sh -c "npm i && npm run dev"
+    restart: unless-stopped
+    volumes:
+      - ./backend:/backend
+      - ./frontend/public:/backend/public
+    depends_on:
+      - frontend
+
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    command: sh -c "npm i && npm run dev"
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/frontend
+      - ./frontend/public:/frontend/public

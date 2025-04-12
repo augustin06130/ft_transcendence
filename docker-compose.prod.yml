@@ -1,25 +1,16 @@
 services:
   fastify:
     container_name: fastify
-    restart: always
     build: ./backend
     ports: ["8080:8080"]
     volumes:
-      - ./backend:/backend
       - ./frontend/public:/backend/public
-    networks: [transcendence]
+    restart: always
     depends_on:
       - frontend
 
   frontend:
     container_name: frontend
     build: ./frontend
-    networks: [transcendence]
     volumes:
-      - ./frontend:/frontend
       - ./frontend/public:/frontend/public
-    restart: always
-
-networks:
-  transcendence:
-    name: transcendence
