@@ -88,8 +88,11 @@ function ProfileForm(
 			method: 'POST',
 			body: image64,
 		}).then(resp => {
-			if (!resp.ok || resp.status !== 204) popOver.show('Error uploading profile picture');
-			else location.reload();
+			if (!resp.ok || resp.status !== 204) {
+				popOver.show('Error uploading profile picture');
+			} else {
+				switchPage('/profile')
+			}
 		});
 	}
 
@@ -153,7 +156,7 @@ function ProfileForm(
 				)
 				: null,
 			div({ className: 'flex-auto' }),
-			username.get() !== getCookie('username') && !editMode()
+			username.get() !== getCookie('username')
 				? button(
 					{
 						className: 'hover:bg-green-500/20',
@@ -255,6 +258,7 @@ export default function Profile(name: string) {
 				if (!response.ok) {
 					throw 'Error updating profile';
 				}
+				switchPage('/profile');
 			})
 			.catch(err => {
 				console.error('Error updating profile:', err);
