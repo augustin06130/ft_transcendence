@@ -1,5 +1,6 @@
 node_modules
 database.db
+package-lock.json
 **.js
 .env
 output.css
