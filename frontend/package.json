@@ -4,7 +4,7 @@
 	"scripts": {
 		"build": "npx esbuild src/main.ts --bundle --outfile=./public/bundle.js",
 		"tailwind": "tailwindcss -i ./src/input.css -o ./public/output.css",
-		"hot-reload": "npm i && nodemon --watch ./src -e ts --exec 'npm run build && npm run tailwind'"
+		"hot-reload": "nodemon --watch ./src -e ts --exec 'npm run build && npm run tailwind'"
 	},
 	"type": "module",
  	"dependencies": {

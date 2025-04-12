@@ -205,7 +205,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "hot-reload": "npm i && nodemon ./src/main.ts"
+    "hot-reload": "nodemon ./src/main.ts"
   },
   "keywords": [],
   "author": "",

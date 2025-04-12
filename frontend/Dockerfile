@@ -4,9 +4,9 @@ WORKDIR /frontend
 
 COPY package.json ./
 
-RUN npm install
-RUN npm install -g nodemon
+RUN npm install && \
+	npm install -g nodemon
 
-# CMD ["sleep", "100000000"]
+COPY tsconfig.json .
+
 CMD ["npm", "run", "hot-reload"]
-# CMD ["npm", "run", "hot-reload"]
