@@ -1,16 +1,17 @@
-import { div, p, form, input, label, button, span, img, textarea } from '@framework/tags';
+import { div, p, form, label, button, span, img, textarea } from '@framework/tags';
 import { EmailIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
 import UseState, { UseStateType } from '@framework/UseState';
 import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
-import { TwoFactorAuthSVG } from '@Icon/addTfa';
-import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 import { isLogged, getCookie } from '@framework/cookies';
+import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { TwoFactorAuthSVG } from '@Icon/addTfa';
 import { switchPage } from '@framework/Router';
 import { UserIconSVG } from '@Icon/User';
 import TfaOverlay from './TfaOverlay';
 import popOver from './PopOver';
+import InputL from './InputL';
 import Loader from './Loader';
-import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 
 function ProfileForm(
 	handleSubmit: (e: Event) => void,
@@ -25,34 +26,6 @@ function ProfileForm(
 	isFriend: UseStateType<boolean>,
 	isTfa: UseStateType<boolean>
 ) {
-	function inputL(
-		id: string,
-		type: string,
-		state: UseStateType<string>,
-		placeholder: string,
-		icon: SVGSVGElement
-	): HTMLDivElement {
-		return div(
-			{ className: 'space-y-1' },
-			label(
-				{ htmlFor: id, className: 'text-sm flex items-center gap-2' },
-				icon,
-				span({}, `${id.toUpperCase()}:`)
-			),
-			input({
-				id: id,
-				type: type,
-				name: id,
-				className: 'w-full bg-black border border-green-500/30 p-2 text-green-500',
-				placeholder: placeholder,
-				value: state.get(),
-				disabled: !editMode(),
-				event: {
-					input: e => state.set((e.target as any)?.value),
-				},
-			})
-		);
-	}
 
 	function textareaL(
 		id: string,
@@ -180,8 +153,8 @@ function ProfileForm(
 					submit: handleSubmit,
 				},
 			},
-			inputL('username', 'text', username, 'username', UserIconSVG),
-			inputL('email', 'email', email, 'email@example.com', EmailIconSVG),
+			InputL('username', 'text', username, 'username', UserIconSVG, !editMode()),
+			InputL('email', 'email', email, 'email@example.com', EmailIconSVG, !editMode()),
 			textareaL('bio', bio, 'Tell us about yourself...', UserIconSVG)
 		)
 	);

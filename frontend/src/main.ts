@@ -18,14 +18,15 @@ function navBarRoutes(): Routes {
             '/profile': baseLinks['/profile'],
             '/history': baseLinks['/history'],
             '/room': baseLinks['/room'],
-            '/pong': baseLinks['/pong'],
             '/privacy': baseLinks['/privacy'],
+            '/pong': baseLinks['/pong'],
         };
     } else {
         return {
             '/': baseLinks['/'],
-            '/tfa': baseLinks['/tfa'],
+            '/register': baseLinks['/register'],
             '/privacy': baseLinks['/privacy'],
+            '/tfa': baseLinks['/tfa'],
         };
     }
 }

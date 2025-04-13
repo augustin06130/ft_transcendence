@@ -1,7 +1,5 @@
-import { button, div, p, a } from '@framework/tags';
-import { switchPage } from '@framework/Router';
 import { getCookie, isLogged } from '@framework/cookies';
-import GoogleSignin from './GooglesSignin';
+import { button, div, p, a } from '@framework/tags';
 import { Args } from '@framework/types';
 import Cookies from '@views/cookies';
 
@@ -71,6 +69,6 @@ export default function TerminalBox(label: string, ...children: Args[]) {
 	);
 	return div(
 		{ className: 'mx-auto' },
-		!getCookie('cookiesOn') ? Cookies() : !getCookie('tfa') ? GoogleSignin() : box
+		!getCookie('cookiesOn') ? Cookies() : box
 	);
 }

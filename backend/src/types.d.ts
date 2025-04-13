@@ -67,3 +67,18 @@ export type JWTPayload = {
     username: string;
     tfaOn: boolean;
 };
+
+export type User = {
+	username: string;
+	email: string;
+	name: string;
+	bio: string;
+	image: string;
+	googleId: string;
+	tfaSecret: string;
+	tfaOn: string;
+	data: number;
+	password:string
+};
+
+

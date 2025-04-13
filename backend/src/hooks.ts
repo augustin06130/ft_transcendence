@@ -11,10 +11,13 @@ export default function attachHooks(fastify: FastifyInstance) {
 		'/output.css',
 		'/style.css',
 		'/bundle.js',
+		'/api/register',
+		'/api/login/pass',
 		'/api/login/google',
 		'/api/logout',
 		'/api/cookies',
-		'/coockie'
+		'/coockie',
+		'/register'
 	]);
 
 	fastify.addHook('onRequest', async (request, reply) => {

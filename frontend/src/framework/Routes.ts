@@ -5,6 +5,7 @@ import RoomView from '@views/RoomView';
 import PongGameView from '@views/Pong';
 import PrivacyPolicy from 'privacy';
 import Home from '@views/Home';
+import Register from '@views/Register';
 
 export const baseLinks = {
 	'/': {
@@ -35,4 +36,9 @@ export const baseLinks = {
 		view: PrivacyPolicy,
 		label: '',
 	},
+	'/register': {
+		view: Register,
+		label: 'Register',
+	},
+
 }

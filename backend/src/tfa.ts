@@ -1,7 +1,8 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { getUserBy, setUserBy, User } from './user';
+import { getUserBy, setUserBy } from './user';
 import { setJwt } from './googleAuth';
 import speakeasy from 'speakeasy';
+import { User } from './types';
 import QRCode from 'qrcode';
 
 export async function enableTfa(request: FastifyRequest, reply: FastifyReply) {

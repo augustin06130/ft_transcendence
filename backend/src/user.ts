@@ -1,23 +1,15 @@
 import { allPromise, getPromise, runPromise } from './promise';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { JWTPayload, User } from './types';
 import { logoutUser } from './googleAuth';
 import { readFileSync } from 'node:fs';
-import { JWTPayload } from './types';
 import { isFriend } from './friends';
 import { htoms } from './utils';
 import path from 'path';
 
-export type User = {
-	username: string;
-	email: string;
-	name: string;
-	bio: string;
-	image: string;
-	googleId: string;
-	tfaSecret: string;
-	tfaOn: string;
-	data: number;
-};
+const defaultImage =
+	'data:image/png;base64,' +
+	readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
 export async function createTableUser() {
 	const sql = `
@@ -25,47 +17,68 @@ export async function createTableUser() {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL,
-		googleId TEXT NOT NULL UNIQUE,
+		googleId TEXT UNIQUE,
 		bio TEXT,
         image BLOB,
 		tfaSecret BLOB,
 		tfaOn INTEGER NOT NULL,
 		date INTEGER NOT NULL,
-		deletionDate INTEGER NOT NULL
+		deletionDate INTEGER NOT NULL,
+		password TEXT
       )`;
+
 	await runPromise(sql);
 	if (!(await getUserBy('username', 'Computer')))
-		await createNewUser('Computer', 'computer@ping.pong', '-1', Number.MAX_SAFE_INTEGER);
+		await createNewUserGoogle('Computer', 'computer@ping.pong', 'computer', Number.MAX_SAFE_INTEGER);
 	if (!(await getUserBy('username', 'Guest')))
-		await createNewUser('Guest', 'guest@ping.pong', '-2', Number.MAX_SAFE_INTEGER);
+		await createNewUserGoogle('Guest', 'guest@ping.pong', 'guest', Number.MAX_SAFE_INTEGER);
 }
 
 export async function getUserBy(key: string, value: string): Promise<User> {
 	return getPromise(`SELECT * FROM users WHERE ${key} = ?;`, [value]);
 }
 
-export async function createNewUser(
+export async function createNewUserGoogle(
 	username: string,
 	email: string,
-	googleId: string,
-	deletionDate: number = 0
+	googleId: string = '',
+	deletionDate: number = 0,
 ) {
 	const sql = `
           INSERT INTO users (username, email, googleId, image, tfaON, date, deletionDate)
           VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
-	const image =
-		'data:image/png;base64,' +
-		readFileSync(path.join(__dirname, '../public/default-avatar.png')).toString('base64');
 
 	const params = [
 		username,
 		email,
 		googleId,
-		image,
+		defaultImage,
 		0,
 		Date.now(),
 		deletionDate || Date.now() + htoms(1),
+	];
+	return runPromise(sql, params);
+}
+
+export async function createNewUserPass(
+	username: string,
+	email: string,
+	hashPass: string,
+) {
+	const sql = `
+          INSERT INTO users (username, email, password, image, tfaON, date, deletionDate)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+
+	const params = [
+		username,
+		email,
+		hashPass,
+		defaultImage,
+		0,
+		Date.now(),
+		Date.now() + htoms(1),
 	];
 	return runPromise(sql, params);
 }
