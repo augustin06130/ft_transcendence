@@ -1,5 +1,6 @@
 import TerminalBox, { BoxFooter } from '@components/TerminalBox';
 import { div, p, form, input } from '@framework/tags';
+import GoogleSignin from '@components/GooglesSignin';
 import UseState from '@framework/UseState';
 import popOver from '@components/PopOver';
 import { State } from '@framework/types';
@@ -21,12 +22,13 @@ function LoginForm(
 		},
 		InputL('username', 'text', username, 'username', UserIconSVG),
 		InputL('password', 'password', password, '********', LockIconSVG),
-		div({ className: 'flex' },
+		div({ className: 'flex content-center' },
 			input({
 				id: 'submit',
 				type: 'submit',
-				className: 'inline w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
-			})
+				className: 'mr-3 w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
+			}),
+			GoogleSignin()
 		)
 	);
 }

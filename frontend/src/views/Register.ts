@@ -1,5 +1,6 @@
 import TerminalBox, { BoxFooter } from '@components/TerminalBox';
 import { div, p, form, input, } from '@framework/tags';
+import GoogleSignin from '@components/GooglesSignin';
 import { switchPage } from '@framework/Router';
 import UseState from '@framework/UseState';
 import popOver from '@components/PopOver';
@@ -58,14 +59,15 @@ export default function Register() {
 		InputL('email', 'email', email, 'user@example.com', UserIconSVG),
 		InputL('password', 'password', password, '********', LockIconSVG),
 		InputL('confirm_Password', 'password', confirmPassword, '********', LockIconSVG),
-		div({ className: 'flex' },
+		div({ className: 'flex content-center' },
 			input({
 				id: 'submit',
 				type: 'submit',
 				value: 'REGISTER',
 				className:
-					'inline w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
+					'mr-3 w-full py-2 border border-green-500 text-green-500 hover:bg-green-500/20',
 			}),
+				GoogleSignin()
 		)
 	);
 
