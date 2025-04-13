@@ -1,7 +1,7 @@
 import { onlineUserStatus } from './onlineUsers';
 import { FastifyInstance } from 'fastify';
+import { logoutUser } from './auth';
 import { getUserBy } from './user';
-import { logoutUser } from './googleAuth';
 
 export default function attachHooks(fastify: FastifyInstance) {
 	const authorizedRoutes = new Set([
@@ -11,10 +11,13 @@ export default function attachHooks(fastify: FastifyInstance) {
 		'/output.css',
 		'/style.css',
 		'/bundle.js',
+		'/api/register',
+		'/api/login/pass',
 		'/api/login/google',
 		'/api/logout',
 		'/api/cookies',
-		'/coockie'
+		'/coockie',
+		'/register'
 	]);
 
 	fastify.addHook('onRequest', async (request, reply) => {
@@ -22,8 +25,8 @@ export default function attachHooks(fastify: FastifyInstance) {
 		try {
 			const jwt: any = await request.jwtVerify({ onlyCookie: true });
 			if (jwt.username) {
-				if (!(await getUserBy('username', jwt.username)))
-					return logoutUser(request, reply);
+				// if (!(await getUserBy('username', jwt.username)))
+				// 	return logoutUser(request, reply);
 
 				onlineUserStatus[jwt.username] = { time: Date.now(), status: 'online' };
 			}

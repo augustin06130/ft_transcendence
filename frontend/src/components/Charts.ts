@@ -22,8 +22,6 @@ class Chart {
 		});
 		this.handleResize = this.handleResize.bind(this);
 		window.addEventListener('resize', this.handleResize);
-		setTimeout(() => this.handleResize(), 1);
-		setTimeout(() => this.handleResize(), 1);
 	}
 
 	handleResize() {
@@ -55,6 +53,9 @@ export class PieChart extends Chart {
 	setData(...sections: Section[]) {
 		this.data = sections;
 		this.total = this.data.reduce((tot, point) => tot + point.value, 0);
+		this.handleResize();
+		setTimeout(() => this.handleResize(), 10);
+		setTimeout(() => this.handleResize(), 20);
 		this.drawChart();
 	}
 
@@ -131,6 +132,8 @@ export class LineChart extends Chart {
 		this.minY = 0;
 		this.maxY = Math.max(...this.data.map(v => v.y));
 		this.handleResize();
+		setTimeout(() => this.handleResize(), 10);
+		setTimeout(() => this.handleResize(), 20);
 		this.drawChart();
 	}
 

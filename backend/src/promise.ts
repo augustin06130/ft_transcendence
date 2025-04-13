@@ -2,7 +2,7 @@ import { db } from "./main";
 
 export async function getPromise(sql: string, params: any[] = []) {
 	return new Promise<any>((resolve, reject) => {
-		db.get(sql, params, (err, data) => {
+		db.get(sql, params, function(err, data) {
 			if (err) {
 				reject(err);
 			} else {
@@ -13,12 +13,12 @@ export async function getPromise(sql: string, params: any[] = []) {
 }
 
 export async function runPromise(sql: string, params: any[] = []) {
-	return new Promise<void>((resolve, reject) => {
-		db.run(sql, params, (err) => {
+	return new Promise<number>((resolve, reject) => {
+		db.run(sql, params, function(err) {
 			if (err) {
 				reject(err);
 			} else {
-				resolve();
+				resolve(this.lastID);
 			}
 		});
 	});
@@ -26,7 +26,7 @@ export async function runPromise(sql: string, params: any[] = []) {
 
 export async function allPromise(sql: string, params: any[] = []) {
 	return new Promise((resolve, reject) => {
-		db.all(sql, params, (err, data) => {
+		db.all(sql, params, function(err, data) {
 			if (err) {
 				reject(err);
 			} else {

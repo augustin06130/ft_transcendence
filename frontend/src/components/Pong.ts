@@ -132,7 +132,6 @@ export default class PongGame {
 		};
 	}
 
-
 	public close() {
 		this.socket.close();
 	}
@@ -334,7 +333,6 @@ export default class PongGame {
 		}
 		if (nextX > this.state.canvasWidth - this.state.game.paddleWidth) {
 			dtHit = (this.state.canvasWidth - x - this.state.game.paddleWidth) / Vx;
-			console.log('depth', d)
 			return y + Vy * dtHit;
 		}
 		return this.getNextBall(nextX, nextY, Vx, Vy, dt, d + 1);

@@ -1,6 +1,7 @@
 import { PieChart, LineChart } from '@components/Charts';
 import { MatchDB, MatchStatistics } from 'types';
 import { div, ul, li } from '@framework/tags';
+import popOver from '@components/PopOver';
 
 export class Graphs {
 	name: string;
@@ -34,16 +35,13 @@ export class Graphs {
 		url.searchParams.set('username', name);
 		url.searchParams.set('page', '0');
 		fetch(url, {})
-			.then(resp => {
-				if (!resp.ok) {
-					throw 'Error getching stats';
-				}
-				return resp.json();
+			.then(resp => resp.json())
+			.then(json => {
+				if (!json.success)
+					throw json.message;
+				this.updateData(json.data)
 			})
-			.then((data: MatchDB[]) => {
-				this.updateData(data);
-			})
-			.catch(err => console.warn(err));
+			.catch(err => popOver.show(err));
 	}
 
 	private setGameModePie(matches: MatchDB[]) {
@@ -219,16 +217,13 @@ export class Stats {
 		const url = new URL('/api/stats', window.location.href);
 		url.searchParams.set('username', name);
 		fetch(url, {})
-			.then(resp => {
-				if (!resp.ok) {
-					throw 'Error fetching stats';
-				}
-				return resp.json();
+			.then(resp => resp.json())
+			.then(json => {
+				if (!json.success)
+					throw json.message
+				this.updateData(json);
 			})
-			.then((data: MatchStatistics) => {
-				this.updateData(data);
-			})
-			.catch(err => console.warn(err));
+			.catch(err => popOver.show(err));
 	}
 
 	public updateData(data: MatchStatistics) {

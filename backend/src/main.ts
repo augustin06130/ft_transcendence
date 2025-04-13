@@ -52,7 +52,7 @@ const start = async () => {
 		startOnlineUserTracking();
 		await setupDatabase();
 		await fastify.listen({ port, host });
-		console.log('Server is listening on https://localhost:8080');
+		console.debug('Server is listening on https://localhost:8080');
 	} catch (err) {
 		console.error('Error starting server:', err);
 		process.exit(1);

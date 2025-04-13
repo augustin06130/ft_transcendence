@@ -4,77 +4,78 @@ import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { confirmTfa, enableTfa, loginTfa, removeTfa } from './tfa';
 import { getMatches, getMatchesCount, getStats } from './matches';
 import { addFriend, getFriends, removeFriend } from './friends';
-import { handleGoogle, logoutUser } from './googleAuth';
+import { loginPass, registerPass } from './login';
 import setupStaticLocations from './static';
+import { handleGoogle } from './googleAuth';
+import { updatePass } from './login';
+import { logoutUser } from './auth';
+
+export function sendSuccess(reply: FastifyReply, code: number = 200, response: { [key: string]: any } = {}) {
+	response['success'] = true;
+	reply.code(code).send(response);
+}
 
 export default function addFastifyRoutes(fastify: FastifyInstance) {
-    function addPost(
-        route: string,
-        handler: (request: FastifyRequest, reply: FastifyReply) => any
-    ) {
-        fastify.post(route, async (request, reply) => {
-            try {
-                await handler(request, reply);
-            } catch (err: any) {
-                if (typeof err === 'object' && typeof err.code) {
-                    console.error(err);
-                    reply.code(err.code).send(err.message);
-                } else {
-                    reply.code(400).send(err);
-                }
-            }
-        });
-    }
 
-    function addGet(route: string, handler: (request: FastifyRequest, reply: FastifyReply) => any) {
-        fastify.get(route, async (request, reply) => {
-            try {
-                await handler(request, reply);
-            } catch (err: any) {
-                if (typeof err === 'object' && typeof err.code) {
-                    console.error(err);
-                    reply.code(err.code).send(err.message);
-                } else {
-                    reply.code(400).send(err);
-                }
-            }
-        });
-    }
+	function addPost(route: string, handler: (request: FastifyRequest, reply: FastifyReply) => any) {
+		fastify.post(route, async (request, reply) => {
+			await execHandler(request, reply, handler);
+		});
+	}
 
-    fastify.get('/pong', (_, rep) => rep.redirect('/room'));
+	function addGet(route: string, handler: (request: FastifyRequest, reply: FastifyReply) => any) {
+		fastify.get(route, async (request, reply) => {
+			await execHandler(request, reply, handler);
+		});
+	}
 
-    addGet('/api/stats', getStats);
-    addGet('/api/matches', getMatches);
-    addGet('/api/matches/count', getMatchesCount);
+	async function execHandler(request: FastifyRequest, reply: FastifyReply, handler: (request: FastifyRequest, reply: FastifyReply) => any) {
+		try {
+			await handler(request, reply);
+		} catch (err: any) {
+			err['succes'] = false;
+			console.error(err);
+			reply.code(err.code || 400).send(err);
+		}
+	}
 
-    addGet('/api/friend/all', getFriends);
-    addPost('/api/friend/add', addFriend);
-    addPost('/api/friend/remove', removeFriend);
+	fastify.get('/pong', (_, rep) => rep.redirect('/room'));
 
-    addGet('/api/room', create_room);
-    addPost('/api/room', validate_roomId);
-    addPost('/api/tournament', get_tree);
+	addGet('/api/stats', getStats);
+	addGet('/api/matches', getMatches);
+	addGet('/api/matches/count', getMatchesCount);
 
-    addGet('/api/user', isUser);
-    addGet('/api/profile', getProfile);
-    addPost('/api/profile', updateProfile);
-    addPost('/api/profile/image', updateProfileImage);
-    addGet('/api/profile/list', getUsernameList);
-    addGet('/api/profile/delete', deleteUser);
+	addGet('/api/friend/all', getFriends);
+	addPost('/api/friend/add', addFriend);
+	addPost('/api/friend/remove', removeFriend);
 
-    addPost('/api/login/google', handleGoogle);
-    addPost('/api/logout', logoutUser);
+	addGet('/api/room', create_room);
+	addPost('/api/room', validate_roomId);
+	addPost('/api/tournament', get_tree);
 
-    addGet('/api/tfa/add', enableTfa);
-    addPost('/api/tfa/verify', confirmTfa);
-    addPost('/api/tfa/login', loginTfa);
-    addGet('/api/tfa/remove', removeTfa);
+	addGet('/api/user', isUser);
+	addGet('/api/profile', getProfile);
+	addPost('/api/profile', updateProfile);
+	addPost('/api/profile/pass', updatePass);
+	addPost('/api/profile/image', updateProfileImage);
+	addGet('/api/profile/list', getUsernameList);
+	addGet('/api/profile/delete', deleteUser);
 
-    addGet('/api/cookies', setCookie);
+	addPost('/api/register', registerPass);
+	addPost('/api/login/pass', loginPass);
+	addPost('/api/login/google', handleGoogle);
+	addGet('/api/logout', logoutUser);
 
-    fastify.register(async fastify => {
-        fastify.get('/api/pong', { websocket: true }, join_room);
-    });
+	addGet('/api/tfa/add', enableTfa);
+	addPost('/api/tfa/verify', confirmTfa);
+	addPost('/api/tfa/login', loginTfa);
+	addGet('/api/tfa/remove', removeTfa);
 
-    setupStaticLocations(fastify, ['/style.css', '/output.css', '/bundle.js', '/favicon.ico']);
+	addGet('/api/cookies', setCookie);
+
+	fastify.register(async fastify => {
+		fastify.get('/api/pong', { websocket: true }, join_room);
+	});
+
+	setupStaticLocations(fastify, ['/style.css', '/output.css', '/bundle.js', '/favicon.ico']);
 }

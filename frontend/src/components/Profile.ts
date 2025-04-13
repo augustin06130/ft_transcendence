@@ -1,16 +1,18 @@
-import { div, p, form, input, label, button, span, img, textarea } from '@framework/tags';
+import { div, p, form, label, button, span, img, textarea } from '@framework/tags';
 import { EmailIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
 import UseState, { UseStateType } from '@framework/UseState';
 import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
-import { TwoFactorAuthSVG } from '@Icon/addTfa';
-import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 import { isLogged, getCookie } from '@framework/cookies';
+import { AddFriendIconSVG } from '@Icon/AddFriend';
+import { TwoFactorAuthSVG } from '@Icon/addTfa';
 import { switchPage } from '@framework/Router';
 import { UserIconSVG } from '@Icon/User';
 import TfaOverlay from './TfaOverlay';
 import popOver from './PopOver';
+import InputL from './InputL';
 import Loader from './Loader';
-import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
+import { ChangePasswordSVG } from '@Icon/ChangePass';
 
 function ProfileForm(
 	handleSubmit: (e: Event) => void,
@@ -25,34 +27,6 @@ function ProfileForm(
 	isFriend: UseStateType<boolean>,
 	isTfa: UseStateType<boolean>
 ) {
-	function inputL(
-		id: string,
-		type: string,
-		state: UseStateType<string>,
-		placeholder: string,
-		icon: SVGSVGElement
-	): HTMLDivElement {
-		return div(
-			{ className: 'space-y-1' },
-			label(
-				{ htmlFor: id, className: 'text-sm flex items-center gap-2' },
-				icon,
-				span({}, `${id.toUpperCase()}:`)
-			),
-			input({
-				id: id,
-				type: type,
-				name: id,
-				className: 'w-full bg-black border border-green-500/30 p-2 text-green-500',
-				placeholder: placeholder,
-				value: state.get(),
-				disabled: !editMode(),
-				event: {
-					input: e => state.set((e.target as any)?.value),
-				},
-			})
-		);
-	}
 
 	function textareaL(
 		id: string,
@@ -156,6 +130,7 @@ function ProfileForm(
 				)
 				: null,
 			div({ className: 'flex-auto' }),
+
 			username.get() !== getCookie('username')
 				? button(
 					{
@@ -164,12 +139,20 @@ function ProfileForm(
 					},
 					isFriend.get() ? RemoveFriendIconSVG : AddFriendIconSVG
 				)
-				: button(
-					{
-						className: 'hover:bg-green-500/20',
-						onclick: toggleTfa,
+				: div({},
+					button({
+						className: 'mr-5 hover:bg-green-500/20',
+						onclick: () => switchPage('/changePass')
 					},
-					!isTfa.get() ? TwoFactorAuthSVG : RemoveTwoFactorAuthSVG
+						ChangePasswordSVG
+					),
+					button(
+						{
+							className: 'hover:bg-green-500/20',
+							onclick: toggleTfa,
+						},
+						!isTfa.get() ? TwoFactorAuthSVG : RemoveTwoFactorAuthSVG
+					)
 				)
 		),
 		profilePictureUpload(),
@@ -180,8 +163,8 @@ function ProfileForm(
 					submit: handleSubmit,
 				},
 			},
-			inputL('username', 'text', username, 'username', UserIconSVG),
-			inputL('email', 'email', email, 'email@example.com', EmailIconSVG),
+			InputL('username', 'text', username, 'username', UserIconSVG, !editMode()),
+			InputL('email', 'email', email, 'email@example.com', EmailIconSVG, !editMode()),
 			textareaL('bio', bio, 'Tell us about yourself...', UserIconSVG)
 		)
 	);
@@ -252,6 +235,7 @@ export default function Profile(name: string) {
 		const url = new URL('/api/profile', window.location.href);
 		fetch(url, {
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data),
 		})
 			.then(response => {
@@ -290,13 +274,15 @@ export default function Profile(name: string) {
 		if (getCookie('username') === username.get()) return;
 		fetch(url, {
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				username: getCookie('username'),
 				friend: username.get(),
 			}),
-		})
-			.then(resp => {
-				if (!resp.ok) throw `Error ${action} friendship`;
+		}).then(response => response.json())
+			.then(json => {
+				if (!json.success)
+					throw json.message;
 			})
 			.catch(err => popOver.show(err));
 	}
@@ -307,8 +293,10 @@ export default function Profile(name: string) {
 		} else {
 			const url = new URL(`/api/tfa/remove`, window.location.href);
 			fetch(url, {})
-				.then(resp => {
-					if (!resp.ok) throw `Error remvoing tfa`;
+				.then(response => response.json())
+				.then(json => {
+					if (!json.success)
+						throw json.message;
 					switchPage('/profile', username.get());
 				})
 				.catch(err => popOver.show(err));

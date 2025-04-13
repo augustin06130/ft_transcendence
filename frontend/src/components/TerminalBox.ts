@@ -1,9 +1,8 @@
-import { button, div, p, a } from '@framework/tags';
-import { switchPage } from '@framework/Router';
 import { getCookie, isLogged } from '@framework/cookies';
-import GoogleSignin from './GooglesSignin';
+import { button, div, p, a } from '@framework/tags';
 import { Args } from '@framework/types';
 import Cookies from '@views/cookies';
+import popOver from './PopOver';
 
 export function footer() {
 	return div(
@@ -28,20 +27,13 @@ export function BoxFooter() {
 
 function LogoutButton() {
 	const handleLogout = async () => {
-		try {
-			const url = new URL('/api/logout', window.location.href);
-			const response = await fetch(url, {
-				method: 'POST',
-			});
-
-			if (response.ok) {
+		const url = new URL('/api/logout', window.location.href);
+		fetch(url).then(resp => resp.json())
+			.then(json => {
+				if (!json.success)
+					throw json.message;
 				window.location.href = '/'
-			} else {
-				throw 'Error during disconnecting'
-			}
-		} catch (err) {
-			console.error(err);
-		}
+			}).catch(err => popOver.show(err));
 	};
 
 	return button(
@@ -71,6 +63,6 @@ export default function TerminalBox(label: string, ...children: Args[]) {
 	);
 	return div(
 		{ className: 'mx-auto' },
-		!getCookie('cookiesOn') ? Cookies() : !getCookie('tfa') ? GoogleSignin() : box
+		!getCookie('cookiesOn') ? Cookies() : box
 	);
 }

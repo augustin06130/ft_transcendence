@@ -9,153 +9,147 @@ import { GameMode } from 'types';
 export let game: PongGame | null = null;
 
 function checkRoom(roomId: string) {
-    const url = new URL('/api/room', window.location.href);
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            roomId,
-        }),
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw 'Connexion failed';
-            } else if (response.status == 204) {
-                throw 'Invalid roomId';
-            }
-        })
-        .catch(err => {
-            popOver.show(err);
-            switchPage('/room');
-        });
+	const url = new URL('/api/room', window.location.href);
+	fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			roomId,
+		}),
+	})
+		.then(resp => resp.json())
+		.then(json => {
+			if (!json.success)
+				throw json.message;
+		})
+		.catch(err => {
+			popOver.show(err);
+			switchPage('/room');
+		});
 }
 
 export default function PongGameView(roomId: string | null = null) {
-    if (!roomId) switchPage('/room');
+	if (!roomId) switchPage('/room');
 	roomId = roomId as string;
 	checkRoom(roomId);
-	
-    let modeSwitchButton: HTMLElement | null = null;
-    let player2NameLabel: HTMLElement | null = null;
-    let player1NameLabel: HTMLElement | null = null;
-    let topLabel: HTMLElement | null = null;
-    let tournamentOverlay: TournamentOverlay = new TournamentOverlay();
 
-    const gameMode = UseState<GameMode>('ai', (newValue, _) => {
-        if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
-    });
+	let modeSwitchButton: HTMLElement | null = null;
+	let player2NameLabel: HTMLElement | null = null;
+	let player1NameLabel: HTMLElement | null = null;
+	let topLabel: HTMLElement | null = null;
+	let tournamentOverlay: TournamentOverlay = new TournamentOverlay();
 
-    const p1Name = UseState<string>('Player 1', (newValue, _) => {
-        if (player1NameLabel) player1NameLabel.innerText = newValue;
-    });
+	const gameMode = UseState<GameMode>('ai', (newValue, _) => {
+		if (modeSwitchButton) modeSwitchButton.textContent = 'Mode ' + newValue;
+	});
 
-    const p2Name = UseState<string>('Player 2', (newValue, _) => {
-        if (player2NameLabel) player2NameLabel.innerText = newValue;
-    });
+	const p1Name = UseState<string>('Player 1', (newValue, _) => {
+		if (player1NameLabel) player1NameLabel.innerText = newValue;
+	});
 
-    const topText = UseState<string>('Welcome', (newValue, _) => {
-        if (topLabel) {
-            topLabel.innerText = newValue;
-        }
-    });
+	const p2Name = UseState<string>('Player 2', (newValue, _) => {
+		if (player2NameLabel) player2NameLabel.innerText = newValue;
+	});
 
-    if (game) game.close();
-    game = new PongGame(gameMode, p1Name.set, p2Name.set, topText.set, roomId);
+	const topText = UseState<string>('Welcome', (newValue, _) => {
+		if (topLabel) {
+			topLabel.innerText = newValue;
+		}
+	});
 
-    const pongGameTitle = () => {
-        topLabel = p({ className: 'text-green-400/70 text-sm' });
-        return div(
-            { className: 'text-center mb-4' },
-            h1({ className: 'text-2xl font-bold tracking-wider' }, `Room id: ${roomId}`),
-            topLabel
-        );
-    };
+	if (game) game.close();
+	game = new PongGame(gameMode, p1Name.set, p2Name.set, topText.set, roomId);
 
-    const gameControls = () => {
-        modeSwitchButton = button(
-            {
-                onclick: () => game?.sendCmd('mode'),
-                className:
-                    'px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition',
-            },
-            'Mode ' + gameMode.get()
-        );
+	const pongGameTitle = () => {
+		topLabel = p({ className: 'text-green-400/70 text-sm' });
+		return div(
+			{ className: 'text-center mb-4' },
+			h1({ className: 'text-2xl font-bold tracking-wider' }, `Room id: ${roomId}`),
+			topLabel
+		);
+	};
 
-        player1NameLabel = div({ className: 'text-sm' }, 'Player 1');
-        player2NameLabel = div({ className: 'text-sm' }, 'Player 2');
-        const buttonTournament = button(
-            {
-                className:
-                    'px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition',
-                onclick: fectchTournamentTree,
-            },
-            'view tournament'
-        );
+	const gameControls = () => {
+		modeSwitchButton = button(
+			{
+				onclick: () => game?.sendCmd('mode'),
+				className:
+					'px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition',
+			},
+			'Mode ' + gameMode.get()
+		);
 
-        return div(
-            { className: 'flex justify-between items-center mt-4' },
-            player1NameLabel,
-            div({ className: 'flex gap-2' }, modeSwitchButton),
-            div({ className: 'flex gap-2' }, buttonTournament),
-            player2NameLabel
-        );
-    };
+		player1NameLabel = div({ className: 'text-sm' }, 'Player 1');
+		player2NameLabel = div({ className: 'text-sm' }, 'Player 2');
+		const buttonTournament = button(
+			{
+				className:
+					'px-4 py-1 border border-green-500/50 rounded text-sm hover:bg-green-500/20 transition',
+				onclick: fectchTournamentTree,
+			},
+			'view tournament'
+		);
 
-    const fectchTournamentTree = () => {
-        const url = new URL('/api/tournament', window.location.href);
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roomId: roomId }),
-        })
-            .then(resp => {
-                if (resp.status === 412) throw 'Not in tournament mode';
-                if (!resp.ok) throw 'Connection failed';
-                return resp.text();
-            })
-            .then(html => {
-                tournamentOverlay.show();
-                tournamentOverlay.setTournament(html);
-            })
-            .catch(r => popOver.show(r));
-    };
+		return div(
+			{ className: 'flex justify-between items-center mt-4' },
+			player1NameLabel,
+			div({ className: 'flex gap-2' }, modeSwitchButton),
+			div({ className: 'flex gap-2' }, buttonTournament),
+			player2NameLabel
+		);
+	};
 
-    const pongInstructions = () => {
-        return div(
-            { className: 'mt-6 text-green-400/70 text-sm' },
-            p({ className: 'mb-1' }, '$ cat instructions.txt'),
-            div(
-                {
-                    className: 'border border-green-500/20 p-2 rounded bg-black/50',
-                },
-                p({}, "- 'W' or 'S' to move the left paddle"),
-                p({}, "- 'I' or 'K' to move the right paddle"),
-                p({}, `- First player to reach ${WINNING_SCORE} points wins`),
-                p({}, '- The ball speeds up as the game progresses')
-            )
-        );
-    };
+	const fectchTournamentTree = () => {
+		const url = new URL('/api/tournament', window.location.href);
+		fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ roomId: roomId }),
+		})
+			.then(resp => resp.json())
+			.then(json => {
+				if (!json.success)
+					throw json.message;
+				tournamentOverlay.show();
+				tournamentOverlay.setTournament(json.data);
+			})
+			.catch(err => popOver.show(err));
+	};
 
-    const pongFooter = () => {
-        return div(
-            { className: 'mt-8 text-green-400/70 text-sm text-center' },
-            `© ${new Date().getFullYear()} TERM_OS • All systems nominal`
-        );
-    };
+	const pongInstructions = () => {
+		return div(
+			{ className: 'mt-6 text-green-400/70 text-sm' },
+			p({ className: 'mb-1' }, '$ cat instructions.txt'),
+			div(
+				{
+					className: 'border border-green-500/20 p-2 rounded bg-black/50',
+				},
+				p({}, "- 'W' or 'S' to move the left paddle"),
+				p({}, "- 'I' or 'K' to move the right paddle"),
+				p({}, `- First player to reach ${WINNING_SCORE} points wins`),
+				p({}, '- The ball speeds up as the game progresses')
+			)
+		);
+	};
 
-    const renderComponent = () => {
-        return div(
-            {},
-            pongGameTitle(),
-            game?.render(),
-            gameControls(),
-            pongInstructions(),
-            pongFooter(),
-            tournamentOverlay.render()
-        );
-    };
+	const pongFooter = () => {
+		return div(
+			{ className: 'mt-8 text-green-400/70 text-sm text-center' },
+			`© ${new Date().getFullYear()} TERM_OS • All systems nominal`
+		);
+	};
 
-    return renderComponent();
+	const renderComponent = () => {
+		return div(
+			{},
+			pongGameTitle(),
+			game?.render(),
+			gameControls(),
+			pongInstructions(),
+			pongFooter(),
+			tournamentOverlay.render()
+		);
+	};
+
+	return renderComponent();
 }

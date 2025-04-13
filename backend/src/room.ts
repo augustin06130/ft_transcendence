@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { onlineUserStatus } from './onlineUsers';
 import { WebSocket } from '@fastify/websocket';
 import PongGame from './pong';
+import { sendSuccess } from './routes';
 
 const pongRooms = new Map<string, PongGame>();
 
@@ -14,12 +15,14 @@ export function create_room(_: FastifyRequest, reply: FastifyReply) {
 	}
 
 	pongRooms.set(roomId, new PongGame(() => pongRooms.delete(roomId)));
-	reply.send({ roomId: roomId });
+	sendSuccess(reply, 200, { roomId: roomId })
 }
 
 export function validate_roomId(request: FastifyRequest, reply: FastifyReply) {
 	const { roomId } = request.body as { roomId: string };
-	reply.code(pongRooms.has(roomId) ? 200 : 204).send();
+	if (!pongRooms.has(roomId))
+		throw { code: 404, message: 'Game not found' }
+	sendSuccess(reply, 200)
 }
 
 export async function join_room(socket: WebSocket, request: FastifyRequest) {
@@ -40,8 +43,9 @@ export function get_tree(request: FastifyRequest, reply: FastifyReply) {
 	const { roomId } = request.body as { roomId: string };
 	reply.header('Content-Type', 'text/plain');
 	if (pongRooms.get(roomId)?.tournament.mode === 'remote') {
-		reply.send(pongRooms.get(roomId)?.tournamentTree());
+		sendSuccess(reply, 200, { roomId: pongRooms.get(roomId)?.tournamentTree() })
+		reply.send();
 	} else {
-		reply.code(412).send();
+		throw ({ code: 412, message: 'ERROR: not in tournament mode' })
 	}
 }
