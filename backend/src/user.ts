@@ -1,8 +1,13 @@
 import { allPromise, getPromise, runPromise } from './promise';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { JWTPayload, User } from './types';
+<<<<<<< HEAD
 import { readFileSync } from 'node:fs';
 import { sendSuccess } from './routes';
+=======
+import { logoutUser } from './googleAuth';
+import { readFileSync } from 'node:fs';
+>>>>>>> 892ecdd97989f5e1af07d2696fd7dbb34dbaa1a1
 import { isFriend } from './friends';
 import { logoutUser } from './auth';
 import { htoms } from './utils';
@@ -82,6 +87,28 @@ export async function createNewUserPass(
 		Date.now() + htoms(1),
 	];
 	return await runPromise(sql, params);
+}
+
+export async function createNewUserPass(
+	username: string,
+	email: string,
+	hashPass: string,
+) {
+	const sql = `
+          INSERT INTO users (username, email, password, image, tfaON, date, deletionDate)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+
+	const params = [
+		username,
+		email,
+		hashPass,
+		defaultImage,
+		0,
+		Date.now(),
+		Date.now() + htoms(1),
+	];
+	return runPromise(sql, params);
 }
 
 export async function updateProfileImage(request: FastifyRequest, reply: FastifyReply) {

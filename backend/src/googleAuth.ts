@@ -3,7 +3,6 @@ import { createNewUserGoogle, getUserBy } from './user';
 import { OAuth2Client } from 'google-auth-library';
 import { TokenPayload } from 'google-auth-library';
 import { loginUser } from "./auth";
-
 const client = new OAuth2Client();
 
 export async function handleGoogle(request: FastifyRequest, reply: FastifyReply) {

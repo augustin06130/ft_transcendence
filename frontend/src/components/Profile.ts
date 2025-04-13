@@ -4,6 +4,7 @@ import UseState, { UseStateType } from '@framework/UseState';
 import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
 import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 import { isLogged, getCookie } from '@framework/cookies';
+import { ChangePasswordSVG } from '@Icon/ChangePass';
 import { AddFriendIconSVG } from '@Icon/AddFriend';
 import { TwoFactorAuthSVG } from '@Icon/addTfa';
 import { switchPage } from '@framework/Router';
@@ -12,7 +13,6 @@ import TfaOverlay from './TfaOverlay';
 import popOver from './PopOver';
 import InputL from './InputL';
 import Loader from './Loader';
-import { ChangePasswordSVG } from '@Icon/ChangePass';
 
 function ProfileForm(
 	handleSubmit: (e: Event) => void,

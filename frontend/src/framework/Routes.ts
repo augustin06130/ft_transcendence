@@ -50,5 +50,4 @@ export const baseLinks = {
 		view: ChangePasswordView,
 		label: '',
 	},
-
 }

@@ -2,10 +2,11 @@ import TerminalBox, { BoxFooter } from '@components/TerminalBox';
 import { div, p, form, input, } from '@framework/tags';
 import { switchPage } from '@framework/Router';
 import UseState from '@framework/UseState';
+import popOver from '@components/PopOver';
 import { UserIconSVG } from '@Icon/User';
 import { LockIconSVG } from '@Icon/Lock';
 import InputL from '@components/InputL';
-import popOver from '@components/PopOver';
+
 
 export default function Register() {
 	const username = UseState('', () => { });
