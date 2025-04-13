@@ -35,7 +35,7 @@ function LogoutButton() {
 			});
 
 			if (response.ok) {
-				switchPage('/');
+				window.location.href = '/'
 			} else {
 				throw 'Error during disconnecting'
 			}
