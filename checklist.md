@@ -1,14 +1,17 @@
-#BUG
+# Checklist Transcendence
+
+## BUG
 
 - google button display in only after refresh
+- ??? Check username exists in jwt Token
 
-# TWEAK
+## TWEAK
 
 - google button not aligned to the right side of the password field (register + login)
 
 Check list transcendence
 
-# Auth
+## Auth
 
 - Access without cookies only to cookies acceptance page
 - Access without login login only to home, register, login
@@ -22,7 +25,7 @@ Check list transcendence
 - Removing 2FA
 - Logout (username and tfa cookies cleared)
 
-# Profile
+## Profile
 
 - Modify text fields (username, email, bio)
 - Duplication username or email
