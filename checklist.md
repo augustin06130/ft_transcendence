@@ -59,3 +59,7 @@ Check list transcendence
 - Bounce paddle and walls
 - AI beatable
 - AI can win
+
+## Privacy
+
+- Display
