@@ -52,7 +52,13 @@ export async function getMatchesCount(request: FastifyRequest, reply: FastifyRep
 }
 
 export async function getMatches(request: FastifyRequest, reply: FastifyReply) {
-    let { username, page } = request.query as { username: string; page: number };
+    let { username, page, count } = request.query as {
+        username: string;
+        page: number;
+        count: number;
+    };
+
+	if (!count) count = 1;
     let sql = 'SELECT * FROM matches ';
     let params: (string | number)[] = [];
     if (page === undefined) page = 0;
@@ -62,7 +68,7 @@ export async function getMatches(request: FastifyRequest, reply: FastifyReply) {
         sql += 'WHERE player1 = ? OR player2 = ? ORDER BY date DESC  LIMIT ?, ?;';
         params = [username, username];
     }
-    params.push(page * pageSize, pageSize);
+    params.push(page * pageSize, pageSize * count);
 
     sendSuccess(reply, 200, { data: await allPromise(sql, params) });
 }

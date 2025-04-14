@@ -34,6 +34,7 @@ export class Graphs {
 		const url = new URL('/api/matches', window.location.href);
 		url.searchParams.set('username', name);
 		url.searchParams.set('page', '0');
+		url.searchParams.set('count', '40');
 		fetch(url, {})
 			.then(resp => resp.json())
 			.then(json => {

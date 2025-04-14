@@ -5,7 +5,7 @@ import { FastifyRequest } from 'fastify';
 import Tournament from './tournament';
 import { addMatch } from './matches';
 
-const WINNING_SCORE = 3;
+const WINNING_SCORE = 1;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];

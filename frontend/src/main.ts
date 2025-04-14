@@ -15,12 +15,12 @@ function navBarRoutes(): Routes {
         baseLinks;
         return {
             '/': baseLinks['/'],
+            '/pong': baseLinks['/pong'],
             '/profile': baseLinks['/profile'],
             '/history': baseLinks['/history'],
             '/room': baseLinks['/room'],
             '/privacy': baseLinks['/privacy'],
             '/changePass': baseLinks['/changePass'],
-            '/pong': baseLinks['/pong'],
         };
     } else {
         return {

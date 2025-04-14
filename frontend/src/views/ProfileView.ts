@@ -53,7 +53,7 @@ export default function ProfileView(username: string | undefined = undefined) {
 				},
 				p(
 					{ className: 'text-xl text-green-500 font-bold' },
-					'USER CHARTS  (over last 25 matches)'
+					'USER CHARTS '
 				),
 				graphs.render()
 			),
