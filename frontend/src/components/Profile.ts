@@ -1,6 +1,6 @@
-import { div, p, form, label, button, span, img, textarea } from '@framework/tags';
 import { EmailIconSVG, EditIconSVG, SaveIconSVG } from '@Icon/SetupIcon';
 import UseState, { UseStateType } from '@framework/UseState';
+import { div, p, form, button, img } from '@framework/tags';
 import { RemoveFriendIconSVG } from '@Icon/RemoveFriend';
 import { RemoveTwoFactorAuthSVG } from '@Icon/removeTfa';
 import { isLogged, getCookie } from '@framework/cookies';
@@ -8,10 +8,10 @@ import { ChangePasswordSVG } from '@Icon/ChangePass';
 import { AddFriendIconSVG } from '@Icon/AddFriend';
 import { TwoFactorAuthSVG } from '@Icon/addTfa';
 import { switchPage } from '@framework/Router';
+import { InputL, TextareaL } from './InputL';
 import { UserIconSVG } from '@Icon/User';
 import TfaOverlay from './TfaOverlay';
 import popOver from './PopOver';
-import InputL from './InputL';
 import Loader from './Loader';
 
 function ProfileForm(
@@ -27,34 +27,6 @@ function ProfileForm(
     isFriend: UseStateType<boolean>,
     isTfa: UseStateType<boolean>
 ) {
-    function textareaL(
-        id: string,
-        state: UseStateType<string>,
-        placeholder: string,
-        icon: SVGSVGElement
-    ): HTMLDivElement {
-        return div(
-            { className: 'space-y-1' },
-            label(
-                { htmlFor: id, className: 'text-sm flex items-center gap-2' },
-                icon,
-                span({}, `${id.toUpperCase()}:`)
-            ),
-            textarea({
-                id,
-                name: id,
-                className:
-                    'w-full bg-black border border-green-500/30 p-2 text-green-500 resize-none h-24',
-                placeholder,
-                value: state.get(),
-                disabled: !editMode(),
-                event: {
-                    input: e => state.set((e.target as any)?.value),
-                },
-            })
-        );
-    }
-
     function sendProfilePicture(image64: string) {
         const url = new URL('/api/profile/image', window.location.href);
         fetch(url, {
@@ -166,7 +138,7 @@ function ProfileForm(
             },
             InputL('username', 'text', username, 'username', UserIconSVG, !editMode()),
             InputL('email', 'email', email, 'email@example.com', EmailIconSVG, !editMode()),
-            textareaL('bio', bio, 'Tell us about yourself...', UserIconSVG)
+            TextareaL('bio', bio, 'Tell us about yourself...', UserIconSVG, !editMode())
         )
     );
 }
@@ -219,7 +191,7 @@ export default function Profile(name: string) {
     function handleSubmit(e: Event) {
         e.preventDefault();
         if (!checkAuth()) return;
-
+        switchPage('/profile');
         const body = {
             username: username.get(),
             email: email.get(),
@@ -238,8 +210,7 @@ export default function Profile(name: string) {
             .then(resp => resp.json())
             .then(data => {
                 switchPage('/profile');
-                if (!data.success)
-					throw data.message;
+                if (!data.success) throw data.message;
             })
             .catch(err => popOver.show(err));
     }
