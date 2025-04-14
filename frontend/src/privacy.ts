@@ -77,7 +77,7 @@ export default function PrivacyPolicy() {
         h2({ className: 'text-green-400 text-xl font-semibold mt-6' }, '6. Data Retention'),
         p(
             {},
-            'We retain your data while your account is active. Upon deletion, all personal data is removed within 30 days, unless legally required otherwise.'
+            'We retain your data while your account is active. Accounts are marked inactive after 1 year without login. Upon deletion, all personal data is removed within 30 days, unless legally required otherwise.'
         ),
 
         h2({ className: 'text-green-400 text-xl font-semibold mt-6' }, '7. Your Rights'),
