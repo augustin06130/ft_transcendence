@@ -33,3 +33,9 @@ Check list transcendence
 - Stats (display + coherence)
 - History (display + coherence)
 - Graphs (display + coherence)
+- Delete account
+
+## History
+
+- Display
+- Count

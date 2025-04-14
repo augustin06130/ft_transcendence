@@ -58,7 +58,7 @@ export async function getMatches(request: FastifyRequest, reply: FastifyReply) {
         count: number;
     };
 
-	if (!count) count = 1;
+    if (!count) count = 1;
     let sql = 'SELECT * FROM matches ';
     let params: (string | number)[] = [];
     if (page === undefined) page = 0;
@@ -74,19 +74,20 @@ export async function getMatches(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export async function getStats(request: FastifyRequest, reply: FastifyReply) {
-    let { username: name } = request.query as { username: string };
+    let { username } = request.query as { username: string };
 
     let ret: Object = {};
 
-    Object.assign(ret, await globalStat(name));
-    Object.assign(ret, await nameStat(name, 1));
-    Object.entries(await nameStat(name, 2)).forEach(([k, v]) => ((ret as any)[k] += v));
-    Object.assign(ret, await wiinerStat(name));
+    Object.assign(ret, await globalStat(username));
+    Object.assign(ret, await nameStat(username, 1));
+    Object.entries(await nameStat(username, 2)).forEach(([k, v]) => ((ret as any)[k] += v));
+    Object.assign(ret, await wiinerStat(username));
     sendSuccess(reply, 200, ret);
 }
 
 async function globalStat(player: string) {
-    const sql = `SELECT
+    console.log('plauer:', player);
+    let sql = `SELECT
 		COUNT()		as [countMatch],
 		AVG(duration)	as [avgDuration],
 		SUM(duration)	as [sumDuration],
@@ -94,26 +95,28 @@ async function globalStat(player: string) {
 		MAX(date)		as [lastestMatch],
 		SUM(rally)		as [sumRally],
 		AVG(rally)		as [avgRally]
-		FROM matches WHERE player1 = ? OR player2 = ?;
+		FROM matches
 	`;
+    if (player) sql += 'WHERE player1 = ? OR player2 = ?;';
 
     const params = [player, player];
     return getPromise(sql, params);
 }
 async function nameStat(player: string, role: number) {
-    const sql = `SELECT
+    let sql = `SELECT
 		SUM(travel1)	as [sumTravel],
 		AVG(travel1)	as [avgTravel],
 		SUM(score1)		as [sumScore],
 		AVG(score1)		as [avgScore]
-		FROM matches WHERE player${role} = ?;
+		FROM matches
 	`;
+    if (player) sql += `WHERE player${role} = ?;`;
 
     const params = [player];
     return getPromise(sql, params);
 }
 async function wiinerStat(player: string) {
-    const sql = `SELECT
+    let sql = `SELECT
 		COUNT()		as [countWin],
 		SUM(travel1)	as [sumTravelWin],
 		AVG(travel1)	as [avgTravelWin],
@@ -123,8 +126,9 @@ async function wiinerStat(player: string) {
 		MAX(date)		as [lastestMatchWin],
 		SUM(rally)		as [sumRallyWin],
 		AVG(rally)		as [avgRallyWin]
-		FROM matches WHERE winner = ?;
+		FROM matches
 	`;
+    if (player) sql += 'WHERE player1 = ? OR player2 = ?;';
 
     const params = [player];
     return getPromise(sql, params);
