@@ -25,8 +25,8 @@ export default function attachHooks(fastify: FastifyInstance) {
 		try {
 			const jwt: any = await request.jwtVerify({ onlyCookie: true });
 			if (jwt.username) {
-				// if (!(await getUserBy('username', jwt.username)))
-				// 	return logoutUser(request, reply);
+				if (!(await getUserBy('username', jwt.username)))
+					return logoutUser(request, reply);
 
 				onlineUserStatus[jwt.username] = { time: Date.now(), status: 'online' };
 			}

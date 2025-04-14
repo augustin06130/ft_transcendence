@@ -5,7 +5,7 @@ import { FastifyRequest } from 'fastify';
 import Tournament from './tournament';
 import { addMatch } from './matches';
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 3;
 
 export type GameMode = 'ai' | 'local' | 'remote';
 const gameModes: GameMode[] = ['ai', 'local', 'remote'];
@@ -44,6 +44,13 @@ export default class PongGame {
     constructor(kill: () => void) {
         this.updateGame = this.updateGame.bind(this);
         this.kill = kill;
+    }
+
+    public hasPlayer(name: string): boolean {
+        for (let p of this.clients) {
+            if (p.username === name) return true;
+        }
+        return false;
     }
 
     public tournamentTree(): string {
@@ -279,7 +286,7 @@ export default class PongGame {
             this.broadcastCmd('ingame', -1);
             this.broadcastCmd('error', 'Please reconnect');
             this.gameState.ingame = false;
-        	if (this.gameState.intervalId) clearInterval(this.gameState.intervalId);
+            if (this.gameState.intervalId) clearInterval(this.gameState.intervalId);
         }
     }
 
@@ -351,7 +358,11 @@ export default class PongGame {
         this.match.score2 = this.gameState.computerScore;
         this.match.duration = Date.now() - this.match.date;
 
-        addMatch(this.match);
+		try {
+        	addMatch(this.match);
+		} catch (err) {
+			console.warn(err);
+		}
 
         this.broadcastCmd('score', winner.username);
         if (this.tournament.mode === 'remote' && this.tournament.nextMatch()) {

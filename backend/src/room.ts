@@ -19,8 +19,13 @@ export function create_room(_: FastifyRequest, reply: FastifyReply) {
 }
 
 export function validate_roomId(request: FastifyRequest, reply: FastifyReply) {
+    const { username } = request.user as { username: string };
     const { roomId } = request.body as { roomId: string };
-    if (!pongRooms.has(roomId)) throw { code: 404, message: 'Game not found' };
+    if (roomId.length != 4 || !pongRooms.has(roomId))
+        throw { code: 404, message: 'Game not found' };
+    for (let room of pongRooms) {
+        if (room[1].hasPlayer(username)) throw { code: 403, message: 'Duplicate username' };
+    }
     sendSuccess(reply, 200);
 }
 
@@ -40,9 +45,10 @@ export async function join_room(socket: WebSocket, request: FastifyRequest) {
 
 export function get_tree(request: FastifyRequest, reply: FastifyReply) {
     const { roomId } = request.body as { roomId: string };
+    if (roomId.length != 4)
+        throw { code: 404, message: 'Game not found' };
     reply.header('Content-Type', 'text/plain');
     if (pongRooms.get(roomId)?.tournament.mode !== 'remote')
-
         throw { code: 412, message: 'ERROR: not in tournament mode' };
     const tree = pongRooms.get(roomId)?.tournamentTree();
     sendSuccess(reply, 200, { data: tree });

@@ -2,7 +2,7 @@ import { Routes } from '@framework/types';
 import { div } from '@framework/tags';
 import { game } from '@views/Pong';
 import _404View from '@views/404';
-import { getCookie } from './cookies';
+import { getCookie, isLogged } from './cookies';
 
 export function Router(routes: Routes) {
     let result = div({});
@@ -44,8 +44,16 @@ export function Router(routes: Routes) {
     return result;
 }
 
+const urls = new Set<string>(['', '/', '/register', '/login', '/privacy']);
+
 export function switchPage(to: string, arg: string | null = null) {
     const from = location.pathname;
+
+    if (!isLogged() && !urls.has(to)) {
+        location.href = '/';
+        location.reload();
+        return;
+    }
 
     if (from === '/pong') {
         if (game?.isPlayer() && !game.isError) {
@@ -58,5 +66,6 @@ export function switchPage(to: string, arg: string | null = null) {
         }
         game?.close();
     }
+
     window.dispatchEvent(new CustomEvent('url', { detail: { from, to, arg } }));
 }

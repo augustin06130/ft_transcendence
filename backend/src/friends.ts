@@ -20,6 +20,9 @@ export async function addFriend(request: FastifyRequest, reply: FastifyReply) {
     let { friend } = request.body as {
         friend: string;
     };
+	if (friend.length > 30)
+		throw {code:400, message: 'Username too long (30)'}
+
     const sql = 'INSERT INTO friends (username, friend, date) VALUES (?,?,?);';
     const params = [username, friend, Date.now()];
     await runPromise(sql, params);
@@ -39,6 +42,7 @@ export async function removeFriend(request: FastifyRequest, reply: FastifyReply)
 
 export async function getFriends(request: FastifyRequest, reply: FastifyReply) {
     const { username } = request.query as { username: string };
+    if (username.length > 30) throw { code: 400, message: 'User name too long' };
     const sql = 'SELECT * FROM friends WHERE username = ?';
     const params = [username];
     const data: any = await allPromise(sql, params);

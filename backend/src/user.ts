@@ -7,6 +7,7 @@ import { sendSuccess } from './routes';
 import { isFriend } from './friends';
 import { htoms } from './utils';
 import path from 'path';
+import { verifyProfile } from './login';
 
 const defaultImage =
     'data:image/png;base64,' +
@@ -80,6 +81,7 @@ export async function createNewUserPass(username: string, email: string, hashPas
 export async function updateProfileImage(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.user as { id: number };
     const sql = 'UPDATE users SET image = ? WHERE id = ?;';
+    if (!request.body) throw { code: 400, message: 'no image found' };
     const params = [request.body, id];
     await runPromise(sql, params);
     sendSuccess(reply, 200);
@@ -93,6 +95,11 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
         email: string;
         bio: string;
     };
+
+    if (body.username.length > 30) throw { code: 400, message: 'Username too long (30)' };
+    if (body.email.length > 50) throw { code: 400, message: 'Email too long (50)' };
+    if (body.bio.length > 280) throw { code: 400, message: 'Bio too long (280)' };
+
     const t = await getUserBy('username', body.username);
     if (t && t.id !== id) throw { code: 400, message: 'Duplicate username' };
 

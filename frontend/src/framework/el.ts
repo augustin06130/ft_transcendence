@@ -23,7 +23,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 
 	children.filter((child) => (child != null && child != undefined)).forEach((element) => {
 		if (typeof element === "string") {
-			parent.innerHTML = element;
+			parent.innerText = element;
 		} else {
 			parent.appendChild(element as HTMLElement);
 		}
