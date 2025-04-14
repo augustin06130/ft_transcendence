@@ -37,5 +37,25 @@ Check list transcendence
 
 ## History
 
-- Display
-- Count
+- Stats (display + coherence)
+- History (display + coherence)
+- Graphs (display + coherence)
+
+## Room
+
+- Create room
+- Join room (valid id)
+- Join room (invalid id)
+- Friend list (status, goto profile, goto room)
+
+## Pong
+
+- Change mode
+- See tournament tree
+- Start game
+- Display players
+- Leave game during game (as player, as, as next player, as spec)
+- Display score
+- Bounce paddle and walls
+- AI beatable
+- AI can win

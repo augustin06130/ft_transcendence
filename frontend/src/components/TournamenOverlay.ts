@@ -1,6 +1,5 @@
 import { div, h2 } from '@framework/tags';
 
-
 export default class TournamentOverlay {
     private div: HTMLDivElement;
     private titleLabel: HTMLHeadingElement;
@@ -16,13 +15,19 @@ export default class TournamentOverlay {
             div(
                 { className: 'px-6 py-2 border border-green-500 rounded bg-black' },
                 this.titleLabel,
-                ...lines.replace('<', '').replace('>', '').split('\n').map(line => div({}, line))
+                ...lines.split('\n').map(line => {
+                    if (line.startsWith('###')) {
+                        return div({ className: 'text-bold text-green-200' }, line.slice(3));
+                    } else {
+                        return div({}, line);
+                    }
+                })
             )
         );
     };
 
     setTournament = (line: string) => {
-		this.div.replaceChildren(line);
+        this.div.replaceChildren(this.getCore(line));
     };
 
     show = () => {

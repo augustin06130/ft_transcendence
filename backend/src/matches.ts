@@ -1,7 +1,7 @@
 import { allPromise, getPromise, runPromise } from './promise';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { Match } from './types';
 import { sendSuccess } from './routes';
+import { Match } from './types';
 
 export async function createTableMatches() {
     const sql = `
@@ -86,9 +86,8 @@ export async function getStats(request: FastifyRequest, reply: FastifyReply) {
 }
 
 async function globalStat(player: string) {
-    console.log('plauer:', player);
     let sql = `SELECT
-		COUNT()		as [countMatch],
+		COUNT()			as [countMatch],
 		AVG(duration)	as [avgDuration],
 		SUM(duration)	as [sumDuration],
 		MIN(date)		as [firstMatch],

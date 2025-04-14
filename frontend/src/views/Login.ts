@@ -55,7 +55,6 @@ export default function Login() {
             }),
         })
             .then(resp => {
-                console.log(resp);
                 if (resp.redirected) {
                     return new Promise(res => res({ success: true }));
                 } else {
@@ -63,7 +62,6 @@ export default function Login() {
                 }
             })
             .then(json => {
-                console.log(json);
                 if (!json.success) throw json.message;
                 location.href = '/profile';
             })

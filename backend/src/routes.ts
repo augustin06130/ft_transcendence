@@ -12,7 +12,7 @@ import { logoutUser } from './auth';
 
 export function sendSuccess(reply: FastifyReply, code: number = 200, response: { [key: string]: any } = {}) {
 	response['success'] = true;
-	reply.code(code).send(response);
+	reply.code(code).send(JSON.stringify(response));
 }
 
 export default function addFastifyRoutes(fastify: FastifyInstance) {
@@ -33,10 +33,8 @@ export default function addFastifyRoutes(fastify: FastifyInstance) {
 		try {
 			await handler(request, reply);
 		} catch (err: any) {
-			err['succes'] = false;
-			console.error(err);
-			reply.code(err.code || 400).send(err);
-		}
+			console.error('error', err);
+			reply.code(err.code || 400).send(JSON.stringify({success:false, message:err.message || ''})); }
 	}
 
 	fastify.get('/pong', (_, rep) => rep.redirect('/room'));

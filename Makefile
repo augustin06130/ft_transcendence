@@ -31,4 +31,4 @@ fclean: clean
 	docker volume prune -f
 
 rm:
-	sudo rm -rf */node_modules */package-lock.json ./frontend/public/output.css ./frontend/public/bundle.js
+	rm -rf */node_modules */package-lock.json ./frontend/public/output.css ./frontend/public/bundle.js
