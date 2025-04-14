@@ -17,7 +17,7 @@ export async function createTableUser() {
       CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        email TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
 		googleId TEXT UNIQUE,
 		bio TEXT,
         image BLOB,

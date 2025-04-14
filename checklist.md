@@ -20,6 +20,7 @@ Check list transcendence
 - Activate 2FA
 - Access before 2FA
 - Removing 2FA
+- Logout (username and tfa cookies cleared)
 
 # Profile
 
