@@ -248,10 +248,10 @@ export class Stats {
             `${Intl.NumberFormat().format(data.sumScore)} points`;
         this.liAverageDistance.innerText =
             `Average paddle travel:`.padEnd(len, ' ') +
-            `${Intl.NumberFormat().format(Math.floor(data.avgTravel))} fields/match`;
+            `${Intl.NumberFormat().format(Math.floor(data.avgTravel / 1000))} fields/match`;
         this.liTotalDistance.innerText =
             `Total paddle distance travel:`.padEnd(len, ' ') +
-            `${Intl.NumberFormat().format(data.sumTravel)} fields`;
+            `${Intl.NumberFormat().format(Math.floor(data.sumTravel / 1000))} fields`;
         this.liAverageRally.innerText =
             `Average rallies:`.padEnd(len, ' ') + `${data.avgRally.toFixed(2)} rallies/match`;
         this.liTotalRally.innerText =

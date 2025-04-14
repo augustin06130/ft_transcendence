@@ -34,7 +34,7 @@ export async function removeFriend(request: FastifyRequest, reply: FastifyReply)
     const sql = 'DELETE FROM friends WHERE username = ? AND friend = ?;';
     const params = [username, friend];
     await runPromise(sql, params);
-    sendSuccess(reply, 204);
+    sendSuccess(reply, 200);
 }
 
 export async function getFriends(request: FastifyRequest, reply: FastifyReply) {

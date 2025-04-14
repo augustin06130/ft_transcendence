@@ -207,8 +207,12 @@ export default function Profile(name: string) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
-            .then(resp => resp.json())
+            .then(resp => {
+				console.log(resp);
+				return resp.json()
+			})
             .then(data => {
+				console.log(data);
                 switchPage('/profile');
                 if (!data.success) throw data.message;
             })

@@ -6,7 +6,7 @@ export default function GoogleSignin() {
         'data-client_id',
         '142263870589-c25b699sci1f9ti7fimmtoge0mn98qkk.apps.googleusercontent.com'
     );
-    onload.setAttribute('data-login_uri', 'https://localhost:8080/api/login/google');
+    onload.setAttribute('data-login_uri', 'https://bess-f2r4s13.clusters.42paris.fr:8080/api/login/google');
     onload.setAttribute('data-auto_prompt', 'false');
     onload.setAttribute('data-context', 'signin');
     onload.setAttribute('data-ux-mode', 'popup');

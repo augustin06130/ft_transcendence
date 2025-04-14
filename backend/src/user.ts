@@ -17,7 +17,7 @@ export async function createTableUser() {
       CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        email TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL,
 		googleId TEXT UNIQUE,
 		bio TEXT,
         image BLOB,
@@ -82,20 +82,19 @@ export async function updateProfileImage(request: FastifyRequest, reply: Fastify
     const sql = 'UPDATE users SET image = ? WHERE id = ?;';
     const params = [request.body, id];
     await runPromise(sql, params);
-    sendSuccess(reply, 204);
+    sendSuccess(reply, 200);
 }
 
 export async function updateProfile(request: FastifyRequest, reply: FastifyReply) {
     const { id } = request.user as { id: number };
+    console.log('user', request.user);
     let body = request.body as {
         username: string;
         email: string;
         bio: string;
     };
-    if ((await getUserBy('username', body.username)).id !== id)
-        throw { code: 400, message: 'Duplicate username' };
-    if ((await getUserBy('email', body.email)).id !== id)
-        throw { code: 400, message: 'Duplicate email' };
+    const t = await getUserBy('username', body.username);
+    if (t && t.id !== id) throw { code: 400, message: 'Duplicate username' };
 
     let user = await getUserBy('id', id);
     if (!id || !user) throw { code: 404, message: 'Google id not found' };
@@ -118,7 +117,7 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
     await runPromise(sql, params);
     user = await getUserBy('id', id);
     setJwt(user, reply, false);
-    sendSuccess(reply, 204);
+    sendSuccess(reply, 200);
 }
 
 export async function getProfile(request: FastifyRequest, reply: FastifyReply) {
