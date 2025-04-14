@@ -92,6 +92,10 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
         email: string;
         bio: string;
     };
+    if ((await getUserBy('username', body.username)).id !== id)
+        throw { code: 400, message: 'Duplicate username' };
+    if ((await getUserBy('email', body.email)).id !== id)
+        throw { code: 400, message: 'Duplicate email' };
 
     let user = await getUserBy('id', id);
     if (!id || !user) throw { code: 404, message: 'Google id not found' };

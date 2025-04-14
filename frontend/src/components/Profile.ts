@@ -237,8 +237,9 @@ export default function Profile(name: string) {
         })
             .then(resp => resp.json())
             .then(data => {
-                if (!data.success) throw data.message;
                 switchPage('/profile');
+                if (!data.success)
+					throw data.message;
             })
             .catch(err => popOver.show(err));
     }
